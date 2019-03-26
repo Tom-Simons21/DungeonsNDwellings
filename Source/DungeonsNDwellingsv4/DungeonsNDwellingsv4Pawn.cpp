@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
 #include "Engine.h"
+#include "InteractableObject.h"
 
 const FName ADungeonsNDwellingsv4Pawn::MoveForwardBinding("MoveForward");
 const FName ADungeonsNDwellingsv4Pawn::MoveRightBinding("MoveRight");
@@ -100,6 +101,8 @@ void ADungeonsNDwellingsv4Pawn::Tick(float DeltaSeconds)
 
 	// Try and fire a shot
 	FireShot(FireDirection);
+
+	getPlayerLocation();
 }
 
 void ADungeonsNDwellingsv4Pawn::FireShot(FVector FireDirection)
@@ -156,4 +159,26 @@ void ADungeonsNDwellingsv4Pawn::OnInteract()
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("I'm Pressing Action"));
 	}
 }
+
+void ADungeonsNDwellingsv4Pawn::getPlayerLocation()
+{
+	FVector actorLoc = GetActorLocation();
+	FVector actorZVector = FVector(0.f, 0.f, 0.f);
+
+	actorZVector.Z += actorLoc.Z;
+
+	for (TActorIterator<AInteractableObject> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AInteractableObject *Object = *ActorItr;
+		ActorItr->getPlayerLocation(actorLoc);
+	}
+}
+
+/*
+void ADungeonsNDwellingsv4Pawn::moveToRoom()
+{
+
+}
+*/
 

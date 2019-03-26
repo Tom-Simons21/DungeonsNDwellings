@@ -64,6 +64,13 @@ public:
 
 	void OnInteract();
 
+	void getPlayerLocation();
+
+	void moveToRoom();
+
+	UPROPERTY(EditDefaultsOnly, Category = "MyCategory")
+	class AInteractableObject* object;
+
 
 private:
 
