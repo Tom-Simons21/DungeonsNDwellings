@@ -5,6 +5,7 @@
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Engine.h"
+#include "DungeonsNDwellingsv4Projectile.h"
 
 // Sets default values
 AInteractableObject::AInteractableObject()
@@ -92,11 +93,58 @@ void AInteractableObject::setItemValue()
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Item value was called"));
 	}
 }
-/*
+
 void AInteractableObject::playerTakesItem()
 {
+	float objSpeed;
+	float objSpeedMax;
+	float objLifeSpan;
 
+	if (itemValue == 1)
+	{
+		objSpeed = 3000;
+		objSpeedMax = 3000;
+		objLifeSpan = 15;
+
+		callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
+	}
+	else if (itemValue == 2)
+	{
+		objSpeed = 1000;
+		objSpeedMax = 1000;
+		objLifeSpan = 10;
+
+		callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
+	}
+	else if (itemValue == 3)
+	{
+		objSpeed = 500;
+		objSpeedMax = 500;
+		objLifeSpan = 5;
+
+		callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
+	}
+	else
+	{
+		objSpeed = 100;
+		objSpeedMax = 100;
+		objLifeSpan = 3;
+
+		callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
+	}
 }
+
+void AInteractableObject::callProjectileFunction(float x, float y, float z)
+{
+	for (TActorIterator<ADungeonsNDwellingsv4Projectile> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Projectile *Object = *ActorItr;
+		ActorItr->updateProperties(x, y, z);
+	}
+}
+
+/*
 void AInteractableObject::displayItemText()
 {
 

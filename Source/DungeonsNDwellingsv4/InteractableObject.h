@@ -57,5 +57,7 @@ public:
 
 	void playerTakesItem();							//responds to player input and gives player an item
 
+	void callProjectileFunction(float x, float y, float z);
+
 	void displayItemText();							//displays the item name / description to players
 };

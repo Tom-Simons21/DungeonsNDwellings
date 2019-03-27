@@ -19,16 +19,17 @@ const FName ADungeonsNDwellingsv4Pawn::MoveForwardBinding("MoveForward");
 const FName ADungeonsNDwellingsv4Pawn::MoveRightBinding("MoveRight");
 const FName ADungeonsNDwellingsv4Pawn::FireForwardBinding("FireForward");
 const FName ADungeonsNDwellingsv4Pawn::FireRightBinding("FireRight");
+static float rateOfFire = 0.3f;
 
 ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
-{	
+{
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipMesh(TEXT("/Game/TwinStick/Meshes/Cube.Cube"));
 	// Create the mesh component
 	PlayerMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipMesh"));
 	RootComponent = PlayerMeshComponent;
 	PlayerMeshComponent->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
 	PlayerMeshComponent->SetStaticMesh(ShipMesh.Object);
-	
+
 	// Cache our sound effect
 	static ConstructorHelpers::FObjectFinder<USoundBase> FireAudio(TEXT("/Game/TwinStick/Audio/TwinStickFire.TwinStickFire"));
 	FireSound = FireAudio.Object;
@@ -50,7 +51,6 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 	MoveSpeed = 1000.0f;
 	// Weapon
 	GunOffset = FVector(36.f, 0.f, 0.f);
-	FireRate = 0.25f;
 	bCanFire = true;
 }
 
@@ -85,7 +85,7 @@ void ADungeonsNDwellingsv4Pawn::Tick(float DeltaSeconds)
 		const FRotator NewRotation = Movement.Rotation();
 		FHitResult Hit(1.f);
 		RootComponent->MoveComponent(Movement, NewRotation, true, &Hit);
-		
+
 		if (Hit.IsValidBlockingHit())
 		{
 			const FVector Normal2D = Hit.Normal.GetSafeNormal2D();
@@ -93,7 +93,7 @@ void ADungeonsNDwellingsv4Pawn::Tick(float DeltaSeconds)
 			RootComponent->MoveComponent(Deflection, NewRotation, true);
 		}
 	}
-	
+
 	// Create fire direction vector
 	const float FireForwardValue = GetInputAxisValue(FireForwardBinding);
 	const float FireRightValue = GetInputAxisValue(FireRightBinding);
@@ -147,6 +147,8 @@ void ADungeonsNDwellingsv4Pawn::BeginPlay()
 {
 	Super::BeginPlay();
 
+	FireRate = updateProperties(rateOfFire);
+
 	FVector ActorLocation = FVector(175, 300, 52);
 	SetActorLocation(ActorLocation, false);
 	SetActorScale3D(FVector(0.4, 0.4, 0.4));
@@ -154,6 +156,13 @@ void ADungeonsNDwellingsv4Pawn::BeginPlay()
 
 void ADungeonsNDwellingsv4Pawn::OnInteract()
 {
+	for (TActorIterator<AInteractableObject> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AInteractableObject *Object = *ActorItr;
+		ActorItr->playerTakesItem();
+	}
+
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("I'm Pressing Action"));
@@ -173,6 +182,13 @@ void ADungeonsNDwellingsv4Pawn::getPlayerLocation()
 		AInteractableObject *Object = *ActorItr;
 		ActorItr->getPlayerLocation(actorLoc);
 	}
+}
+
+float ADungeonsNDwellingsv4Pawn::updateProperties(float defaultValue)
+{
+	float rateOfFire = defaultValue;
+
+	return(rateOfFire);
 }
 
 /*

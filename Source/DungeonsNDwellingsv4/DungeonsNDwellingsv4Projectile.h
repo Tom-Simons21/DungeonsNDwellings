@@ -33,5 +33,18 @@ public:
 	FORCEINLINE UStaticMeshComponent* GetProjectileMesh() const { return ProjectileMesh; }
 	/** Returns ProjectileMovement subobject **/
 	FORCEINLINE UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
+
+
+
+
+	//Non default settings/properties
+
+	void updateProperties(float speedStart, float speedMax, float projLife);
+
+	/*float initialSpeed;
+	float maxSpeed;
+	float projectileLife;
+	*/
+	bool isDebugging;
 };
 

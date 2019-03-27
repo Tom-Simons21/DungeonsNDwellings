@@ -11,36 +11,36 @@ class ADungeonsNDwellingsv4Pawn : public APawn
 {
 	GENERATED_BODY()
 
-	/* The mesh component */
-	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UStaticMeshComponent* PlayerMeshComponent;
+		/* The mesh component */
+		UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		class UStaticMeshComponent* PlayerMeshComponent;
 
 	/** The camera */
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* CameraComponent;
+		class UCameraComponent* CameraComponent;
 
 	/** Camera boom positioning the camera above the character */
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* CameraBoom;
+		class USpringArmComponent* CameraBoom;
 
 public:
 	ADungeonsNDwellingsv4Pawn();
 
 	/** Offset from the ships location to spawn projectiles */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite )
-	FVector GunOffset;
-	
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+		FVector GunOffset;
+
 	/* How fast the weapon will fire */
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	float FireRate;
+		float FireRate;
 
 	/* The speed our ship moves around the level */
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	float MoveSpeed;
+		float MoveSpeed;
 
 	/** Sound to play each time we fire */
 	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
-	class USoundBase* FireSound;
+		class USoundBase* FireSound;
 
 	// Begin Actor Interface
 	virtual void Tick(float DeltaSeconds) override;
@@ -68,8 +68,10 @@ public:
 
 	void moveToRoom();
 
+	float updateProperties(float defaultVal);
+
 	UPROPERTY(EditDefaultsOnly, Category = "MyCategory")
-	class AInteractableObject* object;
+		class AInteractableObject* object;
 
 
 private:
