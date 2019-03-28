@@ -5,7 +5,7 @@
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Engine.h"
-#include "DungeonsNDwellingsv4Projectile.h"
+#include "DungeonsNDwellingsv4Pawn.h"
 
 // Sets default values
 AInteractableObject::AInteractableObject()
@@ -21,19 +21,20 @@ AInteractableObject::AInteractableObject()
 	RootComponent = ConeMesh;
 	ConeMesh->SetStaticMesh(InteractableObjectAsset.Object);
 	ConeMesh->SetupAttachment(RootComponent);
-	SetActorScale3D(FVector(0.81, 0.81, 0.9));
+	SetActorScale3D(FVector(1, 1, 1));
 
 	Iteration = 1;
 }
-
 // Called when the game starts or when spawned
 void AInteractableObject::BeginPlay()
 {
 	Super::BeginPlay();
 
+	itemArray.Empty();
+	itemArray.Init(0, 3);
+
 	setItemValue();
 }
-
 // Called every frame
 void AInteractableObject::Tick(float DeltaTime)
 {
@@ -45,18 +46,17 @@ void AInteractableObject::Tick(float DeltaTime)
 		if (TimeToSpawn < 0.f)
 		{
 			// Make a location for the new actor to spawn at
-			FVector NewLocation = FVector(300.f, 300.f, 6050.f);
+			FVector NewLocation = FVector(400.f, 400.f, 6050.f);
 			
 			//call function to spawn actor, passes back the value for iteration.
 			Iteration = spawnInteractable(NewLocation);
 		}
 	}
 }
-/*
-FVector AInteractableObject::updateSpawnLocation(int roomCount)
-{
-	///will be used later
-}*/
+
+
+
+
 
 int AInteractableObject::spawnInteractable(FVector spawnLoc)
 {
@@ -68,79 +68,107 @@ int AInteractableObject::spawnInteractable(FVector spawnLoc)
 
 		return Iteration;
 }
-
 void AInteractableObject::updateIsInteractable()
 {
 	isInteractable = false;
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Function Called"));
-	}
 }
-
+//function to get the current location of the player
 void AInteractableObject::getPlayerLocation(FVector playerPos)
 {
 	FVector playerLoc = playerPos;
-	
-}
+	FVector interactableLoc = GetActorLocation();
 
+	distanceFromPlayer = FVector::Dist(playerLoc, interactableLoc); //checking if distance is < 125
+}
+//function to generate a random number, each number will correspond to an item the player can collect.
 void AInteractableObject::setItemValue()
 {
-	itemValue = FMath::RandRange(1, 3);
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Item value was called"));
-	}
-}
+	itemValue = FMath::RandRange(1, 3); //set's the value randomly between the range
+	bool isNumberUnique = true;
 
+	do
+	{
+		if (itemArray[0] == 1 && itemArray[1] == 2 && itemArray[2] == 3)
+		{
+			itemValue = 0;
+		}
+		else if (itemArray[(itemValue - 1)] == itemValue)
+		{
+			isNumberUnique = false;
+			itemValue = FMath::RandRange(1, 3); //set's the value randomly between the range
+		}
+		else
+		{
+			itemArray.Insert(itemValue, (itemValue - 1));
+		}
+	} while (isNumberUnique == false);
+}
+//function to modify the players projectiles so that they will have a different effect after an item is taken
 void AInteractableObject::playerTakesItem()
 {
+	//place all modifyable properties here
 	float objSpeed;
 	float objSpeedMax;
 	float objLifeSpan;
 
-	if (itemValue == 1)
+	if (distanceFromPlayer < 125)
 	{
-		objSpeed = 3000;
-		objSpeedMax = 3000;
-		objLifeSpan = 15;
 
-		callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
-	}
-	else if (itemValue == 2)
-	{
-		objSpeed = 1000;
-		objSpeedMax = 1000;
-		objLifeSpan = 10;
+		//this should be replaced by a switch case sequence in this future, this is temporary for ease + testing
+		if (itemValue == 1)
+		{
+			objSpeed = 500;
+			objSpeedMax = 500;
+			objLifeSpan = 4;
 
-		callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
-	}
-	else if (itemValue == 3)
-	{
-		objSpeed = 500;
-		objSpeedMax = 500;
-		objLifeSpan = 5;
+			callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
+		}
+		else if (itemValue == 2)
+		{
+			objSpeed = 1000;
+			objSpeedMax = 1000;
+			objLifeSpan = 8;
 
-		callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
+			callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
+		}
+		else if (itemValue == 3)
+		{
+			objSpeed = 1500;
+			objSpeedMax = 1500;
+			objLifeSpan = 1.5;
+
+			callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
+		}
+		else
+		{
+			objSpeed = 100;
+			objSpeedMax = 100;
+			objLifeSpan = 3;
+
+			callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
+
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("All Items Used"));
+			}
+		}
 	}
 	else
 	{
-		objSpeed = 100;
-		objSpeedMax = 100;
-		objLifeSpan = 3;
-
-		callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Too Far Away"));
+		}
 	}
 }
-
+//function that calls to the projectile modification function, saves repeating it for every item variant
 void AInteractableObject::callProjectileFunction(float x, float y, float z)
 {
-	for (TActorIterator<ADungeonsNDwellingsv4Projectile> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ADungeonsNDwellingsv4Projectile *Object = *ActorItr;
-		ActorItr->updateProperties(x, y, z);
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		ActorItr->updateProjectileValues(x, y, z);
 	}
 }
 
@@ -150,3 +178,9 @@ void AInteractableObject::displayItemText()
 
 }
 */
+
+/*
+FVector AInteractableObject::updateSpawnLocation(int roomCount)
+{
+	///will be used later
+}*/

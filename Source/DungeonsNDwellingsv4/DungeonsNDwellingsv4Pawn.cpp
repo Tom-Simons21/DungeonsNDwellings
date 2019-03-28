@@ -46,12 +46,25 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TopDownCamera"));
 	CameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false;	// Camera does not rotate relative to arm
+	CameraComponent->FieldOfView = 66;
+	CameraComponent->AddRelativeLocation(FVector(0, 0, 0));
+	CameraComponent->SetAspectRatio(1.0);
 
 	// Movement
 	MoveSpeed = 1000.0f;
+	playerZElevation = FVector(0, 0, 22);
+	
 	// Weapon
 	GunOffset = FVector(36.f, 0.f, 0.f);
 	bCanFire = true;
+
+	//set values to be used for projectile
+	initialSpeed = 250;
+	maxSpeed = 250;
+	lifeSpan = 2;
+
+	//room modifier values
+	roomPlacementModifier = FVector(0, 0, 2000);
 }
 
 void ADungeonsNDwellingsv4Pawn::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -116,12 +129,17 @@ void ADungeonsNDwellingsv4Pawn::FireShot(FVector FireDirection)
 			const FRotator FireRotation = FireDirection.Rotation();
 			// Spawn projectile at an offset from this pawn
 			const FVector SpawnLocation = GetActorLocation() + FireRotation.RotateVector(GunOffset);
+			const FVector Scale = FVector(1, 1, 1);
+
+			const FTransform SpawnPosition = FTransform(FireRotation, SpawnLocation, Scale);
 
 			UWorld* const World = GetWorld();
 			if (World != NULL)
 			{
 				// spawn the projectile
-				World->SpawnActor<ADungeonsNDwellingsv4Projectile>(SpawnLocation, FireRotation);
+				ADungeonsNDwellingsv4Projectile* projectileActor = World->SpawnActorDeferred<ADungeonsNDwellingsv4Projectile>(ADungeonsNDwellingsv4Projectile::StaticClass(), SpawnPosition);
+				projectileActor->updateProperties(initialSpeed, maxSpeed, lifeSpan);
+				projectileActor->FinishSpawning(SpawnPosition);
 			}
 
 			bCanFire = false;
@@ -149,7 +167,7 @@ void ADungeonsNDwellingsv4Pawn::BeginPlay()
 
 	FireRate = updateProperties(rateOfFire);
 
-	FVector ActorLocation = FVector(175, 300, 52);
+	FVector ActorLocation = (FVector(175, 400, 0) + playerZElevation);
 	SetActorLocation(ActorLocation, false);
 	SetActorScale3D(FVector(0.4, 0.4, 0.4));
 }
@@ -169,6 +187,9 @@ void ADungeonsNDwellingsv4Pawn::OnInteract()
 	}
 }
 
+
+
+
 void ADungeonsNDwellingsv4Pawn::getPlayerLocation()
 {
 	FVector actorLoc = GetActorLocation();
@@ -182,6 +203,18 @@ void ADungeonsNDwellingsv4Pawn::getPlayerLocation()
 		AInteractableObject *Object = *ActorItr;
 		ActorItr->getPlayerLocation(actorLoc);
 	}
+
+	checkPlayerLocation(actorLoc, actorZVector);
+}
+
+
+
+
+void ADungeonsNDwellingsv4Pawn::updateProjectileValues(float initSpeed, float topSpeed, float lifeTime)
+{
+	initialSpeed = initSpeed;
+	maxSpeed = topSpeed;
+	lifeSpan = lifeTime;
 }
 
 float ADungeonsNDwellingsv4Pawn::updateProperties(float defaultValue)
@@ -191,10 +224,87 @@ float ADungeonsNDwellingsv4Pawn::updateProperties(float defaultValue)
 	return(rateOfFire);
 }
 
-/*
-void ADungeonsNDwellingsv4Pawn::moveToRoom()
-{
 
+
+
+void ADungeonsNDwellingsv4Pawn::checkPlayerLocation(FVector playerCurrentLoc, FVector actorZValue)
+{
+	FVector playerPosition = playerCurrentLoc;
+	FVector playerZPosition = actorZValue;
+	FVector axisValue = FVector(0, 0, 0);
+
+	if ((playerPosition.X <= 0 || playerPosition.X >= 800) && (playerPosition.Y <= 430 && playerPosition.Y >= 370))
+	{
+		if (playerPosition.X <= 0)
+		{
+			axisValue = FVector(120, 400, 0);
+		}
+		else if (playerPosition.X >= 800)
+		{
+			axisValue = FVector(680, 400, 0);
+		}
+		moveToRoom(playerZPosition, axisValue);
+	}
+	else if ((playerPosition.Y <= 0 || playerPosition.Y >= 800) && (playerPosition.X <= 430 && playerPosition.X >= 370))
+	{
+		if (playerPosition.Y <= 0)
+		{
+			axisValue = FVector(400, 120, 0);
+		}
+		else if (playerPosition.Y >= 800)
+		{
+			axisValue = FVector(400, 680, 0);
+		}
+		moveToRoom(playerZPosition, axisValue);
+	}
 }
-*/
+
+
+
+
+void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector actorZ, FVector axisValue)
+{
+	FVector playerZ = actorZ;   //this equals 22 or will equal 22 + (roomPlacementModifier * floorNumber)
+	FVector playerZNoElevation = (playerZ - playerZElevation);
+	FVector floorCoord;
+	FVector playerNewLoc;
+	int floorPickMultiplier;
+	bool isNewFloor = true;
+
+	do
+	{
+		floorPickMultiplier = FMath::RandRange(0, 5);
+		floorCoord = floorPickMultiplier * roomPlacementModifier;
+
+		if (floorCoord.Z == playerZNoElevation.Z)
+		{
+			isNewFloor = false;
+		}
+		else
+		{
+			isNewFloor = true;
+		}
+
+	} while (isNewFloor == false);
+
+	playerNewLoc = axisValue + floorCoord + playerZElevation;
+
+	SetActorLocation(playerNewLoc, false);
+
+
+	/*
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Player Z Location is: %s"), *playerCoord));
+	}
+	*/
+
+	//these will make up the position check and player move functions
+	//x values < 0 || x values > 800	  &&		y values < 420 && y values > 380
+	//y values < 0 || y values > 800      &&		x values < 420 && x values > 380
+	//if true move player to "random number between 0 and roomCount" * 2000 Z
+	//store entry point and exit point
+	//check on true if point has been used before
+}
+
 

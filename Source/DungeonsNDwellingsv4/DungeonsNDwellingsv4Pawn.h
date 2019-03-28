@@ -61,17 +61,31 @@ public:
 	static const FName FireForwardBinding;
 	static const FName FireRightBinding;
 
-
+	
 	void OnInteract();
 
 	void getPlayerLocation();
 
-	void moveToRoom();
+	void moveToRoom(FVector zLoc, FVector axisValue);
+
+	void checkPlayerLocation(FVector playLoc, FVector zLoc);
 
 	float updateProperties(float defaultVal);
 
+	void updateProjectileValues(float initSpeed, float maxSpeed, float life);
+
 	UPROPERTY(EditDefaultsOnly, Category = "MyCategory")
-		class AInteractableObject* object;
+	class AInteractableObject* object;
+
+	UPROPERTY(EditAnywhere)
+	float initialSpeed;
+	UPROPERTY(EditAnywhere)
+	float maxSpeed;
+	UPROPERTY(EditAnywhere)
+	float lifeSpan;
+
+	FVector playerZElevation;
+	FVector roomPlacementModifier;
 
 
 private:

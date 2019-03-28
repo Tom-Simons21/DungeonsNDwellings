@@ -34,13 +34,18 @@ public:
 
 	float TimeToSpawn;								//spawns object whenever Iteration is true
 
+	UPROPERTY(EditAnywhere)
 	float distanceFromPlayer;						//this will track how far away the player is from the interactable
 
+	UPROPERTY(EditAnywhere)
 	int itemValue;									//this will randomly generate a number and then associate it with the relevant item
 
 	bool isInteractable;							//this will determine whether an interactable object can be used (will be false after the user has used it)
 
 	FString itemText;								//this will hold the item text needed to be passed back to the player to inform them of the item
+
+	UPROPERTY(EditAnywhere)
+	TArray<int32> itemArray;
 
 
 	FVector updateSpawnLocation(int roomCount);		//function that will calculate the spawn location of the 2nd object per level

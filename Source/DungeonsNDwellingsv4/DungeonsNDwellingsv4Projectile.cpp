@@ -6,11 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Engine/StaticMesh.h"
-
-
-static float initialSpeed = 300;
-static float maxSpeed = 300;
-static float projectileLife = 30;
+#include "Engine.h"
 
 
 ADungeonsNDwellingsv4Projectile::ADungeonsNDwellingsv4Projectile() 
@@ -29,36 +25,11 @@ ADungeonsNDwellingsv4Projectile::ADungeonsNDwellingsv4Projectile()
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement0"));
 	ProjectileMovement->UpdatedComponent = ProjectileMesh;
-
-
-
-
-	isDebugging = true;
-	if (isDebugging == true)
-	{
-		ProjectileMovement->InitialSpeed = initialSpeed;
-		ProjectileMovement->MaxSpeed = maxSpeed;
-		InitialLifeSpan = projectileLife;
-	}
-	else
-	{
-		ProjectileMovement->InitialSpeed = 3000.f;
-		ProjectileMovement->MaxSpeed = 3000.f;
-		InitialLifeSpan = 3.0f;
-	}
-
 	
-
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.f; // No gravity
 }
-
-
-
-
-
-
 
 
 
@@ -76,7 +47,7 @@ void ADungeonsNDwellingsv4Projectile::OnHit(UPrimitiveComponent* HitComp, AActor
 
 void ADungeonsNDwellingsv4Projectile::updateProperties(float speedStart, float speedMax, float projLife)
 {
-	initialSpeed = speedStart;
-	maxSpeed = speedMax;
-	projectileLife = projLife;
+	ProjectileMovement->InitialSpeed = speedStart;
+	ProjectileMovement->MaxSpeed = speedMax;
+	InitialLifeSpan = projLife;
 }
