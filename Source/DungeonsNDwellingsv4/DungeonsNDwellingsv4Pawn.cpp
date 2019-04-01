@@ -14,6 +14,7 @@
 #include "Sound/SoundBase.h"
 #include "Engine.h"
 #include "InteractableObject.h"
+#include "TileGeneratorParent.h"
 
 const FName ADungeonsNDwellingsv4Pawn::MoveForwardBinding("MoveForward");
 const FName ADungeonsNDwellingsv4Pawn::MoveRightBinding("MoveRight");
@@ -65,6 +66,9 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 
 	//room modifier values
 	roomPlacementModifier = FVector(0, 0, 2000);
+
+	doorStartPoints.Empty();
+	doorEndPoints.Empty();
 }
 
 void ADungeonsNDwellingsv4Pawn::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -170,6 +174,8 @@ void ADungeonsNDwellingsv4Pawn::BeginPlay()
 	FVector ActorLocation = (FVector(175, 400, 0) + playerZElevation);
 	SetActorLocation(ActorLocation, false);
 	SetActorScale3D(FVector(0.4, 0.4, 0.4));
+
+	createArrayOfDoors();
 }
 
 void ADungeonsNDwellingsv4Pawn::OnInteract()
@@ -231,80 +237,222 @@ void ADungeonsNDwellingsv4Pawn::checkPlayerLocation(FVector playerCurrentLoc, FV
 {
 	FVector playerPosition = playerCurrentLoc;
 	FVector playerZPosition = actorZValue;
-	FVector axisValue = FVector(0, 0, 0);
+	FVector newLocationAdjust;
+	FVector doorLocation;
+	int doorNum;
 
 	if ((playerPosition.X <= 0 || playerPosition.X >= 800) && (playerPosition.Y <= 430 && playerPosition.Y >= 370))
 	{
 		if (playerPosition.X <= 0)
 		{
-			axisValue = FVector(120, 400, 0);
+			newLocationAdjust = FVector(100, 400, 0);
+			doorLocation = FVector(0, 400, 0);
+			doorNum = 1;
 		}
 		else if (playerPosition.X >= 800)
 		{
-			axisValue = FVector(680, 400, 0);
+			newLocationAdjust = FVector(700, 400, 0);
+			doorLocation = FVector(0, 400, 0);
+			doorNum = 3;
 		}
-		moveToRoom(playerZPosition, axisValue);
+		moveToRoom(playerZPosition, newLocationAdjust);
 	}
 	else if ((playerPosition.Y <= 0 || playerPosition.Y >= 800) && (playerPosition.X <= 430 && playerPosition.X >= 370))
 	{
 		if (playerPosition.Y <= 0)
 		{
-			axisValue = FVector(400, 120, 0);
+			newLocationAdjust = FVector(400, 100, 0);
+			doorLocation = FVector(400, 0, 0);
+			doorNum = 4;
 		}
 		else if (playerPosition.Y >= 800)
 		{
-			axisValue = FVector(400, 680, 0);
+			newLocationAdjust = FVector(400, 700, 0);
+			doorLocation = FVector(400, 800, 0);
+			doorNum = 3;
 		}
-		moveToRoom(playerZPosition, axisValue);
+		moveToRoom(playerZPosition, newLocationAdjust);
 	}
 }
 
-
-
-
-void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector actorZ, FVector axisValue)
+void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector actorZ, FVector doorLocation)
 {
 	FVector playerZ = actorZ;   //this equals 22 or will equal 22 + (roomPlacementModifier * floorNumber)
 	FVector playerZNoElevation = (playerZ - playerZElevation);
-	FVector floorCoord;
-	FVector playerNewLoc;
 	int floorPickMultiplier;
-	bool isNewFloor = true;
+	FVector floorCoord;
+	bool isNewRoom;
+	FVector playerNewLoc;
 
 	do
 	{
+		isNewRoom = true;
 		floorPickMultiplier = FMath::RandRange(0, 5);
 		floorCoord = floorPickMultiplier * roomPlacementModifier;
 
 		if (floorCoord.Z == playerZNoElevation.Z)
 		{
-			isNewFloor = false;
-		}
-		else
-		{
-			isNewFloor = true;
+			isNewRoom = false;
 		}
 
-	} while (isNewFloor == false);
+	} while (isNewRoom == false);
 
-	playerNewLoc = axisValue + floorCoord + playerZElevation;
+	playerNewLoc = doorLocation + floorCoord + playerZElevation;
 
 	SetActorLocation(playerNewLoc, false);
 
-
 	/*
+	FVector playerZ = actorZ;   //this equals 22 or will equal 22 + (roomPlacementModifier * floorNumber)
+	FVector playerZNoElevation = (playerZ - playerZElevation);
+	FVector floorCoord;
+	FVector playerNewLoc;
+	FVector endPoint;
+	int floorPickMultiplier;
+	int doorsOnFloor;
+	int usedDoorsCounter;
+	bool isNewFloor;
+	bool isValidFloor;
+	bool isDoor1Valid;
+	bool isDoor2Valid;
+	bool isDoor3Valid;
+	bool isDoor4Valid;
+
+	do
+	{
+		isNewFloor = true;
+		isValidFloor = true;
+		isDoor1Valid = true;
+		isDoor2Valid = true;
+		isDoor3Valid = true;
+		isDoor4Valid = true;
+		usedDoorsCounter = 0;
+		floorCoord = FVector(0, 0, 0);
+		floorPickMultiplier = FMath::RandRange(0, 5);
+		floorCoord = floorPickMultiplier * roomPlacementModifier;
+		doorsOnFloor = arrayOfDoors[floorPickMultiplier + 1];
+
+		if (floorCoord.Z == playerZNoElevation.Z)
+		{
+			isNewFloor = false;
+		}
+		for (int i = 0; i != doorStartPoints.Num(); i++)
+		{
+			if (FVector(0, 400, (2000 * floorPickMultiplier)) == doorStartPoints[i])
+			{
+				usedDoorsCounter++;
+				isDoor1Valid = false;
+			}
+			else if (FVector(800, 400, (2000 * floorPickMultiplier)) == doorStartPoints[i])
+			{
+				usedDoorsCounter++;
+				isDoor3Valid = false;
+			}
+			else if (FVector(400, 0, (2000 * floorPickMultiplier)) == doorStartPoints[i])
+			{
+				usedDoorsCounter++;
+				isDoor4Valid = false;
+			}
+			else if (FVector(400, 800, (2000 * floorPickMultiplier)) == doorStartPoints[i])
+			{
+				usedDoorsCounter++;
+				isDoor2Valid = false;
+			}
+		}
+		if (usedDoorsCounter >= doorsOnFloor)
+		{
+			isValidFloor = false;
+			isDoor1Valid = false;
+			isDoor2Valid = false;
+			isDoor3Valid = false;
+			isDoor4Valid = false;
+		}
+	} while (isNewFloor == false && isValidFloor == false);
+
+
+	if (isNew == true)
+	{
+		if (isDoor1Valid == true)
+		{
+			endPoint = FVector(0, 400, 0) + floorCoord.Z;
+			doorStartPoints.AddUnique(doorLocation);
+			doorEndPoints.AddUnique(endPoint);
+			doorStartPoints.AddUnique(endPoint);
+			doorEndPoints.AddUnique(doorLocation);
+			playerNewLoc = FVector(100, 400, 0) + (floorCoord + playerZElevation);
+		}
+		else if (isDoor2Valid == true)
+		{
+			endPoint = FVector(400, 800, 0) + floorCoord.Z;
+			doorStartPoints.AddUnique(doorLocation);
+			doorEndPoints.AddUnique(endPoint);
+			doorStartPoints.AddUnique(endPoint);
+			doorEndPoints.AddUnique(doorLocation);
+			playerNewLoc = FVector(400, 700, 0) + (floorCoord + playerZElevation);
+		}
+		else if (isDoor3Valid == true)
+		{
+			endPoint = FVector(800, 400, 0) + floorCoord.Z;
+			doorStartPoints.AddUnique(doorLocation);
+			doorEndPoints.AddUnique(endPoint);
+			doorStartPoints.AddUnique(endPoint);
+			doorEndPoints.AddUnique(doorLocation);
+			playerNewLoc = FVector(700, 400, 0) + (floorCoord + playerZElevation);
+		}
+		else if (isDoor4Valid == true)
+		{
+			endPoint = FVector(400, 0, 0) + floorCoord.Z;
+			doorStartPoints.AddUnique(doorLocation);
+			doorEndPoints.AddUnique(endPoint);
+			doorStartPoints.AddUnique(endPoint);
+			doorEndPoints.AddUnique(doorLocation);
+			playerNewLoc = FVector(400, 100, 0) + (floorCoord + playerZElevation);
+		}
+	}
+	else if (isNew == false)
+	{
+		playerNewLoc = FVector(700, 0, 0);
+	}
+	
+	SetActorLocation(playerNewLoc, false);
+	*/
+}
+
+
+
+
+
+
+
+void ADungeonsNDwellingsv4Pawn::createArrayOfDoors()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		arrayOfDoors = ActorItr->getArrayOfDoors();
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::getTotalOfDoors()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		totalDoorNum = ActorItr->getRunningTotal();
+	}
+}
+
+
+
+
+
+
+
+
+/*
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Player Z Location is: %s"), *playerCoord));
 	}
 	*/
-
-	//these will make up the position check and player move functions
-	//x values < 0 || x values > 800	  &&		y values < 420 && y values > 380
-	//y values < 0 || y values > 800      &&		x values < 420 && x values > 380
-	//if true move player to "random number between 0 and roomCount" * 2000 Z
-	//store entry point and exit point
-	//check on true if point has been used before
-}
-
-

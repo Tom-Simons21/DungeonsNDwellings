@@ -23,6 +23,11 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	TArray<int32> getArrayOfDoors();
+	int32 getRunningTotal();
+	int32 getRoomCount();
+	FVector getRoomPlacementModifier();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room Properties")
 	int32 roomXLength;
 
@@ -64,4 +69,20 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
 	int32 totalNumDoors;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
+	int32 minNumDoors;
+
+
+
+
+
+
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
+	TArray<int32> testingArray;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
+	int32 testingTotal;
 };

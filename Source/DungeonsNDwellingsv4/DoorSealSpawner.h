@@ -4,18 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "InteractableObject.h"
-#include "InteractableObject_Spawner.generated.h"
-
+#include "DoorSealSpawner.generated.h"
 
 UCLASS()
-class DUNGEONSNDWELLINGSV4_API AInteractableObject_Spawner : public AActor
+class DUNGEONSNDWELLINGSV4_API ADoorSealSpawner : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AInteractableObject_Spawner();
+	ADoorSealSpawner();
 
 protected:
 	// Called when the game starts or when spawned
@@ -25,4 +23,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	void spawnDoorSeals(FTransform spawnLocation);
+
+	void setupSpawns();
+
+	int getRoomCount();
+
+	int roomCount;
+
+	FTransform position;
 };

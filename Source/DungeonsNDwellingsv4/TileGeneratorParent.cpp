@@ -26,6 +26,7 @@ ATileGeneratorParent::ATileGeneratorParent()
 
 	roomDoorCount = 0;
 	totalNumDoors = 0;
+	minNumDoors = 2;
 }
 
 // Called when the game starts or when spawned
@@ -41,4 +42,32 @@ void ATileGeneratorParent::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
+
+/*
+void ATileGeneratorParent::adjustArrayValues(int total)
+{
+	testingTotal = 3;
+}
+*/
+
+TArray<int32> ATileGeneratorParent::getArrayOfDoors()
+{
+	return (arrayOfDoors);
+}
+
+int32 ATileGeneratorParent::getRunningTotal()
+{
+	return (totalNumDoors);
+}
+
+int32 ATileGeneratorParent::getRoomCount()
+{
+	return (roomCount);
+}
+
+FVector ATileGeneratorParent::getRoomPlacementModifier()
+{
+	return (roomPlacementModifier);
+}
+
 

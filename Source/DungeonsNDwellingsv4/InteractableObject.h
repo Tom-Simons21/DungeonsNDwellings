@@ -47,8 +47,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	TArray<int32> itemArray;
 
+	int roomCount;
 
-	FVector updateSpawnLocation(int roomCount);		//function that will calculate the spawn location of the 2nd object per level
+	FVector placementMod;
+
+
+	FVector updateSpawnLocation();		//function that will calculate the spawn location of the 2nd object per level
 		
 	int spawnInteractable(FVector spawnLoc);		//function that will control the spawning of the interactable object
 
@@ -65,4 +69,8 @@ public:
 	void callProjectileFunction(float x, float y, float z);
 
 	void displayItemText();							//displays the item name / description to players
+
+	int getRoomCount();
+
+	FVector getPlacementModifier();
 };

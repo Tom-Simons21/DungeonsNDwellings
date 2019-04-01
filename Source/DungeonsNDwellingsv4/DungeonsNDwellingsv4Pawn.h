@@ -66,13 +66,19 @@ public:
 
 	void getPlayerLocation();
 
-	void moveToRoom(FVector zLoc, FVector axisValue);
+	void moveToRoom(FVector zLoc, FVector doorLocation);
 
 	void checkPlayerLocation(FVector playLoc, FVector zLoc);
 
 	float updateProperties(float defaultVal);
 
 	void updateProjectileValues(float initSpeed, float maxSpeed, float life);
+
+	void createArrayOfDoors();
+
+	void getTotalOfDoors();
+
+	void setEntryLocations(int doorNumber, FVector doorLocation);
 
 	UPROPERTY(EditDefaultsOnly, Category = "MyCategory")
 	class AInteractableObject* object;
@@ -84,9 +90,29 @@ public:
 	UPROPERTY(EditAnywhere)
 	float lifeSpan;
 
+	UPROPERTY(EditAnywhere)
 	FVector playerZElevation;
+
+	UPROPERTY(EditAnywhere)
 	FVector roomPlacementModifier;
 
+	UPROPERTY(EditAnywhere)
+	int totalDoorNum;
+
+	UPROPERTY(EditAnywhere)
+	TArray<int32> arrayOfDoors;
+
+	UPROPERTY(EditAnywhere)
+	TArray<FVector> doorStartPoints;
+
+	UPROPERTY(EditAnywhere)
+	TArray<FVector> doorEndPoints;
+
+	UPROPERTY(EditAnywhere)
+	FVector playerExitLoc;
+
+	UPROPERTY(EditAnywhere)
+	bool isNewDoor;
 
 private:
 

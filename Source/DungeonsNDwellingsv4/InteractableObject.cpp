@@ -6,6 +6,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Engine.h"
 #include "DungeonsNDwellingsv4Pawn.h"
+#include "TileGeneratorParent.h"
 
 // Sets default values
 AInteractableObject::AInteractableObject()
@@ -46,7 +47,7 @@ void AInteractableObject::Tick(float DeltaTime)
 		if (TimeToSpawn < 0.f)
 		{
 			// Make a location for the new actor to spawn at
-			FVector NewLocation = FVector(400.f, 400.f, 6050.f);
+			FVector NewLocation = updateSpawnLocation();
 			
 			//call function to spawn actor, passes back the value for iteration.
 			Iteration = spawnInteractable(NewLocation);
@@ -179,8 +180,41 @@ void AInteractableObject::displayItemText()
 }
 */
 
-/*
-FVector AInteractableObject::updateSpawnLocation(int roomCount)
+
+FVector AInteractableObject::updateSpawnLocation()
 {
-	///will be used later
-}*/
+	FVector spawnLocation;
+	placementMod = getPlacementModifier();
+	roomCount = getRoomCount();
+
+	spawnLocation = FVector(400.f, 400.f, 50.f) + (placementMod * roomCount);
+
+	return (spawnLocation);
+}
+
+
+
+
+int AInteractableObject::getRoomCount()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		roomCount = ActorItr->getRoomCount();
+	}
+
+	return (roomCount);
+}
+
+FVector AInteractableObject::getPlacementModifier()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		placementMod = ActorItr->getRoomPlacementModifier();
+	}
+
+	return (placementMod);
+}
