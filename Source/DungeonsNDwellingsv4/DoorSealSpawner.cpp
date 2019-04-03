@@ -5,6 +5,7 @@
 #include "Engine.h"
 #include "Engine/World.h"
 #include "TileGeneratorParent.h"
+#include "DungeonsNDwellingsv4Pawn.h"
 
 // Sets default values
 ADoorSealSpawner::ADoorSealSpawner()
@@ -27,18 +28,8 @@ void ADoorSealSpawner::BeginPlay()
 void ADoorSealSpawner::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-}
 
-int ADoorSealSpawner::getRoomCount()
-{
-	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ATileGeneratorParent *Object = *ActorItr;
-		roomCount = ActorItr->getRoomCount();
-	}
-
-	return (roomCount);
+	//checkDoorStatus();
 }
 
 void ADoorSealSpawner::setupSpawns()
@@ -81,20 +72,63 @@ void ADoorSealSpawner::setupSpawns()
 			}
 
 			position = FTransform(rotation, location, scale);
-			spawnDoorSeals(position);
+			spawnDoorSeals(position, location, rotation, scale);
 		}
 	}
 }
 
-void ADoorSealSpawner::spawnDoorSeals(FTransform spawnLocation)
+void ADoorSealSpawner::spawnDoorSeals(FTransform spawnLocation, FVector loc, FRotator rot, FVector sca)
 {
-	FActorSpawnParameters spawnInfo;
-
-	spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+	//FActorSpawnParameters spawnInfo;
+	//spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
 
 	UWorld* const World = GetWorld();
 	if (World != NULL)
 	{
-		ADoorSeal* sealActor = World->SpawnActor<ADoorSeal>(ADoorSeal::StaticClass(), spawnLocation, spawnInfo);
+		ADoorSeal* sealActor = World->SpawnActorDeferred<ADoorSeal>(ADoorSeal::StaticClass(), spawnLocation);
+
+		sealActor->SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+		sealActor->updateVariables(loc, rot, sca);
+		sealActor->FinishSpawning(spawnLocation);
+
+		doorSealArray.Add(sealActor);
+	}
+}
+
+
+int ADoorSealSpawner::getRoomCount()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		roomCount = ActorItr->getRoomCount();
+	}
+
+	return (roomCount);
+}
+
+
+void ADoorSealSpawner::checkDoorStatus()
+{
+	FVector playerLoc;
+	FVector doorLoc;
+
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		playerLoc = ActorItr->GetActorLocation();
+	}
+
+	for (int i = 0; i < doorSealArray.Num(); i++)
+	{
+		doorLoc = doorSealArray[i]->getLocation();
+
+		if ((doorLoc.Z - 61) == (playerLoc.Z - 22))
+		{
+			doorSealArray[i]->Destroy();
+			doorSealArray.RemoveAt(i);
+		}
 	}
 }

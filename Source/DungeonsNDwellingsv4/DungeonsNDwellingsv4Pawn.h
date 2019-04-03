@@ -64,7 +64,9 @@ public:
 	
 	void OnInteract();
 
-	void getPlayerLocation();
+	void getPlayerLocation();       //passes player location to other objects
+
+	FVector getCurrentLocation();	//can be called by other objects to get player location
 
 	void moveToRoom(FVector zLoc, FVector doorLocation);
 
@@ -77,8 +79,6 @@ public:
 	void createArrayOfDoors();
 
 	void getTotalOfDoors();
-
-	void setEntryLocations(int doorNumber, FVector doorLocation);
 
 	UPROPERTY(EditDefaultsOnly, Category = "MyCategory")
 	class AInteractableObject* object;

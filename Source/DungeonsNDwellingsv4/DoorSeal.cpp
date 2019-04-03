@@ -23,6 +23,10 @@ ADoorSeal::ADoorSeal()
 	CuboidMesh->BodyInstance.SetCollisionProfileName("Door");
 
 	SetActorScale3D(FVector(1, 1, 1));
+
+	myLocation = FVector(0, 0, 0);
+	myRotation = FRotator(0, 0, 0);
+	myScale = FVector(0.3, 0.95, 1.2);
 }
 
 // Called when the game starts or when spawned
@@ -39,11 +43,15 @@ void ADoorSeal::Tick(float DeltaTime)
 
 }
 
-void ADoorSeal::TesterFunction()
+void ADoorSeal::updateVariables(FVector loc, FRotator rot, FVector sca)
 {
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Called"));
-	}
+	myLocation = loc;
+	myRotation = rot;
+	myScale = sca;
+}
+
+FVector ADoorSeal::getLocation()
+{
+	return (myLocation);
 }
 

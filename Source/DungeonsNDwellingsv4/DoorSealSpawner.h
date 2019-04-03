@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "DoorSeal.h"
 #include "DoorSealSpawner.generated.h"
 
 UCLASS()
@@ -23,13 +24,18 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void spawnDoorSeals(FTransform spawnLocation);
+	void spawnDoorSeals(FTransform spawnLocation, FVector loc, FRotator rot, FVector scale);
 
 	void setupSpawns();
 
 	int getRoomCount();
 
+	void checkDoorStatus();
+
 	int roomCount;
 
 	FTransform position;
+
+	UPROPERTY(EditAnywhere)
+	TArray<ADoorSeal*> doorSealArray;
 };

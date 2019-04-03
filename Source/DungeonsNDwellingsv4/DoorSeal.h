@@ -26,5 +26,14 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = InteractableObject, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* CuboidMesh;
 
-	void TesterFunction();
+	void updateVariables(FVector location, FRotator rotation, FVector scale);
+
+	FVector getLocation();
+
+	UPROPERTY(EditAnywhere)
+	FVector myLocation;
+	UPROPERTY(EditAnywhere)
+	FRotator myRotation;
+	UPROPERTY(EditAnywhere)
+	FVector myScale;
 };

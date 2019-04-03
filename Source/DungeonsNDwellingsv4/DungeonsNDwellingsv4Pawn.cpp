@@ -15,6 +15,8 @@
 #include "Engine.h"
 #include "InteractableObject.h"
 #include "TileGeneratorParent.h"
+#include "DoorSeal.h"
+#include "EnemySpawner.h"
 
 const FName ADungeonsNDwellingsv4Pawn::MoveForwardBinding("MoveForward");
 const FName ADungeonsNDwellingsv4Pawn::MoveRightBinding("MoveRight");
@@ -213,6 +215,13 @@ void ADungeonsNDwellingsv4Pawn::getPlayerLocation()
 	checkPlayerLocation(actorLoc, actorZVector);
 }
 
+FVector ADungeonsNDwellingsv4Pawn::getCurrentLocation()
+{
+	FVector currentLoc = GetActorLocation();
+
+	return (currentLoc);
+}
+
 
 
 
@@ -299,122 +308,14 @@ void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector actorZ, FVector doorLocation)
 
 	playerNewLoc = doorLocation + floorCoord + playerZElevation;
 
-	SetActorLocation(playerNewLoc, false);
-
-	/*
-	FVector playerZ = actorZ;   //this equals 22 or will equal 22 + (roomPlacementModifier * floorNumber)
-	FVector playerZNoElevation = (playerZ - playerZElevation);
-	FVector floorCoord;
-	FVector playerNewLoc;
-	FVector endPoint;
-	int floorPickMultiplier;
-	int doorsOnFloor;
-	int usedDoorsCounter;
-	bool isNewFloor;
-	bool isValidFloor;
-	bool isDoor1Valid;
-	bool isDoor2Valid;
-	bool isDoor3Valid;
-	bool isDoor4Valid;
-
-	do
+	for (TActorIterator<AEnemySpawner> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
-		isNewFloor = true;
-		isValidFloor = true;
-		isDoor1Valid = true;
-		isDoor2Valid = true;
-		isDoor3Valid = true;
-		isDoor4Valid = true;
-		usedDoorsCounter = 0;
-		floorCoord = FVector(0, 0, 0);
-		floorPickMultiplier = FMath::RandRange(0, 5);
-		floorCoord = floorPickMultiplier * roomPlacementModifier;
-		doorsOnFloor = arrayOfDoors[floorPickMultiplier + 1];
-
-		if (floorCoord.Z == playerZNoElevation.Z)
-		{
-			isNewFloor = false;
-		}
-		for (int i = 0; i != doorStartPoints.Num(); i++)
-		{
-			if (FVector(0, 400, (2000 * floorPickMultiplier)) == doorStartPoints[i])
-			{
-				usedDoorsCounter++;
-				isDoor1Valid = false;
-			}
-			else if (FVector(800, 400, (2000 * floorPickMultiplier)) == doorStartPoints[i])
-			{
-				usedDoorsCounter++;
-				isDoor3Valid = false;
-			}
-			else if (FVector(400, 0, (2000 * floorPickMultiplier)) == doorStartPoints[i])
-			{
-				usedDoorsCounter++;
-				isDoor4Valid = false;
-			}
-			else if (FVector(400, 800, (2000 * floorPickMultiplier)) == doorStartPoints[i])
-			{
-				usedDoorsCounter++;
-				isDoor2Valid = false;
-			}
-		}
-		if (usedDoorsCounter >= doorsOnFloor)
-		{
-			isValidFloor = false;
-			isDoor1Valid = false;
-			isDoor2Valid = false;
-			isDoor3Valid = false;
-			isDoor4Valid = false;
-		}
-	} while (isNewFloor == false && isValidFloor == false);
-
-
-	if (isNew == true)
-	{
-		if (isDoor1Valid == true)
-		{
-			endPoint = FVector(0, 400, 0) + floorCoord.Z;
-			doorStartPoints.AddUnique(doorLocation);
-			doorEndPoints.AddUnique(endPoint);
-			doorStartPoints.AddUnique(endPoint);
-			doorEndPoints.AddUnique(doorLocation);
-			playerNewLoc = FVector(100, 400, 0) + (floorCoord + playerZElevation);
-		}
-		else if (isDoor2Valid == true)
-		{
-			endPoint = FVector(400, 800, 0) + floorCoord.Z;
-			doorStartPoints.AddUnique(doorLocation);
-			doorEndPoints.AddUnique(endPoint);
-			doorStartPoints.AddUnique(endPoint);
-			doorEndPoints.AddUnique(doorLocation);
-			playerNewLoc = FVector(400, 700, 0) + (floorCoord + playerZElevation);
-		}
-		else if (isDoor3Valid == true)
-		{
-			endPoint = FVector(800, 400, 0) + floorCoord.Z;
-			doorStartPoints.AddUnique(doorLocation);
-			doorEndPoints.AddUnique(endPoint);
-			doorStartPoints.AddUnique(endPoint);
-			doorEndPoints.AddUnique(doorLocation);
-			playerNewLoc = FVector(700, 400, 0) + (floorCoord + playerZElevation);
-		}
-		else if (isDoor4Valid == true)
-		{
-			endPoint = FVector(400, 0, 0) + floorCoord.Z;
-			doorStartPoints.AddUnique(doorLocation);
-			doorEndPoints.AddUnique(endPoint);
-			doorStartPoints.AddUnique(endPoint);
-			doorEndPoints.AddUnique(doorLocation);
-			playerNewLoc = FVector(400, 100, 0) + (floorCoord + playerZElevation);
-		}
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AEnemySpawner *Object = *ActorItr;
+		ActorItr->activateEnemies(playerNewLoc);
 	}
-	else if (isNew == false)
-	{
-		playerNewLoc = FVector(700, 0, 0);
-	}
-	
+
 	SetActorLocation(playerNewLoc, false);
-	*/
 }
 
 
@@ -442,7 +343,6 @@ void ADungeonsNDwellingsv4Pawn::getTotalOfDoors()
 		totalDoorNum = ActorItr->getRunningTotal();
 	}
 }
-
 
 
 
