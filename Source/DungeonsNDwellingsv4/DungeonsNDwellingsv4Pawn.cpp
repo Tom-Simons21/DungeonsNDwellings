@@ -71,6 +71,9 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 
 	doorStartPoints.Empty();
 	doorEndPoints.Empty();
+
+
+	playerHealth = 100;
 }
 
 void ADungeonsNDwellingsv4Pawn::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -170,6 +173,12 @@ void ADungeonsNDwellingsv4Pawn::ShotTimerExpired()
 void ADungeonsNDwellingsv4Pawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	isDamageable = false;
+
+	FTimerHandle hitControlTimer;
+
+	GetWorldTimerManager().SetTimer(hitControlTimer, this, &ADungeonsNDwellingsv4Pawn::makeDamageable, 1.5f, true, 2.0f);
 
 	FireRate = updateProperties(rateOfFire);
 
@@ -356,3 +365,27 @@ void ADungeonsNDwellingsv4Pawn::getTotalOfDoors()
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Player Z Location is: %s"), *playerCoord));
 	}
 	*/
+
+
+
+void ADungeonsNDwellingsv4Pawn::makeDamageable()
+{
+	bool makeDamageable = true;
+
+	setIsDamageable(makeDamageable);
+}
+
+void ADungeonsNDwellingsv4Pawn::setIsDamageable(bool isD)
+{
+	isDamageable = isD;
+}
+
+void ADungeonsNDwellingsv4Pawn::takeDamage(float dmg)
+{
+	if (isDamageable == true)
+	{
+		playerHealth -= dmg;
+
+		isDamageable = false;
+	}
+}

@@ -32,6 +32,8 @@ public:
 
 	void checkDoorStatus();
 
+	void openDoors(int roomNum);
+
 	int roomCount;
 
 	FTransform position;

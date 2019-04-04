@@ -109,23 +109,17 @@ int ADoorSealSpawner::getRoomCount()
 }
 
 
-void ADoorSealSpawner::checkDoorStatus()
+void ADoorSealSpawner::openDoors(int roomNumber)
 {
-	FVector playerLoc;
+	float doorZValue = (roomNumber * 2000) + 61;
 	FVector doorLoc;
-
-	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-		playerLoc = ActorItr->GetActorLocation();
-	}
+	float doorOpenOffset = 80;
 
 	for (int i = 0; i < doorSealArray.Num(); i++)
 	{
-		doorLoc = doorSealArray[i]->getLocation();
+		doorLoc = doorSealArray[i]->GetActorLocation();
 
-		if ((doorLoc.Z - 61) == (playerLoc.Z - 22))
+		if (doorLoc.Z == doorZValue)
 		{
 			doorSealArray[i]->Destroy();
 			doorSealArray.RemoveAt(i);

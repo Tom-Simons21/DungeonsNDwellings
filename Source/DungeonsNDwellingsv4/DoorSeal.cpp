@@ -55,3 +55,9 @@ FVector ADoorSeal::getLocation()
 	return (myLocation);
 }
 
+void ADoorSeal::setLocation(FVector newLocation)
+{
+	myLocation = newLocation;
+	SetActorLocation(myLocation);
+}
+

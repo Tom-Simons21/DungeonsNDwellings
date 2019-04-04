@@ -30,6 +30,8 @@ public:
 
 	FVector getLocation();
 
+	void setLocation(FVector newLoc);
+
 	UPROPERTY(EditAnywhere)
 	FVector myLocation;
 	UPROPERTY(EditAnywhere)

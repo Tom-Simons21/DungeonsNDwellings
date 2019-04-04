@@ -42,5 +42,8 @@ public:
 	//Non default settings/properties
 
 	void updateProperties(float speedStart, float speedMax, float projLife);
+
+
+	float damage;
 };
 

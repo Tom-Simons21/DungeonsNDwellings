@@ -26,7 +26,11 @@ public:
 	//FORCEINLINE UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = InteractableObject, meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* CylinderMesh;
+	UStaticMeshComponent* CylinderMeshComponent;
+
+	/** Function to handle the enemy hitting something */
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	FVector playerLocation;
 
@@ -42,8 +46,18 @@ public:
 
 	float moveSpeed;
 
+	UPROPERTY(EditAnywhere)
+	float slugHealth;
+
+	float slugDamage;
+
+	bool canDealDamage;
+
+	float getZLocation();
 
 	void setIsEnemyActive();
 
 	void moveTowardsPlayer(float deltaTime);
+
+	void takeDamage(float damage);
 };

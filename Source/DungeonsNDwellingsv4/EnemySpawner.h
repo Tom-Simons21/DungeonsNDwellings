@@ -36,6 +36,16 @@ public:
 
 	void activateEnemies(FVector playerLoc);
 
+	void setPlayerDamage(float dmg);
+
+	float getPlayerCurrentDmg();
+
+	void getEnemiesPerRoom();
+
+	void checkRoomCleared(int roomNum);
+
+	void removeArrayItem(FString name);
+
 	UPROPERTY(EditAnywhere)
 	int roomCount;
 
@@ -58,4 +68,13 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TArray<ABasicSlugEnemy*> slugEnemyArray;
+
+	UPROPERTY(EditAnywhere)
+	TArray<int32> enemiesPerRoom;
+
+	UPROPERTY(EditAnywhere)
+	float playerCurrentDmg;
+
+	UPROPERTY(EditAnywhere)
+	int enemyKilledCounter;
 };

@@ -80,6 +80,12 @@ public:
 
 	void getTotalOfDoors();
 
+	void makeDamageable();
+
+	void setIsDamageable(bool isDamageable);
+
+	void takeDamage(float damageToTake);
+
 	UPROPERTY(EditDefaultsOnly, Category = "MyCategory")
 	class AInteractableObject* object;
 
@@ -113,6 +119,12 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	bool isNewDoor;
+
+	UPROPERTY(EditAnywhere)
+	bool isDamageable;
+
+	UPROPERTY(EditAnywhere)
+	float playerHealth;
 
 private:
 

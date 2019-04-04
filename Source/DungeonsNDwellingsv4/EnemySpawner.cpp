@@ -6,6 +6,7 @@
 #include "Engine/World.h"
 #include "TileGeneratorParent.h"
 #include "DungeonsNDwellingsv4Pawn.h"
+#include "DoorSealSpawner.h"
 
 // Sets default values
 AEnemySpawner::AEnemySpawner()
@@ -18,6 +19,7 @@ AEnemySpawner::AEnemySpawner()
 	enemyCount = 0;
 	spawnChanceSelector = 0;
 	usedRooms.Empty();
+	enemiesPerRoom.Empty();
 }
 
 // Called when the game starts or when spawned
@@ -26,6 +28,8 @@ void AEnemySpawner::BeginPlay()
 	Super::BeginPlay();
 	
 	roomsUsed = usedRooms.Num();
+
+	enemyKilledCounter = 0;
 
 	
 	for (int i = 0; i <= (roomCount - 2); i++)
@@ -45,6 +49,8 @@ void AEnemySpawner::BeginPlay()
 			break;
 		}
 	}
+
+	getEnemiesPerRoom();
 }
 
 // Called every frame
@@ -134,6 +140,13 @@ void AEnemySpawner::spawnEnemy(int enemyType, int enemyCount, int spawnRoom)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("No enemy has spawned in: %s"), *roomSelected));
 		}
+
+		for (TActorIterator<ADoorSealSpawner> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADoorSealSpawner *Object = *ActorItr;
+			ActorItr->openDoors(spawnRoom);
+		}
 	}
 	else if (enemyType == 1)
 	{
@@ -194,13 +207,99 @@ FTransform AEnemySpawner::getSpawnLocation(int enemyNum, int enemyType)
 }
 
 
-void AEnemySpawner::activateEnemies(FVector playLoc)
+void AEnemySpawner::getEnemiesPerRoom()
 {
-	ABasicSlugEnemy* object;
+	int enemyCounter;
+	float zLoc = 61;
+	float enemyZLoc;
 
-	object = slugEnemyArray[1];
+	for (int i = 0; i <= roomCount; i++)
+	{
+		enemyCounter = 0;
 
-	object->setIsEnemyActive();
+		for (int j = 0; j < slugEnemyArray.Num(); j++)
+		{
+			enemyZLoc = slugEnemyArray[j]->getZLocation();
+
+			if (enemyZLoc == zLoc)
+			{
+				enemyCounter++;
+			}
+		}
+
+		enemiesPerRoom.Add(enemyCounter);
+		zLoc += 2000;
+	}
+
 }
 
+
+void AEnemySpawner::activateEnemies(FVector playLoc)
+{
+	float objectZLoc;
+
+	if (slugEnemyArray.Num() != 0)
+	{
+		for (int i = 0; i < slugEnemyArray.Num(); i++)
+		{
+			objectZLoc = slugEnemyArray[i]->getZLocation();
+
+			if ((objectZLoc - 61) == (playLoc.Z - 22))
+			{
+				slugEnemyArray[i]->setIsEnemyActive();
+			}
+
+		}
+	}
+}
+
+
+void AEnemySpawner::checkRoomCleared(int roomNum)
+{
+	int enemiesInRoom;
+	int roomVal = roomNum;
+
+	enemiesInRoom = enemiesPerRoom[roomNum];
+
+	enemyKilledCounter++;
+
+	if (enemyKilledCounter == enemiesInRoom)
+	{
+		enemyKilledCounter = 0;
+		
+		for (TActorIterator<ADoorSealSpawner> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADoorSealSpawner *Object = *ActorItr;
+			ActorItr->openDoors(roomVal);
+		}
+		
+	}
+}
+
+void AEnemySpawner::removeArrayItem(FString objName)
+{
+	FString enemyName;
+
+	for (int i = 0; i < slugEnemyArray.Num(); i++)
+	{
+		enemyName = slugEnemyArray[i]->GetName();
+
+		if (enemyName == objName)
+		{
+			slugEnemyArray.RemoveAt(i);
+		}
+	}
+}
+
+
+void AEnemySpawner::setPlayerDamage(float dmg)
+{
+	playerCurrentDmg = dmg;
+}
+
+float AEnemySpawner::getPlayerCurrentDmg()
+{
+	return (playerCurrentDmg);
+}
 

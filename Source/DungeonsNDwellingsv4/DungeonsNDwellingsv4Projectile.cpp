@@ -7,6 +7,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine.h"
+#include "EnemySpawner.h"
 
 
 ADungeonsNDwellingsv4Projectile::ADungeonsNDwellingsv4Projectile() 
@@ -19,7 +20,10 @@ ADungeonsNDwellingsv4Projectile::ADungeonsNDwellingsv4Projectile()
 	ProjectileMesh->SetStaticMesh(ProjectileMeshAsset.Object);
 	ProjectileMesh->SetupAttachment(RootComponent);
 	ProjectileMesh->BodyInstance.SetCollisionProfileName("Projectile");
+
 	ProjectileMesh->OnComponentHit.AddDynamic(this, &ADungeonsNDwellingsv4Projectile::OnHit);		// set up a notification for when this component hits something
+
+
 	RootComponent = ProjectileMesh;
 
 	// Use a ProjectileMovementComponent to govern this projectile's movement
@@ -29,9 +33,10 @@ ADungeonsNDwellingsv4Projectile::ADungeonsNDwellingsv4Projectile()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.f; // No gravity
+
+
+	damage = 10;
 }
-
-
 
 
 void ADungeonsNDwellingsv4Projectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -40,6 +45,13 @@ void ADungeonsNDwellingsv4Projectile::OnHit(UPrimitiveComponent* HitComp, AActor
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL) && OtherComp->IsSimulatingPhysics())
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 20.0f, GetActorLocation());
+	}
+
+	for (TActorIterator<AEnemySpawner> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AEnemySpawner *Object = *ActorItr;
+		ActorItr->setPlayerDamage(damage);
 	}
 
 	Destroy();
