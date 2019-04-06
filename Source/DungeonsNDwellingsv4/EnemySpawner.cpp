@@ -20,6 +20,10 @@ AEnemySpawner::AEnemySpawner()
 	spawnChanceSelector = 0;
 	usedRooms.Empty();
 	enemiesPerRoom.Empty();
+
+	enemyMinSpawn = 0;
+	enemyMaxSpawn = 0;
+	spawnDefaults.Empty();
 }
 
 // Called when the game starts or when spawned
@@ -31,7 +35,6 @@ void AEnemySpawner::BeginPlay()
 
 	enemyKilledCounter = 0;
 
-	
 	for (int i = 0; i <= (roomCount - 2); i++)
 	{
 		if (roomsUsed <= (roomCount - 2))
@@ -84,7 +87,10 @@ int AEnemySpawner::enemyCountSelector(int enemyType)
 	}
 	if (enemyType == 1)
 	{
-		enemyCount = FMath::RandRange(2, 4);
+		enemyMinSpawn = type1Min;
+		enemyMaxSpawn = type1Max;
+
+		enemyCount = FMath::RandRange(enemyMinSpawn, enemyMaxSpawn);
 	}
 
 	return (enemyCount);
@@ -126,6 +132,45 @@ int AEnemySpawner::spawnRoomSelector()
 
 }
 
+FTransform AEnemySpawner::getSpawnLocation(int enemyNum, int enemyType)
+{
+	FVector loc;
+	FRotator rot = FRotator(0, 0, 0);
+	FVector scale = FVector(0.4, 0.4, 1.2);
+	FTransform enemyPosition;
+
+	if (enemyType == 1)
+	{
+		if (enemyNum == 1)
+		{
+			loc = FVector(100, 100, 0);
+		}
+		else if (enemyNum == 2)
+		{
+			loc = FVector(100, 700, 0);
+		}
+		else if (enemyNum == 3)
+		{
+			loc = FVector(700, 700, 0);
+		}
+		else if (enemyNum == 4)
+		{
+			loc = FVector(700, 100, 0);
+		}
+	}
+	else
+	{
+		loc = FVector(0, 0, 0);
+		rot = FRotator(0, 0, 0);
+		scale = FVector(0, 0, 0);
+	}
+
+	enemyPosition = FTransform(rot, loc, scale);
+
+	return (enemyPosition);
+}
+
+
 void AEnemySpawner::spawnEnemy(int enemyType, int enemyCount, int spawnRoom)
 {
 	FString roomSelected;
@@ -165,45 +210,6 @@ void AEnemySpawner::spawnEnemy(int enemyType, int enemyCount, int spawnRoom)
 	}
 	
 	
-}
-
-
-FTransform AEnemySpawner::getSpawnLocation(int enemyNum, int enemyType)
-{
-	FVector loc;
-	FRotator rot = FRotator(0, 0, 0);
-	FVector scale = FVector(0.4, 0.4, 1.2);
-	FTransform enemyPosition;
-
-	if (enemyType == 1)
-	{
-		if (enemyNum == 1)
-		{
-			loc = FVector(100, 100, 0);
-		}
-		else if (enemyNum == 2)
-		{
-			loc = FVector(100, 700, 0);
-		}
-		else if (enemyNum == 3)
-		{
-			loc = FVector(700, 700, 0);
-		}
-		else if (enemyNum == 4)
-		{
-			loc = FVector(700, 100, 0);
-		}
-	}
-	else
-	{
-		loc = FVector(0, 0, 0);
-		rot = FRotator(0, 0, 0);
-		scale = FVector(0, 0, 0);
-	}
-
-	enemyPosition = FTransform(rot, loc, scale);
-
-	return (enemyPosition);
 }
 
 
@@ -248,7 +254,6 @@ void AEnemySpawner::activateEnemies(FVector playLoc)
 			{
 				slugEnemyArray[i]->setIsEnemyActive();
 			}
-
 		}
 	}
 }
@@ -292,14 +297,4 @@ void AEnemySpawner::removeArrayItem(FString objName)
 	}
 }
 
-
-void AEnemySpawner::setPlayerDamage(float dmg)
-{
-	playerCurrentDmg = dmg;
-}
-
-float AEnemySpawner::getPlayerCurrentDmg()
-{
-	return (playerCurrentDmg);
-}
 

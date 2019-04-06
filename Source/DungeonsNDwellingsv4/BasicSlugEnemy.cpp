@@ -6,6 +6,7 @@
 #include "Engine/StaticMesh.h"
 #include "Engine.h"
 #include "DungeonsNDwellingsv4Pawn.h"
+#include "DungeonsNDwellingsv4Projectile.h"
 #include "EnemySpawner.h"
 
 // Sets default values
@@ -37,14 +38,18 @@ ABasicSlugEnemy::ABasicSlugEnemy()
 	CylinderMeshComponent->SetNotifyRigidBodyCollision(true);
 	CylinderMeshComponent->OnComponentHit.AddDynamic(this, &ABasicSlugEnemy::OnHit);	//set up a notification for when this component hits something
 
+	//keep track of the players location so we can move towards them
 	playerLocation = FVector(0, 0, 0);
 
+	//current generic values incase we need to more directly modify enemy transform
 	slugLocation = FVector(0, 0, 0);
 	slugRotation = FRotator(0, 0, 0);
 	slugScale = FVector(0, 0, 0);
+	//enemies start in the "off" state where they will not call their respective tick functions
 	isEnemyActive = false;
 
-	moveSpeed = 8;
+	//default values for this specific enemy type
+	moveSpeed = 30;
 	slugHealth = 40;
 	slugDamage = 10;
 }
@@ -68,8 +73,44 @@ void ABasicSlugEnemy::Tick(float DeltaTime)
 			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
 			playerLocation = ActorItr->getCurrentLocation();
 		}
-
 		moveTowardsPlayer(DeltaTime);
+	}
+}
+
+void ABasicSlugEnemy::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	FString actorName;
+	float playerDmg;
+
+	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
+	{
+		actorName = *OtherActor->GetName();
+
+		if (actorName == "TP_TwinStickPawn_1")
+		{
+			for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+			{
+				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+				ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+				ActorItr->takeDamage(slugDamage);
+			}
+		}
+		else if (actorName.Contains("DungeonsNDwellingsv4Projectile_"))
+		{
+			
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Enemy Hit")));
+			}
+
+			for (TActorIterator<ADungeonsNDwellingsv4Projectile> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+			{
+				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+				ADungeonsNDwellingsv4Projectile *Object = *ActorItr;
+				playerDmg = ActorItr->GetDamage();
+			}
+			this->takeDamage(playerDmg);
+		}
 	}
 }
 
@@ -88,17 +129,7 @@ void ABasicSlugEnemy::moveTowardsPlayer(float deltaTime)
 
 	velocity.Z = 0;
 
-
 	SetActorLocation(myLocation + velocity);
-}
-
-float ABasicSlugEnemy::getZLocation()
-{
-	FVector loc = GetActorLocation();
-
-	float zLoc = loc.Z;
-
-	return (zLoc);
 }
 
 void ABasicSlugEnemy::takeDamage(float dmg)
@@ -116,51 +147,19 @@ void ABasicSlugEnemy::takeDamage(float dmg)
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 			AEnemySpawner *Object = *ActorItr;
 			ActorItr->checkRoomCleared(roomNumber);
-		}
-		for (TActorIterator<AEnemySpawner> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-		{
-			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-			AEnemySpawner *Object = *ActorItr;
 			ActorItr->removeArrayItem(enemyName);
 		}
-		
+
 		Destroy();
 	}
 }
 
-void ABasicSlugEnemy::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+
+float ABasicSlugEnemy::getZLocation()
 {
-	FString actorName;
-	float playerDmg;
-
-	// Create a damage event  
-	TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
-	FDamageEvent DamageEvent(ValidDamageTypeClass);
-
-	// Only add impulse and destroy projectile if we hit a physics
-	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
-	{
-		actorName = *OtherActor->GetName();
-
-		if (actorName == "TP_TwinStickPawn_1")
-		{
-			for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-			{
-				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-				ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-				ActorItr->takeDamage(slugDamage);
-			}
-		}
-		else if (actorName.Contains("DungeonsNDwellingsv4Projectile_"))
-		{
-			for (TActorIterator<AEnemySpawner> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-			{
-				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-				AEnemySpawner *Object = *ActorItr;
-				playerDmg = ActorItr->getPlayerCurrentDmg();
-			}
-
-			this->takeDamage(playerDmg);
-		}
-	}
+	FVector loc = GetActorLocation();
+	float zLoc = loc.Z;
+	return (zLoc);
 }
+
+

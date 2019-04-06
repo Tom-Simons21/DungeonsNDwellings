@@ -17,6 +17,7 @@
 #include "TileGeneratorParent.h"
 #include "DoorSeal.h"
 #include "EnemySpawner.h"
+#include "BossManager.h"
 
 const FName ADungeonsNDwellingsv4Pawn::MoveForwardBinding("MoveForward");
 const FName ADungeonsNDwellingsv4Pawn::MoveRightBinding("MoveRight");
@@ -65,6 +66,7 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 	initialSpeed = 250;
 	maxSpeed = 250;
 	lifeSpan = 2;
+	projectileDamage = 10;
 
 	//room modifier values
 	roomPlacementModifier = FVector(0, 0, 2000);
@@ -322,6 +324,12 @@ void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector actorZ, FVector doorLocation)
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		AEnemySpawner *Object = *ActorItr;
 		ActorItr->activateEnemies(playerNewLoc);
+	}
+	for (TActorIterator<ABossManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ABossManager *Object = *ActorItr;
+		ActorItr->ActivateBoss(playerNewLoc);
 	}
 
 	SetActorLocation(playerNewLoc, false);

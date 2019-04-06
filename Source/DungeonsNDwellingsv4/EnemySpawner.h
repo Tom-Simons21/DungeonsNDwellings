@@ -20,6 +20,11 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	//Enemy Type 1 Values/////////////////////////////
+	const int type1Min = 1;
+	const int type1Max = 4;
+	//////////////////////////////////////////////////
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -36,18 +41,20 @@ public:
 
 	void activateEnemies(FVector playerLoc);
 
-	void setPlayerDamage(float dmg);
-
-	float getPlayerCurrentDmg();
-
 	void getEnemiesPerRoom();
 
 	void checkRoomCleared(int roomNum);
 
 	void removeArrayItem(FString name);
 
+
+
+
+
+
+
 	UPROPERTY(EditAnywhere)
-	int roomCount;
+		int roomCount;
 
 	int enemyTypePicker;
 
@@ -56,25 +63,31 @@ public:
 	int roomToSpawnIn;
 
 	UPROPERTY(EditAnywhere)
-	int enemyCount;
+		int enemyCount;
 
 	FVector enemyLocation;
 
 	UPROPERTY(EditAnywhere)
-	TArray<int32> usedRooms;
+		TArray<int32> usedRooms;
 
 	UPROPERTY(EditAnywhere)
-	int roomsUsed;
+		int roomsUsed;
 
 	UPROPERTY(EditAnywhere)
-	TArray<ABasicSlugEnemy*> slugEnemyArray;
+		TArray<ABasicSlugEnemy*> slugEnemyArray;
 
 	UPROPERTY(EditAnywhere)
-	TArray<int32> enemiesPerRoom;
+		TArray<int32> enemiesPerRoom;
 
 	UPROPERTY(EditAnywhere)
-	float playerCurrentDmg;
+		int enemyKilledCounter;
 
 	UPROPERTY(EditAnywhere)
-	int enemyKilledCounter;
+		int enemyMinSpawn;
+
+	UPROPERTY(EditAnywhere)
+		int enemyMaxSpawn;
+
+	UPROPERTY(EditAnywhere)
+		TArray<FVector> spawnDefaults;
 };

@@ -25,14 +25,14 @@ AInteractableObject::AInteractableObject()
 	SetActorScale3D(FVector(1, 1, 1));
 
 	Iteration = 1;
+
+	//itemArray.Empty();
+	//itemArray.Init(0, 3);
 }
 // Called when the game starts or when spawned
 void AInteractableObject::BeginPlay()
 {
 	Super::BeginPlay();
-
-	itemArray.Empty();
-	itemArray.Init(0, 3);
 
 	setItemValue();
 }
@@ -40,7 +40,7 @@ void AInteractableObject::BeginPlay()
 void AInteractableObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	/*
 	if (Iteration > 0)
 	{
 		TimeToSpawn -= DeltaTime;
@@ -53,6 +53,7 @@ void AInteractableObject::Tick(float DeltaTime)
 			Iteration = spawnInteractable(NewLocation);
 		}
 	}
+	*/
 }
 
 
@@ -85,6 +86,8 @@ void AInteractableObject::getPlayerLocation(FVector playerPos)
 void AInteractableObject::setItemValue()
 {
 	itemValue = FMath::RandRange(1, 3); //set's the value randomly between the range
+
+	/*
 	bool isNumberUnique = true;
 
 	do
@@ -103,6 +106,7 @@ void AInteractableObject::setItemValue()
 			itemArray.Insert(itemValue, (itemValue - 1));
 		}
 	} while (isNumberUnique == false);
+	*/
 }
 //function to modify the players projectiles so that they will have a different effect after an item is taken
 void AInteractableObject::playerTakesItem()

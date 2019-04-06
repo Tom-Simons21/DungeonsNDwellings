@@ -23,8 +23,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	//FORCEINLINE UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = InteractableObject, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* CylinderMeshComponent;
 
@@ -35,23 +33,28 @@ public:
 	FVector playerLocation;
 
 	UPROPERTY(EditAnywhere)
-	FVector slugLocation;
+		FVector slugLocation;
 	UPROPERTY(EditAnywhere)
-	FRotator slugRotation;
+		FRotator slugRotation;
 	UPROPERTY(EditAnywhere)
-	FVector slugScale;
+		FVector slugScale;
 
 	UPROPERTY(EditAnywhere)
-	bool isEnemyActive;
+		bool isEnemyActive;
 
 	float moveSpeed;
 
 	UPROPERTY(EditAnywhere)
-	float slugHealth;
+		float slugHealth;
 
 	float slugDamage;
 
-	bool canDealDamage;
+	
+
+
+
+
+
 
 	float getZLocation();
 

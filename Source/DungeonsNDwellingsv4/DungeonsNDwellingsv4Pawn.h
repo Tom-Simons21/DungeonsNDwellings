@@ -86,8 +86,6 @@ public:
 
 	void takeDamage(float damageToTake);
 
-	UPROPERTY(EditDefaultsOnly, Category = "MyCategory")
-	class AInteractableObject* object;
 
 	UPROPERTY(EditAnywhere)
 	float initialSpeed;
@@ -95,6 +93,10 @@ public:
 	float maxSpeed;
 	UPROPERTY(EditAnywhere)
 	float lifeSpan;
+	UPROPERTY(EditAnywhere)
+	float projectileDamage;
+
+
 
 	UPROPERTY(EditAnywhere)
 	FVector playerZElevation;

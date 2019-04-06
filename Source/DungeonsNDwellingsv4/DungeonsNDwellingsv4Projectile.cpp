@@ -20,16 +20,12 @@ ADungeonsNDwellingsv4Projectile::ADungeonsNDwellingsv4Projectile()
 	ProjectileMesh->SetStaticMesh(ProjectileMeshAsset.Object);
 	ProjectileMesh->SetupAttachment(RootComponent);
 	ProjectileMesh->BodyInstance.SetCollisionProfileName("Projectile");
-
 	ProjectileMesh->OnComponentHit.AddDynamic(this, &ADungeonsNDwellingsv4Projectile::OnHit);		// set up a notification for when this component hits something
-
-
 	RootComponent = ProjectileMesh;
 
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement0"));
 	ProjectileMovement->UpdatedComponent = ProjectileMesh;
-	
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.f; // No gravity
@@ -47,12 +43,6 @@ void ADungeonsNDwellingsv4Projectile::OnHit(UPrimitiveComponent* HitComp, AActor
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 20.0f, GetActorLocation());
 	}
 
-	for (TActorIterator<AEnemySpawner> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AEnemySpawner *Object = *ActorItr;
-		ActorItr->setPlayerDamage(damage);
-	}
 
 	Destroy();
 }
@@ -62,4 +52,9 @@ void ADungeonsNDwellingsv4Projectile::updateProperties(float speedStart, float s
 	ProjectileMovement->InitialSpeed = speedStart;
 	ProjectileMovement->MaxSpeed = speedMax;
 	InitialLifeSpan = projLife;
+}
+
+float ADungeonsNDwellingsv4Projectile::GetDamage()
+{
+	return (damage);
 }
