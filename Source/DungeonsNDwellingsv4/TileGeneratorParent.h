@@ -23,11 +23,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	TArray<int32> getArrayOfDoors();
-	int32 getRunningTotal();
-	int32 getRoomCount();
-	FVector getRoomPlacementModifier();
+	/***************************************************************************PUBLIC VARIABLES***************************************************************************/
 
+	//Variables to hold all the defaults used in the level/world building algorithm, initialised + declared here so they are exposed to other classes////////////////////////
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room Properties")
 	int32 roomXLength;
 
@@ -72,17 +70,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
 	int32 minNumDoors;
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+	/***********************************************************************************PUBLIC FUNCTIONS***************************************************************************/
 
-
-
-
-
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-	TArray<int32> testingArray;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-	int32 testingTotal;
+	//Functions to GET values from blueprint, used by other functions to access blueprint variables (READ ONLY)/////////////////////////////////////////////////////////////////////
+	TArray<int32> getArrayOfDoors();
+	int32 getRunningTotal();
+	int32 getRoomCount();
+	FVector getRoomPlacementModifier();
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };

@@ -13,13 +13,20 @@ ADoorSealSpawner::ADoorSealSpawner()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	doorSealArray.Empty();
 	roomCount = 0;
 }
 
+//Functions to control the basic functionality of the door seal manager - calls all necessary functions on begin play///////////////////////////////////////////////////////////////
 // Called when the game starts or when spawned
 void ADoorSealSpawner::BeginPlay()
 {
 	Super::BeginPlay();
+
+	roomsOpened = 0;
+
+	GetRoomCount();
+	GetRoomPlacementModifier();
 
 	setupSpawns();
 }
@@ -29,22 +36,23 @@ void ADoorSealSpawner::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//checkDoorStatus();
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+//Functions to control door seal spawning///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ADoorSealSpawner::setupSpawns()
 {
 	FVector location;
 	FRotator rotation;
 	FVector scale;
 	FVector zLocation;
-	roomCount = getRoomCount();
 
 	for (int i = 1; i <= 4; i++)
 	{
 		for (int j = 1; j <= roomCount; j++)
 		{
-			zLocation = (FVector(0, 0, 2000) * j);
+			zLocation = (roomPlacementModifier * j);
 
 			if (i == 1)
 			{
@@ -79,9 +87,6 @@ void ADoorSealSpawner::setupSpawns()
 
 void ADoorSealSpawner::spawnDoorSeals(FTransform spawnLocation, FVector loc, FRotator rot, FVector sca)
 {
-	//FActorSpawnParameters spawnInfo;
-	//spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
-
 	UWorld* const World = GetWorld();
 	if (World != NULL)
 	{
@@ -94,9 +99,46 @@ void ADoorSealSpawner::spawnDoorSeals(FTransform spawnLocation, FVector loc, FRo
 		doorSealArray.Add(sealActor);
 	}
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-int ADoorSealSpawner::getRoomCount()
+//Functions to manage modifying or altering door functionality based on player interaction////////////////////////////////////////////////////////////////////////////////////////////
+void ADoorSealSpawner::openDoors(int roomNumber)
+{
+	roomsOpened += 1;
+
+	float doorZValue = (roomNumber * roomPlacementModifier.Z) + 61;
+	FVector doorLoc;
+
+	for (int i = 0; i < doorSealArray.Num(); i++)
+	{
+		if (doorSealArray[i]->IsValidLowLevel())
+		{
+			doorLoc = doorSealArray[i]->GetActorLocation();
+
+			if (doorLoc.Z == doorZValue)
+			{
+				doorSealArray[i]->Destroy();
+				doorSealArray.RemoveAt(i);
+			}
+		}
+		
+	}
+	
+	if (roomsOpened == roomCount)
+	{
+		for (int i = 0; i < doorSealArray.Num(); i++)
+		{
+			doorSealArray[i]->Destroy();
+			doorSealArray.RemoveAt(i);
+		}
+	}
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//Functions to GET and SET key variables from external classes///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ADoorSealSpawner::GetRoomCount()
 {
 	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
@@ -104,25 +146,16 @@ int ADoorSealSpawner::getRoomCount()
 		ATileGeneratorParent *Object = *ActorItr;
 		roomCount = ActorItr->getRoomCount();
 	}
-
-	return (roomCount);
 }
 
-
-void ADoorSealSpawner::openDoors(int roomNumber)
+void ADoorSealSpawner::GetRoomPlacementModifier()
 {
-	float doorZValue = (roomNumber * 2000) + 61;
-	FVector doorLoc;
-	float doorOpenOffset = 80;
-
-	for (int i = 0; i < doorSealArray.Num(); i++)
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
-		doorLoc = doorSealArray[i]->GetActorLocation();
-
-		if (doorLoc.Z == doorZValue)
-		{
-			doorSealArray[i]->Destroy();
-			doorSealArray.RemoveAt(i);
-		}
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		roomPlacementModifier = ActorItr->getRoomPlacementModifier();
 	}
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+

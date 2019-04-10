@@ -25,40 +25,51 @@ AInteractableObject::AInteractableObject()
 	SetActorScale3D(FVector(1, 1, 1));
 
 	Iteration = 1;
-
-	//itemArray.Empty();
-	//itemArray.Init(0, 3);
 }
+
+
+//Functions to control the core functionality of the interactable object////////////////////////////////////////////////////////////////////////////////////////////
 // Called when the game starts or when spawned
 void AInteractableObject::BeginPlay()
 {
 	Super::BeginPlay();
 
 	setItemValue();
+	getRoomCount();
+	getPlacementModifier();
 }
+
 // Called every frame
 void AInteractableObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	/*
-	if (Iteration > 0)
+
+	if (isLevelComplete == true)
 	{
-		TimeToSpawn -= DeltaTime;
-		if (TimeToSpawn < 0.f)
+		if (Iteration > 0)
 		{
-			// Make a location for the new actor to spawn at
-			FVector NewLocation = updateSpawnLocation();
-			
-			//call function to spawn actor, passes back the value for iteration.
-			Iteration = spawnInteractable(NewLocation);
+			TimeToSpawn -= DeltaTime;
+			if (TimeToSpawn < 0.f)
+			{
+				// Make a location for the new actor to spawn at
+				FVector NewLocation = updateSpawnLocation();
+
+				//call function to spawn actor, passes back the value for iteration.
+				Iteration = spawnInteractable(NewLocation);
+			}
 		}
 	}
-	*/
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+//Functions to control the spawning of the interactable object/////////////////////////////////////////////////////////////////////////////////////////////////////
+FVector AInteractableObject::updateSpawnLocation()
+{
+	secondSpawnPoint = startingSpawnPoint + (placementMod * roomCount);
 
-
+	return (secondSpawnPoint);
+}
 
 int AInteractableObject::spawnInteractable(FVector spawnLoc)
 {
@@ -70,92 +81,70 @@ int AInteractableObject::spawnInteractable(FVector spawnLoc)
 
 		return Iteration;
 }
-void AInteractableObject::updateIsInteractable()
+
+void AInteractableObject::SetIsLevelComplete()
 {
-	isInteractable = false;
+	isLevelComplete = true;
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//Functions to control item generation, selection, display, management////////////////////////////////////////////////////////////////////////////////////////////
+//function to generate a random number, each number will correspond to an item the player can collect.
+void AInteractableObject::setItemValue()
+{
+	itemValue = FMath::RandRange(1, 3); //set's the value randomly between the range
+}
+
+/*void AInteractableObject::displayItemText()
+{
+
+}*/
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//Functions to control the players interactions with the interactable object/////////////////////////////////////////////////////////////////////////////////////////
 //function to get the current location of the player
 void AInteractableObject::getPlayerLocation(FVector playerPos)
 {
 	FVector playerLoc = playerPos;
 	FVector interactableLoc = GetActorLocation();
 
-	distanceFromPlayer = FVector::Dist(playerLoc, interactableLoc); //checking if distance is < 125
+	distanceFromPlayer = FVector::Dist(playerLoc, interactableLoc); //checking if distance is < 120
 }
-//function to generate a random number, each number will correspond to an item the player can collect.
-void AInteractableObject::setItemValue()
-{
-	itemValue = FMath::RandRange(1, 3); //set's the value randomly between the range
 
-	/*
-	bool isNumberUnique = true;
-
-	do
-	{
-		if (itemArray[0] == 1 && itemArray[1] == 2 && itemArray[2] == 3)
-		{
-			itemValue = 0;
-		}
-		else if (itemArray[(itemValue - 1)] == itemValue)
-		{
-			isNumberUnique = false;
-			itemValue = FMath::RandRange(1, 3); //set's the value randomly between the range
-		}
-		else
-		{
-			itemArray.Insert(itemValue, (itemValue - 1));
-		}
-	} while (isNumberUnique == false);
-	*/
-}
 //function to modify the players projectiles so that they will have a different effect after an item is taken
 void AInteractableObject::playerTakesItem()
 {
-	//place all modifyable properties here
-	float objSpeed;
-	float objSpeedMax;
-	float objLifeSpan;
-
-	if (distanceFromPlayer < 125)
+	if (distanceFromPlayer < 120)
 	{
-
 		//this should be replaced by a switch case sequence in this future, this is temporary for ease + testing
 		if (itemValue == 1)
 		{
-			objSpeed = 500;
-			objSpeedMax = 500;
-			objLifeSpan = 4;
+			projectileSpeed = 500;
+			projectileMaxSpeed = 500;
+			projectileLifeSpan = 4;
+			callProjectileFunction(projectileSpeed, projectileMaxSpeed, projectileLifeSpan);
 
-			callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
+			Destroy();
 		}
 		else if (itemValue == 2)
 		{
-			objSpeed = 1000;
-			objSpeedMax = 1000;
-			objLifeSpan = 8;
+			projectileSpeed = 1000;
+			projectileMaxSpeed = 1000;
+			projectileLifeSpan = 8;
+			callProjectileFunction(projectileSpeed, projectileMaxSpeed, projectileLifeSpan);
 
-			callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
+			Destroy();
 		}
 		else if (itemValue == 3)
 		{
-			objSpeed = 1500;
-			objSpeedMax = 1500;
-			objLifeSpan = 1.5;
+			projectileSpeed = 1500;
+			projectileMaxSpeed = 1500;
+			projectileLifeSpan = 1.5;
+			callProjectileFunction(projectileSpeed, projectileMaxSpeed, projectileLifeSpan);
 
-			callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
-		}
-		else
-		{
-			objSpeed = 100;
-			objSpeedMax = 100;
-			objLifeSpan = 3;
-
-			callProjectileFunction(objSpeed, objSpeedMax, objLifeSpan);
-
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("All Items Used"));
-			}
+			Destroy();
 		}
 	}
 	else
@@ -166,6 +155,10 @@ void AInteractableObject::playerTakesItem()
 		}
 	}
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//Functions to call to relevant classes to modify variables based on player item selection///////////////////////////////////////////////////////////////////////////
 //function that calls to the projectile modification function, saves repeating it for every item variant
 void AInteractableObject::callProjectileFunction(float x, float y, float z)
 {
@@ -176,30 +169,17 @@ void AInteractableObject::callProjectileFunction(float x, float y, float z)
 		ActorItr->updateProjectileValues(x, y, z);
 	}
 }
-
-/*
-void AInteractableObject::displayItemText()
-{
-
-}
-*/
-
-
-FVector AInteractableObject::updateSpawnLocation()
-{
-	FVector spawnLocation;
-	placementMod = getPlacementModifier();
-	roomCount = getRoomCount();
-
-	spawnLocation = FVector(400.f, 400.f, 50.f) + (placementMod * roomCount);
-
-	return (spawnLocation);
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
 
-int AInteractableObject::getRoomCount()
+
+
+
+
+//Functions to GET and pass variables to external classes, all too be called in BeginPlay()////////////////////////////////////////////////////////////////////////
+void AInteractableObject::getRoomCount()
 {
 	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
@@ -207,11 +187,9 @@ int AInteractableObject::getRoomCount()
 		ATileGeneratorParent *Object = *ActorItr;
 		roomCount = ActorItr->getRoomCount();
 	}
-
-	return (roomCount);
 }
 
-FVector AInteractableObject::getPlacementModifier()
+void AInteractableObject::getPlacementModifier()
 {
 	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
@@ -219,6 +197,5 @@ FVector AInteractableObject::getPlacementModifier()
 		ATileGeneratorParent *Object = *ActorItr;
 		placementMod = ActorItr->getRoomPlacementModifier();
 	}
-
-	return (placementMod);
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

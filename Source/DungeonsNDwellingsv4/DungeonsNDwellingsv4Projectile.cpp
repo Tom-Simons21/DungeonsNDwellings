@@ -19,7 +19,7 @@ ADungeonsNDwellingsv4Projectile::ADungeonsNDwellingsv4Projectile()
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh0"));
 	ProjectileMesh->SetStaticMesh(ProjectileMeshAsset.Object);
 	ProjectileMesh->SetupAttachment(RootComponent);
-	ProjectileMesh->BodyInstance.SetCollisionProfileName("Projectile");
+	ProjectileMesh->BodyInstance.SetCollisionProfileName("PlayerProjectile");
 	ProjectileMesh->OnComponentHit.AddDynamic(this, &ADungeonsNDwellingsv4Projectile::OnHit);		// set up a notification for when this component hits something
 	RootComponent = ProjectileMesh;
 
@@ -29,9 +29,6 @@ ADungeonsNDwellingsv4Projectile::ADungeonsNDwellingsv4Projectile()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.f; // No gravity
-
-
-	damage = 10;
 }
 
 
@@ -42,8 +39,6 @@ void ADungeonsNDwellingsv4Projectile::OnHit(UPrimitiveComponent* HitComp, AActor
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 20.0f, GetActorLocation());
 	}
-
-
 	Destroy();
 }
 
@@ -52,9 +47,4 @@ void ADungeonsNDwellingsv4Projectile::updateProperties(float speedStart, float s
 	ProjectileMovement->InitialSpeed = speedStart;
 	ProjectileMovement->MaxSpeed = speedMax;
 	InitialLifeSpan = projLife;
-}
-
-float ADungeonsNDwellingsv4Projectile::GetDamage()
-{
-	return (damage);
 }

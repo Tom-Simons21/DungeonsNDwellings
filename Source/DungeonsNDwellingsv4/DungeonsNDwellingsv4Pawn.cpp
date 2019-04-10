@@ -68,15 +68,12 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 	lifeSpan = 2;
 	projectileDamage = 10;
 
-	//room modifier values
-	roomPlacementModifier = FVector(0, 0, 2000);
 
-	doorStartPoints.Empty();
-	doorEndPoints.Empty();
-
-
+	//set values for player stats
 	playerHealth = 100;
 }
+
+//Functions to control core functionality/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void ADungeonsNDwellingsv4Pawn::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
@@ -176,19 +173,18 @@ void ADungeonsNDwellingsv4Pawn::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//Initialise all variables from external classes asap//////////////////////////////////////////////
+	GetRoomPlacementModifier();
+	getTotalOfDoors();
+	createArrayOfDoors();
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+
 	isDamageable = false;
-
-	FTimerHandle hitControlTimer;
-
 	GetWorldTimerManager().SetTimer(hitControlTimer, this, &ADungeonsNDwellingsv4Pawn::makeDamageable, 1.5f, true, 2.0f);
-
 	FireRate = updateProperties(rateOfFire);
 
-	FVector ActorLocation = (FVector(175, 400, 0) + playerZElevation);
-	SetActorLocation(ActorLocation, false);
-	SetActorScale3D(FVector(0.4, 0.4, 0.4));
-
-	createArrayOfDoors();
+	SetActorLocation(playerStartPoint, false);
+	SetActorScale3D(playerScale);
 }
 
 void ADungeonsNDwellingsv4Pawn::OnInteract()
@@ -199,16 +195,12 @@ void ADungeonsNDwellingsv4Pawn::OnInteract()
 		AInteractableObject *Object = *ActorItr;
 		ActorItr->playerTakesItem();
 	}
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("I'm Pressing Action"));
-	}
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
-
+//Functions to control and track player location and movement within a level///////////////////////////////////////////////////////////////////////////////////
 void ADungeonsNDwellingsv4Pawn::getPlayerLocation()
 {
 	FVector actorLoc = GetActorLocation();
@@ -225,33 +217,6 @@ void ADungeonsNDwellingsv4Pawn::getPlayerLocation()
 
 	checkPlayerLocation(actorLoc, actorZVector);
 }
-
-FVector ADungeonsNDwellingsv4Pawn::getCurrentLocation()
-{
-	FVector currentLoc = GetActorLocation();
-
-	return (currentLoc);
-}
-
-
-
-
-void ADungeonsNDwellingsv4Pawn::updateProjectileValues(float initSpeed, float topSpeed, float lifeTime)
-{
-	initialSpeed = initSpeed;
-	maxSpeed = topSpeed;
-	lifeSpan = lifeTime;
-}
-
-float ADungeonsNDwellingsv4Pawn::updateProperties(float defaultValue)
-{
-	float rateOfFire = defaultValue;
-
-	return(rateOfFire);
-}
-
-
-
 
 void ADungeonsNDwellingsv4Pawn::checkPlayerLocation(FVector playerCurrentLoc, FVector actorZValue)
 {
@@ -334,48 +299,10 @@ void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector actorZ, FVector doorLocation)
 
 	SetActorLocation(playerNewLoc, false);
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-
-
-
-
-void ADungeonsNDwellingsv4Pawn::createArrayOfDoors()
-{
-	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ATileGeneratorParent *Object = *ActorItr;
-		arrayOfDoors = ActorItr->getArrayOfDoors();
-	}
-}
-
-void ADungeonsNDwellingsv4Pawn::getTotalOfDoors()
-{
-	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ATileGeneratorParent *Object = *ActorItr;
-		totalDoorNum = ActorItr->getRunningTotal();
-	}
-}
-
-
-
-
-
-
-
-/*
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Player Z Location is: %s"), *playerCoord));
-	}
-	*/
-
-
-
+//Functions for controlling player taking damage/////////////////////////////////////////////////////////////////////////////////////////////////////
 void ADungeonsNDwellingsv4Pawn::makeDamageable()
 {
 	bool makeDamageable = true;
@@ -397,3 +324,89 @@ void ADungeonsNDwellingsv4Pawn::takeDamage(float dmg)
 		isDamageable = false;
 	}
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//Functions for modifying properties of the player projectile object////////////////////////////////////////////////////////////////////////////
+void ADungeonsNDwellingsv4Pawn::updateProjectileValues(float initSpeed, float topSpeed, float lifeTime)
+{
+	initialSpeed = initSpeed;
+	maxSpeed = topSpeed;
+	lifeSpan = lifeTime;
+}
+
+float ADungeonsNDwellingsv4Pawn::updateProperties(float defaultValue)
+{
+	float rateOfFire = defaultValue;
+
+	return(rateOfFire);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//Functions for getting key variables from other classes////////////////////////////////////////////////////////////////////////////////////////
+void ADungeonsNDwellingsv4Pawn::getTotalOfDoors()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		totalDoorNum = ActorItr->getRunningTotal();
+	}
+}
+
+FVector ADungeonsNDwellingsv4Pawn::getCurrentLocation()
+{
+	FVector currentLoc = GetActorLocation();
+
+	return (currentLoc);
+}
+
+void ADungeonsNDwellingsv4Pawn::GetRoomPlacementModifier()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		roomPlacementModifier = ActorItr->getRoomPlacementModifier();
+	}
+}
+
+FVector ADungeonsNDwellingsv4Pawn::GetPlayerZOffset()
+{
+	return (playerZElevation);
+}
+
+void ADungeonsNDwellingsv4Pawn::createArrayOfDoors()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		arrayOfDoors = ActorItr->getArrayOfDoors();
+	}
+}
+
+float ADungeonsNDwellingsv4Pawn::GetProjectileDamage()
+{
+	return (projectileDamage);
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+///Code snippets for reuse/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Player Z Location is: %s"), *playerCoord));
+	}
+*/
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

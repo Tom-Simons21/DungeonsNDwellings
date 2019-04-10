@@ -24,9 +24,9 @@ ADoorSeal::ADoorSeal()
 
 	SetActorScale3D(FVector(1, 1, 1));
 
-	myLocation = FVector(0, 0, 0);
-	myRotation = FRotator(0, 0, 0);
-	myScale = FVector(0.3, 0.95, 1.2);
+	doorSealLocation = FVector(0, 0, 0);
+	doorSealRotation = FRotator(0, 0, 0);
+	doorSealScale = FVector(0.3, 0.95, 1.2);
 }
 
 // Called when the game starts or when spawned
@@ -45,19 +45,19 @@ void ADoorSeal::Tick(float DeltaTime)
 
 void ADoorSeal::updateVariables(FVector loc, FRotator rot, FVector sca)
 {
-	myLocation = loc;
-	myRotation = rot;
-	myScale = sca;
+	doorSealLocation = loc;
+	doorSealRotation = rot;
+	doorSealScale = sca;
 }
 
 FVector ADoorSeal::getLocation()
 {
-	return (myLocation);
+	return (doorSealLocation);
 }
 
 void ADoorSeal::setLocation(FVector newLocation)
 {
-	myLocation = newLocation;
-	SetActorLocation(myLocation);
+	doorSealLocation = newLocation;
+	SetActorLocation(doorSealLocation);
 }
 

@@ -33,9 +33,9 @@ public:
 	void setLocation(FVector newLoc);
 
 	UPROPERTY(EditAnywhere)
-	FVector myLocation;
+	FVector doorSealLocation;
 	UPROPERTY(EditAnywhere)
-	FRotator myRotation;
+	FRotator doorSealRotation;
 	UPROPERTY(EditAnywhere)
-	FVector myScale;
+	FVector doorSealScale;
 };

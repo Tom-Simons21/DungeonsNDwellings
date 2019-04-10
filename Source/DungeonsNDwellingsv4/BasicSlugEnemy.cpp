@@ -49,11 +49,13 @@ ABasicSlugEnemy::ABasicSlugEnemy()
 	isEnemyActive = false;
 
 	//default values for this specific enemy type
-	moveSpeed = 30;
+	moveSpeed = 45;
 	slugHealth = 40;
 	slugDamage = 10;
 }
 
+
+//Functions to control the basic functionality of the slug enemy object///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Called when the game starts or when spawned
 void ABasicSlugEnemy::BeginPlay()
 {
@@ -77,6 +79,9 @@ void ABasicSlugEnemy::Tick(float DeltaTime)
 	}
 }
 
+//Checks if the slug enemy has been hit, this function should be present on all enemy objects, 
+//effects of this type are being managed on the player + enemy as this combination is less 
+//volatile as all processes can complete before destroy
 void ABasicSlugEnemy::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	FString actorName;
@@ -97,23 +102,20 @@ void ABasicSlugEnemy::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 		}
 		else if (actorName.Contains("DungeonsNDwellingsv4Projectile_"))
 		{
-			
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Enemy Hit")));
-			}
-
-			for (TActorIterator<ADungeonsNDwellingsv4Projectile> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+			for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 			{
 				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-				ADungeonsNDwellingsv4Projectile *Object = *ActorItr;
-				playerDmg = ActorItr->GetDamage();
+				ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+				playerDmg = ActorItr->GetProjectileDamage();
 			}
 			this->takeDamage(playerDmg);
 		}
 	}
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+//Functions to control the behaviour of the slug enemies/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ABasicSlugEnemy::setIsEnemyActive()
 {
 	isEnemyActive = true;
@@ -131,7 +133,10 @@ void ABasicSlugEnemy::moveTowardsPlayer(float deltaTime)
 
 	SetActorLocation(myLocation + velocity);
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+//Functions to control slug enemies taking damage and the application of status effects////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ABasicSlugEnemy::takeDamage(float dmg)
 {
 	float zLoc = getZLocation();
@@ -149,17 +154,17 @@ void ABasicSlugEnemy::takeDamage(float dmg)
 			ActorItr->checkRoomCleared(roomNumber);
 			ActorItr->removeArrayItem(enemyName);
 		}
-
 		Destroy();
 	}
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+//Functions to GET and SET key variables between classes//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 float ABasicSlugEnemy::getZLocation()
 {
 	FVector loc = GetActorLocation();
 	float zLoc = loc.Z;
 	return (zLoc);
 }
-
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

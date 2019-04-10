@@ -61,73 +61,6 @@ public:
 	static const FName FireForwardBinding;
 	static const FName FireRightBinding;
 
-	
-	void OnInteract();
-
-	void getPlayerLocation();       //passes player location to other objects
-
-	FVector getCurrentLocation();	//can be called by other objects to get player location
-
-	void moveToRoom(FVector zLoc, FVector doorLocation);
-
-	void checkPlayerLocation(FVector playLoc, FVector zLoc);
-
-	float updateProperties(float defaultVal);
-
-	void updateProjectileValues(float initSpeed, float maxSpeed, float life);
-
-	void createArrayOfDoors();
-
-	void getTotalOfDoors();
-
-	void makeDamageable();
-
-	void setIsDamageable(bool isDamageable);
-
-	void takeDamage(float damageToTake);
-
-
-	UPROPERTY(EditAnywhere)
-	float initialSpeed;
-	UPROPERTY(EditAnywhere)
-	float maxSpeed;
-	UPROPERTY(EditAnywhere)
-	float lifeSpan;
-	UPROPERTY(EditAnywhere)
-	float projectileDamage;
-
-
-
-	UPROPERTY(EditAnywhere)
-	FVector playerZElevation;
-
-	UPROPERTY(EditAnywhere)
-	FVector roomPlacementModifier;
-
-	UPROPERTY(EditAnywhere)
-	int totalDoorNum;
-
-	UPROPERTY(EditAnywhere)
-	TArray<int32> arrayOfDoors;
-
-	UPROPERTY(EditAnywhere)
-	TArray<FVector> doorStartPoints;
-
-	UPROPERTY(EditAnywhere)
-	TArray<FVector> doorEndPoints;
-
-	UPROPERTY(EditAnywhere)
-	FVector playerExitLoc;
-
-	UPROPERTY(EditAnywhere)
-	bool isNewDoor;
-
-	UPROPERTY(EditAnywhere)
-	bool isDamageable;
-
-	UPROPERTY(EditAnywhere)
-	float playerHealth;
-
 private:
 
 	/* Flag to control firing  */
@@ -143,5 +76,101 @@ public:
 	FORCEINLINE class UCameraComponent* GetCameraComponent() const { return CameraComponent; }
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+
+
+
+	/**********************************************************************PUBLIC VARIABLES***************************************************************************/
+
+	//Player Stats/////////////////////////////////////////////////////////////////////////////////////////
+	UPROPERTY(EditAnywhere)
+		bool isDamageable;
+
+	UPROPERTY(EditAnywhere)
+		float playerHealth;
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	//Projectile Stats/////////////////////////////////////////////////////////////////////////////////
+	UPROPERTY(EditAnywhere)
+		float initialSpeed;
+	UPROPERTY(EditAnywhere)
+		float maxSpeed;
+	UPROPERTY(EditAnywhere)
+		float lifeSpan;
+	UPROPERTY(EditAnywhere)
+		float projectileDamage;
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	//Key vector locations///////////////////////////////////////////////////////////////////////////
+	UPROPERTY(EditAnywhere)
+		FVector playerZElevation;
+
+	UPROPERTY(EditAnywhere)
+		FVector roomPlacementModifier;
+
+	FVector playerStartPoint = FVector(175, 400, 22);
+	FVector playerScale = FVector(0.4, 0.4, 0.4);
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	//Timers//////////////////////////////////////////////////////////////////////////////////////////
+	FTimerHandle hitControlTimer;
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	//Door Modifier + Tracker Variables used for player move algorithms///////////////////////////////
+	UPROPERTY(EditAnywhere)
+		int totalDoorNum;
+	UPROPERTY(EditAnywhere)
+		TArray<int32> arrayOfDoors;
+	UPROPERTY(EditAnywhere)
+		TArray<FVector> doorStartPoints;
+	UPROPERTY(EditAnywhere)
+		TArray<FVector> doorEndPoints;
+	UPROPERTY(EditAnywhere)
+		FVector playerExitLoc;
+	UPROPERTY(EditAnywhere)
+		bool isNewDoor;
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+	/*************************************************************************PUBLIC FUNCTIONS***************************************************************************/
+
+	//Functions for getting and passing key variables to other classes////////////////////////////////////////////////
+	void getTotalOfDoors();
+	FVector getCurrentLocation();							//can be called by other objects to get player location
+	void GetRoomPlacementModifier();
+	FVector GetPlayerZOffset();
+	void createArrayOfDoors();
+	float GetProjectileDamage();
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	//Functions for updating variables relative to projectile/////////////////////////////////////////////////////////
+	float updateProperties(float defaultVal);
+	void updateProjectileValues(float initSpeed, float maxSpeed, float life);
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	//Functions for controlling player damage taken///////////////////////////////////////////////////////////////////
+	void makeDamageable();
+	void setIsDamageable(bool isDamageable);
+	void takeDamage(float damageToTake);
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	//Functions for tracking player movement through level and current location///////////////////////////////////////
+	void getPlayerLocation();										//passes player location to other objects
+	void moveToRoom(FVector zLoc, FVector doorLocation);
+	void checkPlayerLocation(FVector playLoc, FVector zLoc);
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	//Functions to control player interactions and additional actions/////////////////////////////////////////////////
+	void OnInteract();
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };
 

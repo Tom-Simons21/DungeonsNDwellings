@@ -43,9 +43,6 @@ public:
 
 	void updateProperties(float speedStart, float speedMax, float projLife);
 
-	float GetDamage();
-
-
 	float damage;
 };
 

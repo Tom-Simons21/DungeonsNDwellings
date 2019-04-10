@@ -28,49 +28,71 @@ public:
 	UStaticMeshComponent* ConeMesh;
 
 
+	/****************************************************************************PUBLIC VARIABLES***************************************************************************/
+
+	//Variables to control interactable item spawning////////////////////////////////////////////////////////////////////////////////////////////////////////
+	int Iteration;												//integer variable to dictate how many times we "spawn" our interactable item
+	float TimeToSpawn;											//spawns object whenever Iteration is true
+	FVector const startingSpawnPoint = FVector(400, 400, 50);
+	FVector secondSpawnPoint;
+	int roomCount;
+	FVector placementMod;
+	bool isLevelComplete;
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	int Iteration;									//integer variable to dictate how many times we "spawn" our interactable item
-
-	float TimeToSpawn;								//spawns object whenever Iteration is true
-
+	//Variables to control player interaction with object////////////////////////////////////////////////////////////////////////////////////////////////////
 	UPROPERTY(EditAnywhere)
 	float distanceFromPlayer;						//this will track how far away the player is from the interactable
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+	//Variable to control and manage items that player interacts with////////////////////////////////////////////////////////////////////////////////////////
 	UPROPERTY(EditAnywhere)
 	int itemValue;									//this will randomly generate a number and then associate it with the relevant item
-
-	bool isInteractable;							//this will determine whether an interactable object can be used (will be false after the user has used it)
-
 	FString itemText;								//this will hold the item text needed to be passed back to the player to inform them of the item
-
 	UPROPERTY(EditAnywhere)
 	TArray<int32> itemArray;
-
-	int roomCount;
-
-	FVector placementMod;
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 
-	FVector updateSpawnLocation();		//function that will calculate the spawn location of the 2nd object per level
-		
-	int spawnInteractable(FVector spawnLoc);		//function that will control the spawning of the interactable object
+	//Variables to hold all the editable variable value properties for the respective effects////////////////////////////////////////////////////////////////
+	float projectileSpeed;
+	float projectileMaxSpeed;
+	float projectileLifeSpan;
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	void updateIsInteractable();					//function to update the isInteractable variable, will interact with player object
 
-	void getPlayerLocation(FVector playerLoc);		//function to get the current location of player to be used in distance measure
 
-	float getDistanceFromPlayer(FVector playerPos);	//function to get the distance between player and object
+	
+	/*******************************************************************************PUBLIC FUNCTIONS***************************************************************************/
+	
+	//Functions to control spawning the interactable object////////////////////////////////////////////////////////////////////////////////////////////////
+	FVector updateSpawnLocation();									//function that will calculate the spawn location of the 2nd object per level
+	int spawnInteractable(FVector spawnLoc);						//function that will control the spawning of the interactable object
+	void SetIsLevelComplete();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	void setItemValue();							//sets the value that will be used to determine the item passed to players
+	
+	//Functions to control player interaction with interactable////////////////////////////////////////////////////////////////////////////////////////////
+	void playerTakesItem();											//responds to player input and gives player an item
+	void getPlayerLocation(FVector playerLoc);						//function to get the current location of player to be used in distance measure
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	void playerTakesItem();							//responds to player input and gives player an item
 
+	//Functions to control item generation, selection and display//////////////////////////////////////////////////////////////////////////////////////////
+	void setItemValue();											//sets the value that will be used to determine the item passed to players
+	//void displayItemText();										//displays the item name / description to players
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	//Functions that call to relevant classes to apply item effects////////////////////////////////////////////////////////////////////////////////////////
 	void callProjectileFunction(float x, float y, float z);
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	void displayItemText();							//displays the item name / description to players
 
-	int getRoomCount();
-
-	FVector getPlacementModifier();
+	//Functions to get variables from external classes/////////////////////////////////////////////////////////////////////////////////////////////////////
+	void getRoomCount();
+	void getPlacementModifier();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };

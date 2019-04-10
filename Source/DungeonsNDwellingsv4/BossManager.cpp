@@ -5,6 +5,8 @@
 #include "Engine.h"
 #include "Engine/World.h"
 #include "TileGeneratorParent.h"
+#include "DungeonsNDwellingsv4Pawn.h"
+#include "InteractableObject.h"
 
 // Sets default values
 ABossManager::ABossManager()
@@ -15,17 +17,29 @@ ABossManager::ABossManager()
 	roomCount = 0;
 }
 
+//These functions control the core functionality of the Boss Manager////////////////////////////////////////////////////////////////////////////
 // Called when the game starts or when spawned
 void ABossManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UWorld* const World = GetWorld();
+	//Initialise all variables from external classes asap////////////////////////////////////////////////////////////////////
+	GetRoomCount();
+	GetRoomPlacementModifier();
+	GetPlayerZOffset();
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	//every level reset boss is killed to false//////////////////////////////////////////////////////////////////////////////
+	isBossKilled = false;
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	//Here goes the code to spawn the relevant boss//////////////////////////////////////////////////////////////////////////
+	UWorld* const World = GetWorld();
 	if (World != NULL)
 	{
 		AProjectileBoss* projectileBoss = World->SpawnActor<AProjectileBoss>(AProjectileBoss::StaticClass(), spawnTrans);
 	}
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 // Called every frame
@@ -34,11 +48,14 @@ void ABossManager::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+//Functions to control not specific boss behaviours///////////////////////////////////////////////////////////////////////////////////////////
 void ABossManager::ActivateBoss(FVector playerLoc)
 {
 	float playerZ = playerLoc.Z;
-	float floorVal = (playerZ - playerOffset) / roomOffset;
+	float floorVal = (playerZ - playerOffset) / roomPlacementModifier;
 
 	if (floorVal == roomCount)
 	{
@@ -50,7 +67,30 @@ void ABossManager::ActivateBoss(FVector playerLoc)
 		}
 	}
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+//Functions to implement level complete functionality////////////////////////////////////////////////////////////////////////////////////////
+void ABossManager::SetIsBossKilled()
+{
+	isBossKilled = true;
+
+	AddLevelCompleteElements();
+}
+
+void ABossManager::AddLevelCompleteElements()
+{
+	for (TActorIterator<AInteractableObject> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AInteractableObject *Object = *ActorItr;
+		ActorItr->SetIsLevelComplete();
+	}
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//Functions to GET or PASS required variables between seperate class objects/////////////////////////////////////////////////////////////////
 void ABossManager::GetRoomCount()
 {
 	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
@@ -61,3 +101,39 @@ void ABossManager::GetRoomCount()
 	}
 }
 
+void ABossManager::GetRoomPlacementModifier()
+{
+	FVector offset;
+
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		offset = ActorItr->getRoomPlacementModifier();
+	}
+
+	roomPlacementModifier = offset.Z;
+}
+
+void ABossManager::GetPlayerZOffset()
+{
+	FVector offset;
+
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		offset = ActorItr->GetPlayerZOffset();
+	}
+
+	playerOffset = offset.Z;
+}
+
+float ABossManager::GetZOffset()
+{
+	FVector current = GetActorLocation();
+	float zOffset = (current.Z / roomCount) - roomPlacementModifier;
+
+	return (zOffset);
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

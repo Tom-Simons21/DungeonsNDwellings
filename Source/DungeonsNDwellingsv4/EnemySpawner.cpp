@@ -7,6 +7,7 @@
 #include "TileGeneratorParent.h"
 #include "DungeonsNDwellingsv4Pawn.h"
 #include "DoorSealSpawner.h"
+#include "TileGeneratorParent.h"
 
 // Sets default values
 AEnemySpawner::AEnemySpawner()
@@ -14,23 +15,32 @@ AEnemySpawner::AEnemySpawner()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	roomCount = 5;
+	//ensure all values relative to the enemy manager are reset each time the game is played/////////////////////////
+	roomCount = 0; 
+	roomPlacementModifier = FVector(0, 0, 0);
 	enemyTypePicker = 0;
 	enemyCount = 0;
 	spawnChanceSelector = 0;
-	usedRooms.Empty();
-	enemiesPerRoom.Empty();
-
 	enemyMinSpawn = 0;
 	enemyMaxSpawn = 0;
-	spawnDefaults.Empty();
+
+	//empty arrays
+	usedRooms.Empty();
+	enemiesPerRoom.Empty();
+	slugEnemyArray.Empty();
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
+
+//Functions to control basic functionality and on load features of the enemy manager///////////////////////////////////////////////////////////////////////////////////////////////////
 // Called when the game starts or when spawned
 void AEnemySpawner::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	GetRoomCount();
+	GetRoomPlacementModifier();
+
 	roomsUsed = usedRooms.Num();
 
 	enemyKilledCounter = 0;
@@ -62,7 +72,10 @@ void AEnemySpawner::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+//Functions to control randomly generating all values respective to enemy spawning, should be expandable to multiple enemy types///////////////////////////////////////////////////////////
 int AEnemySpawner::enemySpawnSelector()
 {
 	spawnChanceSelector = FMath::RandRange(1, 100);
@@ -87,8 +100,8 @@ int AEnemySpawner::enemyCountSelector(int enemyType)
 	}
 	if (enemyType == 1)
 	{
-		enemyMinSpawn = type1Min;
-		enemyMaxSpawn = type1Max;
+		enemyMinSpawn = minimumSpawnValue[enemyType];
+		enemyMaxSpawn = maximumSpawnValue[enemyType];
 
 		enemyCount = FMath::RandRange(enemyMinSpawn, enemyMaxSpawn);
 	}
@@ -129,7 +142,6 @@ int AEnemySpawner::spawnRoomSelector()
 	
 	usedRooms.Add(roomToSpawnIn);
 	return (roomToSpawnIn);
-
 }
 
 FTransform AEnemySpawner::getSpawnLocation(int enemyNum, int enemyType)
@@ -200,7 +212,7 @@ void AEnemySpawner::spawnEnemy(int enemyType, int enemyCount, int spawnRoom)
 			for (int i = 1; i <= enemyCount; i++)
 			{
 				spawnLocation = getSpawnLocation(i, enemyType);
-				spawnLocation.AddToTranslation((FVector(0, 0, 2000) * spawnRoom));
+				spawnLocation.AddToTranslation((roomPlacementModifier * spawnRoom));
 				spawnLocation.AddToTranslation(FVector(0, 0, 61));
 				ABasicSlugEnemy* slugActor = World->SpawnActor<ABasicSlugEnemy>(ABasicSlugEnemy::StaticClass(), spawnLocation);
 
@@ -208,10 +220,7 @@ void AEnemySpawner::spawnEnemy(int enemyType, int enemyCount, int spawnRoom)
 			}
 		}
 	}
-	
-	
 }
-
 
 void AEnemySpawner::getEnemiesPerRoom()
 {
@@ -234,31 +243,32 @@ void AEnemySpawner::getEnemiesPerRoom()
 		}
 
 		enemiesPerRoom.Add(enemyCounter);
-		zLoc += 2000;
+		zLoc += roomPlacementModifier.Z;
 	}
 
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+//Functions to modify and affect enemy behaviour and passing any logic or stat functions//////////////////////////////////////////////////////////////////////////////////////////////////////
 void AEnemySpawner::activateEnemies(FVector playLoc)
 {
 	float objectZLoc;
 
-	if (slugEnemyArray.Num() != 0)
+	for (int i = 0; i < slugEnemyArray.Num(); i++)
 	{
-		for (int i = 0; i < slugEnemyArray.Num(); i++)
-		{
-			objectZLoc = slugEnemyArray[i]->getZLocation();
+		objectZLoc = slugEnemyArray[i]->getZLocation();
 
-			if ((objectZLoc - 61) == (playLoc.Z - 22))
-			{
-				slugEnemyArray[i]->setIsEnemyActive();
-			}
+		if ((objectZLoc - 61) == (playLoc.Z - 22))
+		{
+			slugEnemyArray[i]->setIsEnemyActive();
 		}
 	}
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+//Functions to check room status and manage enemy objects - this will check if rooms have been emptied + remove destroyed enemies from their respective arrays////////////////////////////////
 void AEnemySpawner::checkRoomCleared(int roomNum)
 {
 	int enemiesInRoom;
@@ -278,12 +288,12 @@ void AEnemySpawner::checkRoomCleared(int roomNum)
 			ADoorSealSpawner *Object = *ActorItr;
 			ActorItr->openDoors(roomVal);
 		}
-		
 	}
 }
 
 void AEnemySpawner::removeArrayItem(FString objName)
 {
+	//To modify this in the future without create a function per enemy the name should be checked for a key word "slug" enemies should be appropriately named for this.
 	FString enemyName;
 
 	for (int i = 0; i < slugEnemyArray.Num(); i++)
@@ -295,6 +305,30 @@ void AEnemySpawner::removeArrayItem(FString objName)
 			slugEnemyArray.RemoveAt(i);
 		}
 	}
+	
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//Functions to GET and SET key variables between classes////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void AEnemySpawner::GetRoomCount()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		roomCount = ActorItr->getRoomCount();
+	}
 }
 
+void AEnemySpawner::GetRoomPlacementModifier()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		roomPlacementModifier = ActorItr->getRoomPlacementModifier();
+	}
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
