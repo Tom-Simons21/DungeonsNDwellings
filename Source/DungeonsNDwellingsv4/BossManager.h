@@ -26,10 +26,11 @@ public:
 	/*******************************************************************************PUBLIC VARIABLES***************************************************************************/
 
 	//Projectile Boss Spawn Point//////////////////////////////////////////////////////////////////////////////////////
-	FVector const spawnLocation = FVector(400, 400, 10032);								  	
+	FVector spawnLocation = FVector(400, 400, 0);
+	FVector const bossOffset = FVector(0, 0, 32);
 	FRotator const spawnRotation = FRotator(0, 0, 0);									  
 	FVector const spawnScale = FVector(1.3, 1.3, 0.6);									  
-	FTransform const spawnTrans = FTransform(spawnRotation, spawnLocation, spawnScale);   
+	FTransform spawnTrans = FTransform(spawnRotation, spawnLocation, spawnScale);   
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 

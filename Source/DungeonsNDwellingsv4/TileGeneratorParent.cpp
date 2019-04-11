@@ -28,6 +28,11 @@ ATileGeneratorParent::ATileGeneratorParent()
 	roomDoorCount = 0;
 	totalNumDoors = 0;
 	minNumDoors = 2;
+	maxNumDoors = 4;
+
+
+	testingTotal = 0;
+	valueToChange = 0;
 }
 
 //Standard begin play and tick functions, unlikely these should ever be used as this class only exists to expose blueprint variables to other classes//////////////////////////

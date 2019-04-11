@@ -34,6 +34,11 @@ void ABossManager::BeginPlay()
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Here goes the code to spawn the relevant boss//////////////////////////////////////////////////////////////////////////
+	spawnLocation = spawnLocation + bossOffset;
+	spawnLocation.Z += roomPlacementModifier * roomCount;
+
+	spawnTrans = FTransform(spawnRotation, spawnLocation, spawnScale);
+
 	UWorld* const World = GetWorld();
 	if (World != NULL)
 	{

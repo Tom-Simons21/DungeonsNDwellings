@@ -27,49 +27,76 @@ public:
 
 	//Variables to hold all the defaults used in the level/world building algorithm, initialised + declared here so they are exposed to other classes////////////////////////
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room Properties")
-	int32 roomXLength;
+		int32 roomXLength;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room Properties")
-	int32 roomYLength;
+		int32 roomYLength;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room Properties")
-	int32 tileSize;
+		int32 tileSize;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room Properties")
-	int32 roomCount;
+		int32 roomCount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room Properties")
-	FVector roomPlacementModifier;
+		FVector roomPlacementModifier;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wall Properties")
-	int32 wallXLength;
+		int32 wallXLength;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wall Properties")
-	int32 wallYLength;
+		int32 wallYLength;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wall Properties")
-	int32 singleWallLength;
+		int32 singleWallLength;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wall Properties")
-	int32 wallNo1;
+		int32 wallNo1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wall Properties")
-	int32 wallNo2;
+		int32 wallNo2;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wall Properties")
-	int32 wallNo3;
+		int32 wallNo3;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-	int32 roomDoorCount;
+		int32 roomDoorCount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-	TArray<int32> arrayOfDoors;
+		TArray<int32> arrayOfDoors;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-	int32 totalNumDoors;
+		int32 totalNumDoors;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-	int32 minNumDoors;
+		int32 minNumDoors;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
+		int32 maxNumDoors;
+
+
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
+		TArray<int32> testingArray;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
+		int32 testingTotal;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
+		bool isNotValid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
+		bool isCompleted;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
+		int32 valueToChange;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
+		int32 minTotalDoors;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
+		int32 maxTotalDoors;
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
