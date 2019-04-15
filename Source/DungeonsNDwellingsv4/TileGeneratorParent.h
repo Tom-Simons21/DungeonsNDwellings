@@ -77,14 +77,9 @@ public:
 
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-		TArray<int32> testingArray;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
 		int32 testingTotal;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-		bool isNotValid;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
 		bool isCompleted;

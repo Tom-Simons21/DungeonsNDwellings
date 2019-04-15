@@ -12,7 +12,7 @@ ATileGeneratorParent::ATileGeneratorParent()
 	roomXLength = 9;
 	roomYLength = 9;
 	tileSize = 100;
-	roomCount = 5;
+	roomCount = 6;
 	roomPlacementModifier = FVector(0, 0, 2000);
 	
 	//set up wall default values

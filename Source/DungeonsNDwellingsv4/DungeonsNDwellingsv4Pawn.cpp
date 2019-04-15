@@ -177,6 +177,7 @@ void ADungeonsNDwellingsv4Pawn::BeginPlay()
 	GetRoomPlacementModifier();
 	getTotalOfDoors();
 	createArrayOfDoors();
+	GetRoomCount();
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 
 	isDamageable = false;
@@ -237,7 +238,7 @@ void ADungeonsNDwellingsv4Pawn::checkPlayerLocation(FVector playerCurrentLoc, FV
 		else if (playerPosition.X >= 800)
 		{
 			newLocationAdjust = FVector(700, 400, 0);
-			doorLocation = FVector(0, 400, 0);
+			doorLocation = FVector(800, 400, 0);
 			doorNum = 3;
 		}
 		moveToRoom(playerZPosition, newLocationAdjust);
@@ -254,7 +255,7 @@ void ADungeonsNDwellingsv4Pawn::checkPlayerLocation(FVector playerCurrentLoc, FV
 		{
 			newLocationAdjust = FVector(400, 700, 0);
 			doorLocation = FVector(400, 800, 0);
-			doorNum = 3;
+			doorNum = 2;
 		}
 		moveToRoom(playerZPosition, newLocationAdjust);
 	}
@@ -272,7 +273,7 @@ void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector actorZ, FVector doorLocation)
 	do
 	{
 		isNewRoom = true;
-		floorPickMultiplier = FMath::RandRange(0, 5);
+		floorPickMultiplier = FMath::RandRange(0, roomCount);
 		floorCoord = floorPickMultiplier * roomPlacementModifier;
 
 		if (floorCoord.Z == playerZNoElevation.Z)
@@ -390,6 +391,16 @@ void ADungeonsNDwellingsv4Pawn::createArrayOfDoors()
 float ADungeonsNDwellingsv4Pawn::GetProjectileDamage()
 {
 	return (projectileDamage);
+}
+
+void ADungeonsNDwellingsv4Pawn::GetRoomCount()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		roomCount = ActorItr->getRoomCount();
+	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
