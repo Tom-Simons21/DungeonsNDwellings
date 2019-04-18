@@ -40,11 +40,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Materials)
 		UMaterialInstanceDynamic* dynamicMaterial;
 
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:
+
 	/**********************************************************************PUBLIC VARIABLES***************************************************************************/
 
+	FString bossName;
+	float bossDmg;
 
-
-	/**********************************************************************PUBLIC FUNCTIONS***************************************************************************/
 
 	void UpdateMaterials();
 };

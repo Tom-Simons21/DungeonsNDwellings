@@ -129,8 +129,11 @@ void ADoorSealSpawner::openDoors(int roomNumber)
 	{
 		for (int i = 0; i < doorSealArray.Num(); i++)
 		{
-			doorSealArray[i]->Destroy();
-			doorSealArray.RemoveAt(i);
+			if (doorSealArray[i]->IsValidLowLevel())
+			{
+				doorSealArray[i]->Destroy();
+				doorSealArray.RemoveAt(i);
+			}
 		}
 	}
 }

@@ -44,15 +44,17 @@ public:
 	//Variables to control player interaction with object////////////////////////////////////////////////////////////////////////////////////////////////////
 	UPROPERTY(EditAnywhere)
 	float distanceFromPlayer;						//this will track how far away the player is from the interactable
+	bool isItemRerolled;
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	//Variable to control and manage items that player interacts with////////////////////////////////////////////////////////////////////////////////////////
 	UPROPERTY(EditAnywhere)
-	int itemValue;									//this will randomly generate a number and then associate it with the relevant item
-	FString itemText;								//this will hold the item text needed to be passed back to the player to inform them of the item
+		int itemValue;									//this will randomly generate a number and then associate it with the relevant item
 	UPROPERTY(EditAnywhere)
-	TArray<int32> itemArray;
+		FString itemText;								//this will hold the item text needed to be passed back to the player to inform them of the item
+	UPROPERTY(EditAnywhere)
+		TArray<FString> itemArray = { "Strength-1", "Strength-2", "Strength-3", "Vigor-1", "Vigor-2", "Vigor-3", "Masses-1", "Masses-2", "Masses-3" };
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 
@@ -61,6 +63,14 @@ public:
 	float projectileMaxSpeed;
 	float projectileLifeSpan;
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	
+
+
+
+
+
 
 
 
@@ -76,13 +86,14 @@ public:
 	
 	//Functions to control player interaction with interactable////////////////////////////////////////////////////////////////////////////////////////////
 	void playerTakesItem();											//responds to player input and gives player an item
+	bool PlayerRerollItem();
 	void getPlayerLocation(FVector playerLoc);						//function to get the current location of player to be used in distance measure
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	//Functions to control item generation, selection and display//////////////////////////////////////////////////////////////////////////////////////////
 	void setItemValue();											//sets the value that will be used to determine the item passed to players
-	//void displayItemText();										//displays the item name / description to players
+	void displayItemText();										//displays the item name / description to players
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -94,5 +105,12 @@ public:
 	//Functions to get variables from external classes/////////////////////////////////////////////////////////////////////////////////////////////////////
 	void getRoomCount();
 	void getPlacementModifier();
+
+
+	UFUNCTION(BlueprintPure, Category = "Item Data")
+		FString GetItemName();
+
+	UFUNCTION(BlueprintPure, Category = "Item Data")
+		float GetDistanceFromPlayer();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };

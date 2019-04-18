@@ -11,8 +11,18 @@ class ADungeonsNDwellingsv4GameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
+		virtual void BeginPlay() override;  //override begin play from base class
+
 public:
 	ADungeonsNDwellingsv4GameMode();
+
+protected:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Health", Meta = (BlueprintProtected = "true"))
+		TSubclassOf<class UUserWidget> PlayerHUDClass;
+
+	UPROPERTY()
+		class UUserWidget* CurrentWidget;
 };
 
 

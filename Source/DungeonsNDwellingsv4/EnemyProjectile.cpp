@@ -7,6 +7,8 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine.h"
+#include "DungeonsNDwellingsv4Pawn.h"
+#include "BossManager.h"
 
 // Sets default values
 AEnemyProjectile::AEnemyProjectile()
@@ -41,18 +43,37 @@ AEnemyProjectile::AEnemyProjectile()
 		theMaterial = (UMaterialInstanceConstant*)Material.Object;
 	}
 
-
 	ProjectileMovement->InitialSpeed = 300;
 	ProjectileMovement->MaxSpeed = 300;
 	InitialLifeSpan = 4;
 }
 
+void AEnemyProjectile::BeginPlay()
+{
+	Super::BeginPlay();
+
+	for (TActorIterator<ABossManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ABossManager *Object = *ActorItr;
+		bossDmg = ActorItr->GetCurrentBossDmg();
+	}
+}
+
 void AEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Only add impulse and destroy projectile if we hit a physics
-	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL) && OtherComp->IsSimulatingPhysics())
+	FString actorName;
+
+	actorName = OtherActor->GetName();
+
+	if (actorName == "TP_TwinStickPawn_1")
 	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * 20.0f, GetActorLocation());
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->takeDamage(bossDmg);
+		}
 	}
 	Destroy();
 }

@@ -47,6 +47,7 @@ AProjectileBoss::AProjectileBoss()
 
 	//Set up boss stats
 	projectileBossContactDamage = 25;
+	projectileBossDmg = 20;
 	projectileBossHealth = 200;
 
 	//is boss turned on - off by default
@@ -360,5 +361,9 @@ void AProjectileBoss::GetRoomCount()
 		ATileGeneratorParent *Object = *ActorItr;
 		roomCount = ActorItr->getRoomCount();
 	}
+}
+float AProjectileBoss::GetBossProjectileDmg()
+{
+	return projectileBossDmg;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

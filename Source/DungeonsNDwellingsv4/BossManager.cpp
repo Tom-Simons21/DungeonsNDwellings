@@ -44,6 +44,13 @@ void ABossManager::BeginPlay()
 	{
 		AProjectileBoss* projectileBoss = World->SpawnActor<AProjectileBoss>(AProjectileBoss::StaticClass(), spawnTrans);
 	}
+
+	for (TActorIterator<AProjectileBoss> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AProjectileBoss *Object = *ActorItr;
+		currentBossDmg = ActorItr->GetBossProjectileDmg();
+	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
@@ -140,5 +147,10 @@ float ABossManager::GetZOffset()
 	float zOffset = (current.Z / roomCount) - roomPlacementModifier;
 
 	return (zOffset);
+}
+
+float ABossManager::GetCurrentBossDmg()
+{
+	return currentBossDmg;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

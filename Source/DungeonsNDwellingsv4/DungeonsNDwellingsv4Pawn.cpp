@@ -18,6 +18,7 @@
 #include "DoorSeal.h"
 #include "EnemySpawner.h"
 #include "BossManager.h"
+#include "MyPlayerController.h"
 
 const FName ADungeonsNDwellingsv4Pawn::MoveForwardBinding("MoveForward");
 const FName ADungeonsNDwellingsv4Pawn::MoveRightBinding("MoveRight");
@@ -71,6 +72,13 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 
 	//set values for player stats
 	playerHealth = 100;
+	playerGold = 0;
+	goldToAdd = 0;
+	winStreak = 0;
+	loseStreak = 0;
+
+	//pause variables
+	isPaused = false;
 }
 
 //Functions to control core functionality/////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +94,9 @@ void ADungeonsNDwellingsv4Pawn::SetupPlayerInputComponent(class UInputComponent*
 	PlayerInputComponent->BindAxis(FireRightBinding);
 
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ADungeonsNDwellingsv4Pawn::OnInteract);
+	PlayerInputComponent->BindAction("Reroll", IE_Pressed, this, &ADungeonsNDwellingsv4Pawn::OnReroll);
+	PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &ADungeonsNDwellingsv4Pawn::OnPauseGame);
+	PlayerInputComponent->BindAction("NextLevel", IE_Pressed, this, &ADungeonsNDwellingsv4Pawn::OnNextLevel);
 }
 
 void ADungeonsNDwellingsv4Pawn::Tick(float DeltaSeconds)
@@ -197,9 +208,112 @@ void ADungeonsNDwellingsv4Pawn::OnInteract()
 		ActorItr->playerTakesItem();
 	}
 }
+
+void ADungeonsNDwellingsv4Pawn::OnReroll()
+{
+	bool isRerolled = false;
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Reroll pressed.")));
+	}
+
+
+	if (playerGold >= 2)
+	{
+		for (TActorIterator<AInteractableObject> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			AInteractableObject *Object = *ActorItr;
+			isRerolled = ActorItr->PlayerRerollItem();
+		}
+
+		if (isRerolled == true)
+		{
+			playerGold -= 2;
+		}
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::OnPauseGame()
+{
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Pause pressed.")));
+	}
+
+	UWorld* const World = GetWorld();
+	UGameplayStatics::SetGamePaused(World, true);
+
+	AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
+	if (MyPlayer != NULL)
+	{
+		MyPlayer->OpenPauseMenu();
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::OnNextLevel()
+{
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Next Level Pressed.")));
+	}
+
+	AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
+	if (MyPlayer != NULL)
+	{
+		MyPlayer->DisplayTextPopup();
+	}
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+//Functions to control player currency and externals///////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ADungeonsNDwellingsv4Pawn::UpdatePlayerCurrency()
+{
+	int goldBonus;
+	int interest;
+
+	interest = playerGold / 10;
+
+	if (interest > 5)
+	{
+		interest = 5;
+	}
+	if (playerHealth < 100)
+	{
+		winStreak = 0;
+	}
+	if (playerHealth >= 25)
+	{
+		loseStreak = 0;
+	}
+
+	if (winStreak > 4)
+	{
+		winStreak = 4;
+	}
+	else if (loseStreak > 4)
+	{
+		loseStreak = 4;
+	}
+	
+	goldBonus = goldToAdd + interest + winStreak + loseStreak;
+
+	playerGold += goldBonus;
+
+	goldToAdd = 1;
+
+	if (playerHealth == 100)
+	{
+		winStreak++;
+	}
+	else if (playerHealth < 25)
+	{
+		loseStreak++;
+	}	
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Functions to control and track player location and movement within a level///////////////////////////////////////////////////////////////////////////////////
 void ADungeonsNDwellingsv4Pawn::getPlayerLocation()
@@ -298,6 +412,7 @@ void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector actorZ, FVector doorLocation)
 		ActorItr->ActivateBoss(playerNewLoc);
 	}
 
+	UpdatePlayerCurrency();
 	SetActorLocation(playerNewLoc, false);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -401,6 +516,16 @@ void ADungeonsNDwellingsv4Pawn::GetRoomCount()
 		ATileGeneratorParent *Object = *ActorItr;
 		roomCount = ActorItr->getRoomCount();
 	}
+}
+
+float ADungeonsNDwellingsv4Pawn::GetPlayerHealth()
+{
+	return playerHealth;
+}
+
+int ADungeonsNDwellingsv4Pawn::GetPlayerCurrency()
+{
+	return playerGold;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

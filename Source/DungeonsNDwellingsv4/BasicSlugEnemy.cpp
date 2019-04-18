@@ -102,6 +102,8 @@ void ABasicSlugEnemy::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 		}
 		else if (actorName.Contains("DungeonsNDwellingsv4Projectile_"))
 		{
+			OtherActor->Destroy();
+
 			for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 			{
 				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.

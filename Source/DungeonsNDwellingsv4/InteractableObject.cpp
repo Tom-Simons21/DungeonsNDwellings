@@ -7,6 +7,9 @@
 #include "Engine.h"
 #include "DungeonsNDwellingsv4Pawn.h"
 #include "TileGeneratorParent.h"
+#include "Components/TextBlock.h"
+#include "Blueprint/UserWidget.h"
+#include "MyPlayerController.h"
 
 // Sets default values
 AInteractableObject::AInteractableObject()
@@ -25,6 +28,8 @@ AInteractableObject::AInteractableObject()
 	SetActorScale3D(FVector(1, 1, 1));
 
 	Iteration = 1;
+
+	setItemValue();
 }
 
 
@@ -73,13 +78,13 @@ FVector AInteractableObject::updateSpawnLocation()
 
 int AInteractableObject::spawnInteractable(FVector spawnLoc)
 {
-		AInteractableObject* NewActor = GetWorld()->SpawnActor<AInteractableObject>(GetClass(), spawnLoc, FRotator::ZeroRotator);
+	AInteractableObject* NewActor = GetWorld()->SpawnActor<AInteractableObject>(GetClass(), spawnLoc, FRotator::ZeroRotator);
 
-		// Housekeeping so that we dont spawn new actors forever  
-		NewActor->Iteration = Iteration - 1;
-		Iteration = 0; // stop ourselves spawning any more 
+	// Housekeeping so that we dont spawn new actors forever  
+	NewActor->Iteration = Iteration - 1;
+	Iteration = 0; // stop ourselves spawning any more 
 
-		return Iteration;
+	return Iteration;
 }
 
 void AInteractableObject::SetIsLevelComplete()
@@ -94,12 +99,13 @@ void AInteractableObject::SetIsLevelComplete()
 void AInteractableObject::setItemValue()
 {
 	itemValue = FMath::RandRange(1, 3); //set's the value randomly between the range
+	itemText = itemArray[itemValue];
 }
 
-/*void AInteractableObject::displayItemText()
+void AInteractableObject::displayItemText()
 {
-
-}*/
+	
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -111,6 +117,29 @@ void AInteractableObject::getPlayerLocation(FVector playerPos)
 	FVector interactableLoc = GetActorLocation();
 
 	distanceFromPlayer = FVector::Dist(playerLoc, interactableLoc); //checking if distance is < 120
+
+	
+	if (distanceFromPlayer < 120)
+	{
+		//if (GEngine)
+		//{
+		//	  GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Close")));
+		//}
+
+		AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
+		if (MyPlayer != NULL)
+		{
+			MyPlayer->DisplayTextPopup();
+		}
+	}
+	else
+	{
+		AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
+		if (MyPlayer != NULL)
+		{
+			MyPlayer->RemoveTextPopup();
+		}
+	}
 }
 
 //function to modify the players projectiles so that they will have a different effect after an item is taken
@@ -155,6 +184,20 @@ void AInteractableObject::playerTakesItem()
 		}
 	}
 }
+
+bool AInteractableObject::PlayerRerollItem()
+{
+	isItemRerolled = false;
+
+	if (distanceFromPlayer < 120)
+	{
+		setItemValue();
+
+		isItemRerolled = true;
+	}
+
+	return (isItemRerolled);
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -197,5 +240,17 @@ void AInteractableObject::getPlacementModifier()
 		ATileGeneratorParent *Object = *ActorItr;
 		placementMod = ActorItr->getRoomPlacementModifier();
 	}
+}
+
+FString AInteractableObject::GetItemName()
+{
+	itemText = itemArray[itemValue];
+
+	return (itemText);
+}
+
+float AInteractableObject::GetDistanceFromPlayer()
+{
+	return (distanceFromPlayer);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
