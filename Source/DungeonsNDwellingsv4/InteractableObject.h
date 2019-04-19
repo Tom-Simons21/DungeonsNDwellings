@@ -43,6 +43,8 @@ public:
 
 	//Variables to control player interaction with object////////////////////////////////////////////////////////////////////////////////////////////////////
 	UPROPERTY(EditAnywhere)
+		bool isInteractable;
+	UPROPERTY(EditAnywhere)
 		float distanceFromPlayer;						//this will track how far away the player is from the interactable
 	UPROPERTY(EditAnywhere)
 		bool isItemRerolled;

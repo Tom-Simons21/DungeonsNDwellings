@@ -38,6 +38,8 @@ void AInteractableObject::BeginPlay()
 {
 	Super::BeginPlay();
 
+	this->isInteractable = true;
+
 	SelectItem();
 	getRoomCount();
 	getPlacementModifier();
@@ -139,15 +141,35 @@ void AInteractableObject::getPlayerLocation(FVector playerPos)
 //function to modify the players projectiles so that they will have a different effect after an item is taken
 void AInteractableObject::playerTakesItem()
 {
-	if (distanceFromPlayer < 120)
+	if (isInteractable == true)
 	{
-		Destroy();
+		if (distanceFromPlayer < 120)
+		{
+			for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+			{
+				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+				AItemManager *Object = *ActorItr;
+				ActorItr->AddItemToPlayer(this->GetName());
+			}
+
+			isInteractable = false;
+			itemName = " ";
+			this->SetActorHiddenInGame(true);
+			this->SetActorEnableCollision(false);
+		}
+		else
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Too Far Away"));
+			}
+		}
 	}
 	else
 	{
 		if (GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Too Far Away"));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Item already used."));
 		}
 	}
 }
@@ -156,23 +178,26 @@ bool AInteractableObject::PlayerRerollItem()
 {
 	isItemRerolled = false;
 
-	if (distanceFromPlayer < 120)
+	if (isInteractable == true)
 	{
-		for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		if (distanceFromPlayer < 120)
 		{
-			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-			AItemManager *Object = *ActorItr;
-			ActorItr->RerollItem(this->GetName());
-		}
+			for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+			{
+				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+				AItemManager *Object = *ActorItr;
+				ActorItr->RerollItem(this->GetName());
+			}
 
-		for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-		{
-			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-			AItemManager *Object = *ActorItr;
-			itemName = ActorItr->GetItemName();
-		}
+			for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+			{
+				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+				AItemManager *Object = *ActorItr;
+				itemName = ActorItr->GetItemName();
+			}
 
-		isItemRerolled = true;
+			isItemRerolled = true;
+		}
 	}
 
 	return (isItemRerolled);

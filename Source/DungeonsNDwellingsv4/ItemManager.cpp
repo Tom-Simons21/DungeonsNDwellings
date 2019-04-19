@@ -18,6 +18,7 @@ void AItemManager::BeginPlay()
 {
 	Super::BeginPlay();
 
+	currentAvailableItems.Empty();
 }
 
 // Called every frame
@@ -63,6 +64,27 @@ void AItemManager::RerollItem(FString objectName)
 		itemName = currentAvailableItems[1];
 		currentAvailableItems.RemoveAt(2);
 		itemPool.RemoveAt(itemValue);
+	}
+}
+
+void AItemManager::AddItemToPlayer(FString objectName)
+{
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Function Called")));
+	}
+
+	if (objectName == "InteractableObject0")
+	{
+		playerItems.Add(currentAvailableItems[0]);
+		currentAvailableItems.Insert(itemPool[0], 0);
+		currentAvailableItems.RemoveAt(1);
+	}
+	else if (objectName == "InteractableObject_0")
+	{
+		playerItems.Add(currentAvailableItems[1]);
+		currentAvailableItems.Insert(itemPool[0], 1);
+		currentAvailableItems.RemoveAt(2);
 	}
 }
 

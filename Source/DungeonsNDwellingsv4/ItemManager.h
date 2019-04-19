@@ -55,5 +55,7 @@ public:
 
 	void RerollItem(FString objectName);
 
+	void AddItemToPlayer(FString objectName);
+
 	FString GetItemName();
 };
