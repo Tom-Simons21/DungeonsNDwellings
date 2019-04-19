@@ -10,6 +10,7 @@
 #include "Components/TextBlock.h"
 #include "Blueprint/UserWidget.h"
 #include "MyPlayerController.h"
+#include "ItemManager.h"
 
 // Sets default values
 AInteractableObject::AInteractableObject()
@@ -28,8 +29,6 @@ AInteractableObject::AInteractableObject()
 	SetActorScale3D(FVector(1, 1, 1));
 
 	Iteration = 1;
-
-	setItemValue();
 }
 
 
@@ -39,7 +38,7 @@ void AInteractableObject::BeginPlay()
 {
 	Super::BeginPlay();
 
-	setItemValue();
+	SelectItem();
 	getRoomCount();
 	getPlacementModifier();
 }
@@ -96,15 +95,16 @@ void AInteractableObject::SetIsLevelComplete()
 
 //Functions to control item generation, selection, display, management////////////////////////////////////////////////////////////////////////////////////////////
 //function to generate a random number, each number will correspond to an item the player can collect.
-void AInteractableObject::setItemValue()
+void AInteractableObject::SelectItem()
 {
-	itemValue = FMath::RandRange(1, 3); //set's the value randomly between the range
-	itemText = itemArray[itemValue];
-}
+	for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AItemManager *Object = *ActorItr;
+		ActorItr->SelectItem();
+	}
 
-void AInteractableObject::displayItemText()
-{
-	
+	SetItemName();
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -118,14 +118,8 @@ void AInteractableObject::getPlayerLocation(FVector playerPos)
 
 	distanceFromPlayer = FVector::Dist(playerLoc, interactableLoc); //checking if distance is < 120
 
-	
 	if (distanceFromPlayer < 120)
 	{
-		//if (GEngine)
-		//{
-		//	  GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Close")));
-		//}
-
 		AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
 		if (MyPlayer != NULL)
 		{
@@ -147,34 +141,7 @@ void AInteractableObject::playerTakesItem()
 {
 	if (distanceFromPlayer < 120)
 	{
-		//this should be replaced by a switch case sequence in this future, this is temporary for ease + testing
-		if (itemValue == 1)
-		{
-			projectileSpeed = 500;
-			projectileMaxSpeed = 500;
-			projectileLifeSpan = 4;
-			callProjectileFunction(projectileSpeed, projectileMaxSpeed, projectileLifeSpan);
-
-			Destroy();
-		}
-		else if (itemValue == 2)
-		{
-			projectileSpeed = 1000;
-			projectileMaxSpeed = 1000;
-			projectileLifeSpan = 8;
-			callProjectileFunction(projectileSpeed, projectileMaxSpeed, projectileLifeSpan);
-
-			Destroy();
-		}
-		else if (itemValue == 3)
-		{
-			projectileSpeed = 1500;
-			projectileMaxSpeed = 1500;
-			projectileLifeSpan = 1.5;
-			callProjectileFunction(projectileSpeed, projectileMaxSpeed, projectileLifeSpan);
-
-			Destroy();
-		}
+		Destroy();
 	}
 	else
 	{
@@ -191,7 +158,19 @@ bool AInteractableObject::PlayerRerollItem()
 
 	if (distanceFromPlayer < 120)
 	{
-		setItemValue();
+		for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			AItemManager *Object = *ActorItr;
+			ActorItr->RerollItem(this->GetName());
+		}
+
+		for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			AItemManager *Object = *ActorItr;
+			itemName = ActorItr->GetItemName();
+		}
 
 		isItemRerolled = true;
 	}
@@ -199,23 +178,6 @@ bool AInteractableObject::PlayerRerollItem()
 	return (isItemRerolled);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-//Functions to call to relevant classes to modify variables based on player item selection///////////////////////////////////////////////////////////////////////////
-//function that calls to the projectile modification function, saves repeating it for every item variant
-void AInteractableObject::callProjectileFunction(float x, float y, float z)
-{
-	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-		ActorItr->updateProjectileValues(x, y, z);
-	}
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
 
 
 
@@ -242,11 +204,19 @@ void AInteractableObject::getPlacementModifier()
 	}
 }
 
+void AInteractableObject::SetItemName()
+{
+	for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AItemManager *Object = *ActorItr;
+		itemName = ActorItr->GetItemName();
+	}
+}
+
 FString AInteractableObject::GetItemName()
 {
-	itemText = itemArray[itemValue];
-
-	return (itemText);
+	return (itemName);
 }
 
 float AInteractableObject::GetDistanceFromPlayer()

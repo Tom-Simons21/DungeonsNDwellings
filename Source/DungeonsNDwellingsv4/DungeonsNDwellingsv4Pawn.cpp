@@ -213,12 +213,6 @@ void ADungeonsNDwellingsv4Pawn::OnReroll()
 {
 	bool isRerolled = false;
 
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Reroll pressed.")));
-	}
-
-
 	if (playerGold >= 2)
 	{
 		for (TActorIterator<AInteractableObject> ActorItr(GetWorld()); ActorItr; ++ActorItr)
@@ -258,12 +252,6 @@ void ADungeonsNDwellingsv4Pawn::OnNextLevel()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Next Level Pressed.")));
 	}
-
-	AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
-	if (MyPlayer != NULL)
-	{
-		MyPlayer->DisplayTextPopup();
-	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -289,13 +277,13 @@ void ADungeonsNDwellingsv4Pawn::UpdatePlayerCurrency()
 		loseStreak = 0;
 	}
 
-	if (winStreak > 4)
+	if (winStreak > 1)
 	{
-		winStreak = 4;
+		winStreak = 1;
 	}
-	else if (loseStreak > 4)
+	else if (loseStreak > 1)
 	{
-		loseStreak = 4;
+		loseStreak = 1;
 	}
 	
 	goldBonus = goldToAdd + interest + winStreak + loseStreak;

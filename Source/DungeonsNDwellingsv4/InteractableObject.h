@@ -25,7 +25,7 @@ public:
 
 	/** Interactable object component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = InteractableObject, meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* ConeMesh;
+		UStaticMeshComponent* ConeMesh;
 
 
 	/****************************************************************************PUBLIC VARIABLES***************************************************************************/
@@ -43,26 +43,17 @@ public:
 
 	//Variables to control player interaction with object////////////////////////////////////////////////////////////////////////////////////////////////////
 	UPROPERTY(EditAnywhere)
-	float distanceFromPlayer;						//this will track how far away the player is from the interactable
-	bool isItemRerolled;
+		float distanceFromPlayer;						//this will track how far away the player is from the interactable
+	UPROPERTY(EditAnywhere)
+		bool isItemRerolled;
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	//Variable to control and manage items that player interacts with////////////////////////////////////////////////////////////////////////////////////////
 	UPROPERTY(EditAnywhere)
-		int itemValue;									//this will randomly generate a number and then associate it with the relevant item
-	UPROPERTY(EditAnywhere)
-		FString itemText;								//this will hold the item text needed to be passed back to the player to inform them of the item
-	UPROPERTY(EditAnywhere)
-		TArray<FString> itemArray = { "Strength-1", "Strength-2", "Strength-3", "Vigor-1", "Vigor-2", "Vigor-3", "Masses-1", "Masses-2", "Masses-3" };
+		FString itemName;
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
-
-	//Variables to hold all the editable variable value properties for the respective effects////////////////////////////////////////////////////////////////
-	float projectileSpeed;
-	float projectileMaxSpeed;
-	float projectileLifeSpan;
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	
@@ -92,20 +83,16 @@ public:
 
 
 	//Functions to control item generation, selection and display//////////////////////////////////////////////////////////////////////////////////////////
-	void setItemValue();											//sets the value that will be used to determine the item passed to players
-	void displayItemText();										//displays the item name / description to players
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-	//Functions that call to relevant classes to apply item effects////////////////////////////////////////////////////////////////////////////////////////
-	void callProjectileFunction(float x, float y, float z);
+	void SelectItem();											//sets the value that will be used to determine the item passed to players
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	//Functions to get variables from external classes/////////////////////////////////////////////////////////////////////////////////////////////////////
 	void getRoomCount();
-	void getPlacementModifier();
 
+	void getPlacementModifier();
+	
+	void SetItemName();
 
 	UFUNCTION(BlueprintPure, Category = "Item Data")
 		FString GetItemName();
