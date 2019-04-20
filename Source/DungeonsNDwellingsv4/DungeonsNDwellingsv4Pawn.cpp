@@ -14,6 +14,7 @@
 #include "Sound/SoundBase.h"
 #include "Engine.h"
 #include "InteractableObject.h"
+#include "InteractableObjectManager.h"
 #include "TileGeneratorParent.h"
 #include "DoorSeal.h"
 #include "EnemySpawner.h"
@@ -201,11 +202,11 @@ void ADungeonsNDwellingsv4Pawn::BeginPlay()
 
 void ADungeonsNDwellingsv4Pawn::OnInteract()
 {
-	for (TActorIterator<AInteractableObject> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	for (TActorIterator<AInteractableObjectManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AInteractableObject *Object = *ActorItr;
-		ActorItr->playerTakesItem();
+		AInteractableObjectManager *Object = *ActorItr;
+		ActorItr->Claim();
 	}
 }
 
@@ -215,11 +216,11 @@ void ADungeonsNDwellingsv4Pawn::OnReroll()
 
 	if (playerGold >= 2)
 	{
-		for (TActorIterator<AInteractableObject> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		for (TActorIterator<AInteractableObjectManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-			AInteractableObject *Object = *ActorItr;
-			isRerolled = ActorItr->PlayerRerollItem();
+			AInteractableObjectManager *Object = *ActorItr;
+			isRerolled = ActorItr->Reroll();
 		}
 
 		if (isRerolled == true)

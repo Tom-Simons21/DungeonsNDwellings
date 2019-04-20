@@ -17,17 +17,6 @@ void AMyPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	/*
-	if (ItemTextPopupClass != nullptr)
-	{
-		PopUpWidget = CreateWidget<UUserWidget>(GetWorld(), ItemTextPopupClass);
-
-		if (PopUpWidget != nullptr)
-		{
-			PopUpWidget->AddToViewport();
-		}
-	}
-	*/
 }
 
 void AMyPlayerController::DisplayTextPopup()

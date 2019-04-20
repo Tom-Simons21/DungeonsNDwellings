@@ -6,7 +6,7 @@
 #include "Engine/World.h"
 #include "TileGeneratorParent.h"
 #include "DungeonsNDwellingsv4Pawn.h"
-#include "InteractableObject.h"
+#include "InteractableObjectManager.h"
 
 // Sets default values
 ABossManager::ABossManager()
@@ -92,11 +92,11 @@ void ABossManager::SetIsBossKilled()
 
 void ABossManager::AddLevelCompleteElements()
 {
-	for (TActorIterator<AInteractableObject> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	for (TActorIterator<AInteractableObjectManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AInteractableObject *Object = *ActorItr;
-		ActorItr->SetIsLevelComplete();
+		AInteractableObjectManager *Object = *ActorItr;
+		ActorItr->SpawnInteractableOnComplete();
 	}
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

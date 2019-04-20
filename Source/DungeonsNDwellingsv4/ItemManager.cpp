@@ -11,14 +11,15 @@ AItemManager::AItemManager()
 	PrimaryActorTick.bCanEverTick = true;
 
 	availableItemsCounter = 0;
+
+	currentAvailableItems.Empty();
 }
 
 // Called when the game starts or when spawned
 void AItemManager::BeginPlay()
 {
 	Super::BeginPlay();
-
-	currentAvailableItems.Empty();
+	
 }
 
 // Called every frame
@@ -28,17 +29,24 @@ void AItemManager::Tick(float DeltaTime)
 
 }
 
-void AItemManager::SelectItem()
+void AItemManager::SelectItem(FString objectName)
 {
 	if (itemPool.Num() > 1)
 	{
 		itemValue = FMath::RandRange(1, itemPool.Num() - 1);
 
-		currentAvailableItems.Add(itemPool[itemValue]);
-		availableItemsCounter += 1;
-		itemName = currentAvailableItems[availableItemsCounter - 1];
+		if (objectName == "InteractableObject_0")
+		{
+			currentAvailableItems.Add(itemPool[itemValue]);
 
-		itemPool.RemoveAt(itemValue);
+			itemPool.RemoveAt(itemValue);
+		}
+		else if (objectName == "InteractableObject_1")
+		{
+			currentAvailableItems.Add(itemPool[itemValue]);
+
+			itemPool.RemoveAt(itemValue);
+		}
 	}
 }
 
@@ -49,19 +57,17 @@ void AItemManager::RerollItem(FString objectName)
 		itemValue = FMath::RandRange(1, itemPool.Num() - 1);
 	}
 
-	if (objectName == "InteractableObject0")
+	if (objectName == "InteractableObject_0")
 	{
 		itemPool.Add(currentAvailableItems[0]);
 		currentAvailableItems.Insert(itemPool[itemValue], 0);
-		itemName = currentAvailableItems[0];
 		currentAvailableItems.RemoveAt(1);
 		itemPool.RemoveAt(itemValue);
 	}
-	else if (objectName == "InteractableObject_0")
+	else if (objectName == "InteractableObject_1")
 	{
 		itemPool.Add(currentAvailableItems[1]);
 		currentAvailableItems.Insert(itemPool[itemValue], 1);
-		itemName = currentAvailableItems[1];
 		currentAvailableItems.RemoveAt(2);
 		itemPool.RemoveAt(itemValue);
 	}
@@ -74,13 +80,13 @@ void AItemManager::AddItemToPlayer(FString objectName)
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Function Called")));
 	}
 
-	if (objectName == "InteractableObject0")
+	if (objectName == "InteractableObject_0")
 	{
 		playerItems.Add(currentAvailableItems[0]);
 		currentAvailableItems.Insert(itemPool[0], 0);
 		currentAvailableItems.RemoveAt(1);
 	}
-	else if (objectName == "InteractableObject_0")
+	else if (objectName == "InteractableObject_1")
 	{
 		playerItems.Add(currentAvailableItems[1]);
 		currentAvailableItems.Insert(itemPool[0], 1);
@@ -92,9 +98,9 @@ void AItemManager::AddItemToPlayer(FString objectName)
 
 //Public GET and SET functions////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-FString AItemManager::GetItemName()
+TArray<FString> AItemManager::GetCurrentItems()
 {
-	return (itemName);
+	return (currentAvailableItems);
 }
 
 

@@ -33,11 +33,9 @@ private:
 		int availableItemsCounter;
 	UPROPERTY(EditAnywhere)
 		int itemValue;									//this will randomly generate a number and then associate it with the relevant item
-	UPROPERTY(EditAnywhere)
-		FString itemName;
 
 	UPROPERTY(EditAnywhere)
-		TArray<FString> itemPool = { "No-Item", "Strength-1", "Strength-2", "Strength-3", "Vigor-1", "Vigor-2", "Vigor-3", "Masses-1", "Masses-2", "Masses-3" }; //0 is no item for the sake of checking the currentAvailableArray;
+		TArray<FString> itemPool = { "  ", "Strength-1", "Strength-2", "Strength-3", "Vigor-1", "Vigor-2", "Vigor-3", "Masses-1", "Masses-2", "Masses-3" }; //0 is no item for the sake of checking the currentAvailableArray;
 	UPROPERTY(EditAnywhere)
 		TArray<FString> currentAvailableItems;
 	UPROPERTY(EditAnywhere)
@@ -51,11 +49,12 @@ private:
 	
 public:
 
-	void SelectItem();
+	void SelectItem(FString objectName);
 
 	void RerollItem(FString objectName);
 
 	void AddItemToPlayer(FString objectName);
 
-	FString GetItemName();
+	UFUNCTION(BlueprintPure, Category = "Item Widget")
+		TArray<FString> GetCurrentItems();
 };

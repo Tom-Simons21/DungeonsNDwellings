@@ -11,6 +11,7 @@
 #include "Blueprint/UserWidget.h"
 #include "MyPlayerController.h"
 #include "ItemManager.h"
+#include "InteractableObjectManager.h"
 
 // Sets default values
 AInteractableObject::AInteractableObject()
@@ -27,8 +28,6 @@ AInteractableObject::AInteractableObject()
 	ConeMesh->SetStaticMesh(InteractableObjectAsset.Object);
 	ConeMesh->SetupAttachment(RootComponent);
 	SetActorScale3D(FVector(1, 1, 1));
-
-	Iteration = 1;
 }
 
 
@@ -41,8 +40,6 @@ void AInteractableObject::BeginPlay()
 	this->isInteractable = true;
 
 	SelectItem();
-	getRoomCount();
-	getPlacementModifier();
 }
 
 // Called every frame
@@ -50,63 +47,22 @@ void AInteractableObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (isLevelComplete == true)
-	{
-		if (Iteration > 0)
-		{
-			TimeToSpawn -= DeltaTime;
-			if (TimeToSpawn < 0.f)
-			{
-				// Make a location for the new actor to spawn at
-				FVector NewLocation = updateSpawnLocation();
-
-				//call function to spawn actor, passes back the value for iteration.
-				Iteration = spawnInteractable(NewLocation);
-			}
-		}
-	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-//Functions to control the spawning of the interactable object/////////////////////////////////////////////////////////////////////////////////////////////////////
-FVector AInteractableObject::updateSpawnLocation()
-{
-	secondSpawnPoint = startingSpawnPoint + (placementMod * roomCount);
-
-	return (secondSpawnPoint);
-}
-
-int AInteractableObject::spawnInteractable(FVector spawnLoc)
-{
-	AInteractableObject* NewActor = GetWorld()->SpawnActor<AInteractableObject>(GetClass(), spawnLoc, FRotator::ZeroRotator);
-
-	// Housekeeping so that we dont spawn new actors forever  
-	NewActor->Iteration = Iteration - 1;
-	Iteration = 0; // stop ourselves spawning any more 
-
-	return Iteration;
-}
-
-void AInteractableObject::SetIsLevelComplete()
-{
-	isLevelComplete = true;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 //Functions to control item generation, selection, display, management////////////////////////////////////////////////////////////////////////////////////////////
 //function to generate a random number, each number will correspond to an item the player can collect.
 void AInteractableObject::SelectItem()
 {
+	FString name = this->GetName();
+
 	for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		AItemManager *Object = *ActorItr;
-		ActorItr->SelectItem();
+		ActorItr->SelectItem(name);
 	}
-
-	SetItemName();
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -115,26 +71,40 @@ void AInteractableObject::SelectItem()
 //function to get the current location of the player
 void AInteractableObject::getPlayerLocation(FVector playerPos)
 {
+	bool isCloseEnough;
 	FVector playerLoc = playerPos;
 	FVector interactableLoc = GetActorLocation();
 
 	distanceFromPlayer = FVector::Dist(playerLoc, interactableLoc); //checking if distance is < 120
 
-	if (distanceFromPlayer < 120)
+	for (TActorIterator<AInteractableObjectManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
-		AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
-		if (MyPlayer != NULL)
-		{
-			MyPlayer->DisplayTextPopup();
-		}
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AInteractableObjectManager *Object = *ActorItr;
+		isCloseEnough = ActorItr->CheckDistanceFromPlayer();
 	}
-	else
+
+	if (isCloseEnough == false)
 	{
-		AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
-		if (MyPlayer != NULL)
-		{
-			MyPlayer->RemoveTextPopup();
-		}
+		RemoveItemText();
+	}
+}
+
+void AInteractableObject::DisplayItemText()
+{
+	AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
+	if (MyPlayer != NULL)
+	{
+		MyPlayer->DisplayTextPopup();
+	}
+}
+
+void AInteractableObject::RemoveItemText()
+{
+	AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
+	if (MyPlayer != NULL)
+	{
+		MyPlayer->RemoveTextPopup();
 	}
 }
 
@@ -142,28 +112,17 @@ void AInteractableObject::getPlayerLocation(FVector playerPos)
 void AInteractableObject::playerTakesItem()
 {
 	if (isInteractable == true)
-	{
-		if (distanceFromPlayer < 120)
+	{		
+		for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
-			for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-			{
-				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-				AItemManager *Object = *ActorItr;
-				ActorItr->AddItemToPlayer(this->GetName());
-			}
-
-			isInteractable = false;
-			itemName = " ";
-			this->SetActorHiddenInGame(true);
-			this->SetActorEnableCollision(false);
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			AItemManager *Object = *ActorItr;
+			ActorItr->AddItemToPlayer(this->GetName());
 		}
-		else
-		{
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Too Far Away"));
-			}
-		}
+		isInteractable = false;
+		itemName = " ";
+		this->SetActorHiddenInGame(true);
+		this->SetActorEnableCollision(false);
 	}
 	else
 	{
@@ -180,26 +139,15 @@ bool AInteractableObject::PlayerRerollItem()
 
 	if (isInteractable == true)
 	{
-		if (distanceFromPlayer < 120)
+		for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
-			for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-			{
-				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-				AItemManager *Object = *ActorItr;
-				ActorItr->RerollItem(this->GetName());
-			}
-
-			for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-			{
-				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-				AItemManager *Object = *ActorItr;
-				itemName = ActorItr->GetItemName();
-			}
-
-			isItemRerolled = true;
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			AItemManager *Object = *ActorItr;
+			ActorItr->RerollItem(this->GetName());
 		}
-	}
 
+		isItemRerolled = true;
+	}
 	return (isItemRerolled);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -209,43 +157,5 @@ bool AInteractableObject::PlayerRerollItem()
 
 
 //Functions to GET and pass variables to external classes, all too be called in BeginPlay()////////////////////////////////////////////////////////////////////////
-void AInteractableObject::getRoomCount()
-{
-	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ATileGeneratorParent *Object = *ActorItr;
-		roomCount = ActorItr->getRoomCount();
-	}
-}
 
-void AInteractableObject::getPlacementModifier()
-{
-	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ATileGeneratorParent *Object = *ActorItr;
-		placementMod = ActorItr->getRoomPlacementModifier();
-	}
-}
-
-void AInteractableObject::SetItemName()
-{
-	for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AItemManager *Object = *ActorItr;
-		itemName = ActorItr->GetItemName();
-	}
-}
-
-FString AInteractableObject::GetItemName()
-{
-	return (itemName);
-}
-
-float AInteractableObject::GetDistanceFromPlayer()
-{
-	return (distanceFromPlayer);
-}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -30,17 +30,6 @@ public:
 
 	/****************************************************************************PUBLIC VARIABLES***************************************************************************/
 
-	//Variables to control interactable item spawning////////////////////////////////////////////////////////////////////////////////////////////////////////
-	int Iteration;												//integer variable to dictate how many times we "spawn" our interactable item
-	float TimeToSpawn;											//spawns object whenever Iteration is true
-	FVector const startingSpawnPoint = FVector(400, 400, 50);
-	FVector secondSpawnPoint;
-	int roomCount;
-	FVector placementMod;
-	bool isLevelComplete;
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 	//Variables to control player interaction with object////////////////////////////////////////////////////////////////////////////////////////////////////
 	UPROPERTY(EditAnywhere)
 		bool isInteractable;
@@ -70,36 +59,16 @@ public:
 	
 	/*******************************************************************************PUBLIC FUNCTIONS***************************************************************************/
 	
-	//Functions to control spawning the interactable object////////////////////////////////////////////////////////////////////////////////////////////////
-	FVector updateSpawnLocation();									//function that will calculate the spawn location of the 2nd object per level
-	int spawnInteractable(FVector spawnLoc);						//function that will control the spawning of the interactable object
-	void SetIsLevelComplete();
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	
 	//Functions to control player interaction with interactable////////////////////////////////////////////////////////////////////////////////////////////
 	void playerTakesItem();											//responds to player input and gives player an item
 	bool PlayerRerollItem();
 	void getPlayerLocation(FVector playerLoc);						//function to get the current location of player to be used in distance measure
+	void DisplayItemText();
+	void RemoveItemText();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	//Functions to control item generation, selection and display//////////////////////////////////////////////////////////////////////////////////////////
 	void SelectItem();											//sets the value that will be used to determine the item passed to players
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-	//Functions to get variables from external classes/////////////////////////////////////////////////////////////////////////////////////////////////////
-	void getRoomCount();
-
-	void getPlacementModifier();
-	
-	void SetItemName();
-
-	UFUNCTION(BlueprintPure, Category = "Item Data")
-		FString GetItemName();
-
-	UFUNCTION(BlueprintPure, Category = "Item Data")
-		float GetDistanceFromPlayer();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };
