@@ -40,11 +40,13 @@ void AEnemySpawner::BeginPlay()
 	
 	GetRoomCount();
 	GetRoomPlacementModifier();
+	GetPlayerZOffset();
 
 	roomsUsed = usedRooms.Num();
 
 	enemyKilledCounter = 0;
 
+	//enemy spawner always uses roomCount - 2 to account for no spawning in first or last room
 	for (int i = 0; i <= (roomCount - 2); i++)
 	{
 		if (roomsUsed <= (roomCount - 2))
@@ -64,6 +66,7 @@ void AEnemySpawner::BeginPlay()
 	}
 
 	getEnemiesPerRoom();
+	GetSlugEnemyZ();
 }
 
 // Called every frame
@@ -234,7 +237,7 @@ void AEnemySpawner::getEnemiesPerRoom()
 
 		for (int j = 0; j < slugEnemyArray.Num(); j++)
 		{
-			enemyZLoc = slugEnemyArray[j]->getZLocation();
+			enemyZLoc = slugEnemyArray[j]->GetZLocation();
 
 			if (enemyZLoc == zLoc)
 			{
@@ -257,9 +260,9 @@ void AEnemySpawner::activateEnemies(FVector playLoc)
 
 	for (int i = 0; i < slugEnemyArray.Num(); i++)
 	{
-		objectZLoc = slugEnemyArray[i]->getZLocation();
+		objectZLoc = slugEnemyArray[i]->GetZLocation();
 
-		if ((objectZLoc - 61) == (playLoc.Z - 22))
+		if ((objectZLoc - enemyZOffset) == (playLoc.Z - playerZOffset))
 		{
 			slugEnemyArray[i]->setIsEnemyActive();
 		}
@@ -328,6 +331,29 @@ void AEnemySpawner::GetRoomPlacementModifier()
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ATileGeneratorParent *Object = *ActorItr;
 		roomPlacementModifier = ActorItr->getRoomPlacementModifier();
+	}
+}
+void AEnemySpawner::GetPlayerZOffset()
+{
+	FVector zOffset;
+
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		zOffset = ActorItr->GetPlayerZOffset();
+	}
+
+	playerZOffset = zOffset.Z;
+}
+
+void AEnemySpawner::GetSlugEnemyZ()
+{
+	for (TActorIterator<ABasicSlugEnemy> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ABasicSlugEnemy *Object = *ActorItr;
+		enemyZOffset = ActorItr->GetZOffset();
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

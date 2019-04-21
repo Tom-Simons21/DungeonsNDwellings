@@ -47,7 +47,7 @@ AProjectileBoss::AProjectileBoss()
 
 	//Set up boss stats
 	projectileBossContactDamage = 25;
-	projectileBossDmg = 20;
+	projectileBossDmg = 10;
 	projectileBossHealth = 200;
 
 	//is boss turned on - off by default
@@ -159,7 +159,7 @@ void AProjectileBoss::SelectBossAttack()
 	}
 	else if (attackName == "pulsating")
 	{
-		timeToRun = 8;
+		timeToRun = 4.8;
 		endTime = GetWorld()->GetTimeSeconds() + timeToRun;
 		//Binding the function with specific values
 		timerDel.BindUFunction(this, FName("PulsatingAttack_One"), endTime);
@@ -242,7 +242,7 @@ void AProjectileBoss::PulsatingAttack_One(float endTime)
 	
 	FVector sca = FVector(1, 1, 1);
 	float radius = 35;
-	int quantity = 10;
+	int quantity = 9;
 
 	float position;
 	FRotator rotation;
@@ -280,7 +280,7 @@ void AProjectileBoss::PulsatingAttack_Two(float endTime)
 	
 	FVector sca = FVector(1, 1, 1);
 	float radius = 20;
-	int quantity = 10;
+	int quantity = 9;
 
 	float position;
 	FRotator rotation;

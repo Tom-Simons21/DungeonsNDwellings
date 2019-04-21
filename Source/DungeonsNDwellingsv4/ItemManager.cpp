@@ -29,6 +29,7 @@ void AItemManager::Tick(float DeltaTime)
 
 }
 
+//Function to select items from the current item pool and allow player collections
 void AItemManager::SelectItem(FString objectName)
 {
 	if (itemPool.Num() > 1)
@@ -50,8 +51,11 @@ void AItemManager::SelectItem(FString objectName)
 	}
 }
 
+
+//Controlling functionality of player item interaction, setting items on reroll, setting items to player array on take///////////////////////////////////////////////////////
 void AItemManager::RerollItem(FString objectName)
 {
+	//We use a lot of hard set variables in these functions because the current design is only to have 2 items per level
 	if (itemPool.Num() > 1)
 	{
 		itemValue = FMath::RandRange(1, itemPool.Num() - 1);
@@ -75,11 +79,7 @@ void AItemManager::RerollItem(FString objectName)
 
 void AItemManager::AddItemToPlayer(FString objectName)
 {
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Function Called")));
-	}
-
+	//We use a lot of hard set variables in these functions because the current design is only to have 2 items per level
 	if (objectName == "InteractableObject_0")
 	{
 		playerItems.Add(currentAvailableItems[0]);
@@ -93,10 +93,11 @@ void AItemManager::AddItemToPlayer(FString objectName)
 		currentAvailableItems.RemoveAt(2);
 	}
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
-//Public GET and SET functions////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Public GET and SET functions///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 TArray<FString> AItemManager::GetCurrentItems()
 {

@@ -30,11 +30,22 @@ public:
 	//Variables to manage door spawning and management/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	FTransform position;
 
+	FVector const scale = FVector(0.3, 0.95, 1.2);
+
 	UPROPERTY(EditAnywhere)
 		TArray<ADoorSeal*> doorSealArray;
 
 	UPROPERTY(EditAnywhere)
 		int roomsOpened;
+
+
+	UPROPERTY(EditAnywhere)
+		TArray<FVector> doorPositionsArray = { FVector(0, 0, 0), FVector(20, 400, 61), FVector(400, 780, 61), FVector(780, 400, 61), FVector(400, 20, 61) };
+
+	UPROPERTY(EditAnywhere)
+		TArray<FRotator> doorRotationsArray = { FRotator(0, 0, 0), FRotator(0, 0, 0), FRotator(0, 90, 0), FRotator(0, 0, 0), FRotator(0, 90, 0) };
+
+	float const doorZOffset = 61;
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	

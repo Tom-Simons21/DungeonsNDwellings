@@ -78,7 +78,7 @@ bool AInteractableObjectManager::CheckDistanceFromPlayer()
 	{
 		distance = interactableObjectArray[i]->distanceFromPlayer;
 
-		if (distance < 120)
+		if (distance < minimumDistanceToInteract)
 		{
 			isCloseEnough = true;
 			interactableObjectArray[i]->DisplayItemText();
@@ -96,7 +96,7 @@ bool AInteractableObjectManager::Reroll()
 	{
 		distance = interactableObjectArray[i]->distanceFromPlayer;
 
-		if (distance < 120)
+		if (distance < minimumDistanceToInteract)
 		{
 			isRerolled = interactableObjectArray[i]->PlayerRerollItem();
 			break;
@@ -111,7 +111,7 @@ void AInteractableObjectManager::Claim()
 	{
 		distance = interactableObjectArray[i]->distanceFromPlayer;
 
-		if (distance < 120)
+		if (distance < minimumDistanceToInteract)
 		{
 			interactableObjectArray[i]->playerTakesItem();
 			break;

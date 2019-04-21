@@ -8,6 +8,7 @@
 #include "DungeonsNDwellingsv4Pawn.h"
 #include "DungeonsNDwellingsv4Projectile.h"
 #include "EnemySpawner.h"
+#include "TileGeneratorParent.h"
 
 // Sets default values
 ABasicSlugEnemy::ABasicSlugEnemy()
@@ -49,9 +50,9 @@ ABasicSlugEnemy::ABasicSlugEnemy()
 	isEnemyActive = false;
 
 	//default values for this specific enemy type
-	moveSpeed = 45;
+	moveSpeed = 80;
 	slugHealth = 40;
-	slugDamage = 10;
+	slugDamage = 15;
 }
 
 
@@ -60,6 +61,8 @@ ABasicSlugEnemy::ABasicSlugEnemy()
 void ABasicSlugEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GetRoomPlacementModifier();
 }
 
 // Called every frame
@@ -141,9 +144,9 @@ void ABasicSlugEnemy::moveTowardsPlayer(float deltaTime)
 //Functions to control slug enemies taking damage and the application of status effects////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ABasicSlugEnemy::takeDamage(float dmg)
 {
-	float zLoc = getZLocation();
+	float zLoc = GetZLocation();
 	FString enemyName = this->GetName();
-	int roomNumber = (zLoc - 61) / 2000;
+	int roomNumber = (zLoc - slugZOffset) / roomPlacementModifier.Z;
 
 	slugHealth -= dmg;
 
@@ -163,10 +166,25 @@ void ABasicSlugEnemy::takeDamage(float dmg)
 
 
 //Functions to GET and SET key variables between classes//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-float ABasicSlugEnemy::getZLocation()
+float ABasicSlugEnemy::GetZLocation()
 {
 	FVector loc = GetActorLocation();
 	float zLoc = loc.Z;
 	return (zLoc);
+}
+
+float ABasicSlugEnemy::GetZOffset()
+{
+	return (slugZOffset);
+}
+
+void ABasicSlugEnemy::GetRoomPlacementModifier()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		roomPlacementModifier = ActorItr->getRoomPlacementModifier();
+	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

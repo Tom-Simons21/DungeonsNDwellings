@@ -35,7 +35,6 @@ void ADoorSealSpawner::BeginPlay()
 void ADoorSealSpawner::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -45,7 +44,6 @@ void ADoorSealSpawner::setupSpawns()
 {
 	FVector location;
 	FRotator rotation;
-	FVector scale;
 	FVector zLocation;
 
 	for (int i = 1; i <= 4; i++)
@@ -56,27 +54,23 @@ void ADoorSealSpawner::setupSpawns()
 
 			if (i == 1)
 			{
-				location = FVector(20, 400, 61) + zLocation;
-				rotation = FRotator(0, 0, 0);
-				scale = FVector(0.3, 0.95, 1.2);
+				location = doorPositionsArray[i] + zLocation;
+				rotation = doorRotationsArray[i];
 			}
 			else if (i == 2)
 			{
-				location = FVector(400, 780, 61) + zLocation;
-				rotation = FRotator(0, 90, 0);
-				scale = FVector(0.3, 0.95, 1.2);
+				location = doorPositionsArray[i] + zLocation;
+				rotation = doorRotationsArray[i];
 			}
 			else if (i == 3)
 			{
-				location = FVector(780, 400, 61) + zLocation;
-				rotation = FRotator(0, 0, 0);
-				scale = FVector(0.3, 0.95, 1.2);
+				location = doorPositionsArray[i] + zLocation;
+				rotation = doorRotationsArray[i];
 			}
 			else if (i == 4)
 			{
-				location = FVector(400, 20, 61) + zLocation;
-				rotation = FRotator(0, 90, 0);
-				scale = FVector(0.3, 0.95, 1.2);
+				location = doorPositionsArray[i] + zLocation;
+				rotation = doorRotationsArray[i];
 			}
 
 			position = FTransform(rotation, location, scale);
@@ -107,7 +101,7 @@ void ADoorSealSpawner::openDoors(int roomNumber)
 {
 	roomsOpened += 1;
 
-	float doorZValue = (roomNumber * roomPlacementModifier.Z) + 61;
+	float doorZValue = (roomNumber * roomPlacementModifier.Z) + doorZOffset;
 	FVector doorLoc;
 
 	for (int i = 0; i < doorSealArray.Num(); i++)

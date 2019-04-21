@@ -80,6 +80,14 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 
 	//pause variables
 	isPaused = false;
+
+	strBuffActive = false;
+	massBuffActive = false;
+	vigBuffActive = false;
+
+	spawnChanceValue = 0;
+
+	healthRegenValue = 0;
 }
 
 //Functions to control core functionality/////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -304,6 +312,86 @@ void ADungeonsNDwellingsv4Pawn::UpdatePlayerCurrency()
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+//Functions for item management and buff/debuff application////////////////////////////////////////////////////////////////////////////////////////////////////
+void ADungeonsNDwellingsv4Pawn::SetStrBuff()
+{
+	strBuffActive = true;
+}
+
+void ADungeonsNDwellingsv4Pawn::SetMassBuff()
+{
+	massBuffActive = true;
+}
+
+void ADungeonsNDwellingsv4Pawn::SetVigBuff()
+{
+	vigBuffActive = true;
+}
+
+void ADungeonsNDwellingsv4Pawn::ModifyPlayerDamage(float percentDamageIncrease)
+{
+	if (strBuffActive == true)
+	{
+		projectileDamage = projectileDefaultDamage * percentDamageIncrease;
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::ModifyProjectileSpawnChance(int spawnChanceModifier)
+{
+	if (massBuffActive == true)
+	{
+		spawnChanceValue = spawnChanceModifier;
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::ModifyPlayerHealth(float healthIncrease, bool isHealthRegening, float healthRegenAmount)
+{
+	if (vigBuffActive == true)
+	{
+		playerMaxHealth += healthIncrease;
+	}
+
+	if (isHealthRegening == true)
+	{
+		healthRegenValue += healthRegenAmount;
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::SpawnAdditionalShots(FVector FireDirection)
+{
+	const FRotator FireRotation = FireDirection.Rotation();
+	// Spawn projectile at an offset from this pawn
+	const FVector SpawnLocation = GetActorLocation() + FireRotation.RotateVector(GunOffset + FVector(0, 15, 0));
+	const FVector Scale = FVector(1, 1, 1);
+
+	const FTransform SpawnPosition = FTransform(FireRotation, SpawnLocation, Scale);
+
+	int spawnChance = FMath::RandRange(1, spawnChanceValue);
+
+	UWorld* const World = GetWorld();
+	if (World != NULL)
+	{
+		if (spawnChance == 1)
+		{
+			// spawn the projectile
+			ADungeonsNDwellingsv4Projectile* projectileActor = World->SpawnActorDeferred<ADungeonsNDwellingsv4Projectile>(ADungeonsNDwellingsv4Projectile::StaticClass(), SpawnPosition);
+			projectileActor->updateProperties(initialSpeed, maxSpeed, lifeSpan);
+			projectileActor->FinishSpawning(SpawnPosition);
+		}
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::RegenHealth()
+{
+	if (vigBuffActive == true)
+	{
+		playerHealth += healthRegenValue;
+	}
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 //Functions to control and track player location and movement within a level///////////////////////////////////////////////////////////////////////////////////
 void ADungeonsNDwellingsv4Pawn::getPlayerLocation()
 {
@@ -373,6 +461,8 @@ void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector actorZ, FVector doorLocation)
 	bool isNewRoom;
 	FVector playerNewLoc;
 
+	bool isRoomNew = true;
+
 	do
 	{
 		isNewRoom = true;
@@ -401,7 +491,22 @@ void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector actorZ, FVector doorLocation)
 		ActorItr->ActivateBoss(playerNewLoc);
 	}
 
-	UpdatePlayerCurrency();
+
+	for (int i = 0; i < uniqueZTracker.Num(); i++)
+	{
+		if (uniqueZTracker[i] == (playerNewLoc.Z - playerZElevation.Z))
+		{
+			isRoomNew = false;
+		}
+	}
+
+	if (isRoomNew == true)
+	{
+		uniqueZTracker.AddUnique(playerNewLoc.Z - playerZElevation.Z);
+		UpdatePlayerCurrency();
+		RegenHealth();
+	}
+
 	SetActorLocation(playerNewLoc, false);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
