@@ -2,6 +2,7 @@
 
 #include "ItemManager.h"
 #include "InteractableObject.h"
+#include "DungeonsNDwellingsv4Pawn.h"
 #include "Engine.h"
 
 // Sets default values
@@ -11,6 +12,10 @@ AItemManager::AItemManager()
 	PrimaryActorTick.bCanEverTick = true;
 
 	availableItemsCounter = 0;
+
+	strItemCounter = 0;
+	massItemCounter = 0;
+	vigItemCounter = 0;
 
 	currentAvailableItems.Empty();
 }
@@ -92,17 +97,210 @@ void AItemManager::AddItemToPlayer(FString objectName)
 		currentAvailableItems.Insert(itemPool[0], 1);
 		currentAvailableItems.RemoveAt(2);
 	}
+
+	TrackAffects();
+	ApplyAffects();
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+//Functions to control and apply affects to players based off of item selection//////////////////////////////////////////////////////////////////////////////////////////////
+void AItemManager::TrackAffects()
+{
+	bool isNewClass;
+	strItemCounter = 0;
+	massItemCounter = 0;
+	vigItemCounter = 0;
+
+	for (int i = 0; i < playerItems.Num(); i++)
+	{
+		isNewClass = true;
+		if (playerItems[i].Contains("Strength") == true)
+		{
+			strItemCounter++;
+			if (uniqueClasses.Num() != 0)
+			{
+				for (int j = 0; j < uniqueClasses.Num(); j++)
+				{
+					if (uniqueClasses[j].Contains("Strength") == true)
+					{
+						isNewClass = false;
+						break;
+					}
+				}
+			}
+			if (isNewClass == true)
+			{
+				uniqueClasses.AddUnique("Strength");
+			}
+		}
+		else if (playerItems[i].Contains("Masses") == true)
+		{
+			massItemCounter++;
+			if (uniqueClasses.Num() != 0)
+			{
+				for (int j = 0; j < uniqueClasses.Num(); j++)
+				{
+					if (uniqueClasses[j].Contains("Masses") == true)
+					{
+						isNewClass = false;
+						break;
+					}
+				}
+			}
+			if (isNewClass == true)
+			{
+				uniqueClasses.AddUnique("Masses");
+			}
+		}
+		else if (playerItems[i].Contains("Vigor") == true)
+		{
+			vigItemCounter++;
+			if (uniqueClasses.Num() != 0)
+			{
+				for (int j = 0; j < uniqueClasses.Num(); j++)
+				{
+					if (uniqueClasses[j].Contains("Vigor") == true)
+					{
+						isNewClass = false;
+						break;
+					}
+				}
+			}
+			if (isNewClass == true)
+			{
+				uniqueClasses.AddUnique("Vigor");
+			}
+		}
+	}
+}
+
+void AItemManager::ApplyAffects()
+{
+	if (strItemCounter > 0)
+	{
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->SetStrBuff();
+		}
+
+		StrAffects();
+	}
+
+	if (massItemCounter > 0)
+	{
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->SetMassBuff();
+		}
+
+		MassesAffects();
+	}
+
+	if (vigItemCounter > 0)
+	{
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->SetVigBuff();
+		}
+
+		VigAffects();
+	}
+}
+//Functions for each family of affects, keep other two functions clean////////////////////////////////////////////////////////////////////////////////////////////////////////
+void AItemManager::StrAffects()
+{
+	float damageMultiplier;
+
+	if (strItemCounter == 1)
+	{
+		damageMultiplier = 1.2;
+	}
+	else if (strItemCounter == 2)
+	{
+		damageMultiplier = 1.5;
+	}
+	else if (strItemCounter == 3)
+	{
+		damageMultiplier = 2;
+	}
+
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		ActorItr->ModifyPlayerDamage(damageMultiplier);
+	}
+}
+
+void AItemManager::MassesAffects()
+{
+	int spawnerModifier;
+
+	if (massItemCounter == 1)
+	{
+		spawnerModifier = 4;
+	}
+	else if (massItemCounter == 2)
+	{
+		spawnerModifier = 2;
+	}
+	else if (massItemCounter == 3)
+	{
+		spawnerModifier = 1;
+	}
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		ActorItr->ModifyProjectileSpawnChance(spawnerModifier);
+	}
+}
+
+void AItemManager::VigAffects()
+{
+	float healthIncrease;
+	bool isHealthRegening = false;
+	float regenRate = 0; //amount per room
+
+	if (vigItemCounter == 1)
+	{
+		healthIncrease = 20;
+	}
+	else if (vigItemCounter == 2)
+	{
+		healthIncrease = 40;
+	}
+	else if (vigItemCounter == 3)
+	{
+		healthIncrease = 40;
+		isHealthRegening = true;
+		regenRate = 2;
+	}
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		ActorItr->ModifyPlayerHealth(healthIncrease, isHealthRegening, regenRate);
+	}
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 //Public GET and SET functions///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 TArray<FString> AItemManager::GetCurrentItems()
 {
 	return (currentAvailableItems);
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 

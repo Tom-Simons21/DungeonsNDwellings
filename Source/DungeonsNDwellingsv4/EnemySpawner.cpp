@@ -64,9 +64,8 @@ void AEnemySpawner::BeginPlay()
 			break;
 		}
 	}
-
-	getEnemiesPerRoom();
 	GetSlugEnemyZ();
+	getEnemiesPerRoom();
 }
 
 // Called every frame
@@ -228,7 +227,7 @@ void AEnemySpawner::spawnEnemy(int enemyType, int enemyCount, int spawnRoom)
 void AEnemySpawner::getEnemiesPerRoom()
 {
 	int enemyCounter;
-	float zLoc = 61;
+	float zLoc = enemyZOffset;
 	float enemyZLoc;
 
 	for (int i = 0; i <= roomCount; i++)

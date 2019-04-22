@@ -88,6 +88,9 @@ public:
 	UPROPERTY(EditAnywhere)
 		float playerHealth;
 
+	UPROPERTY(EditAnywhere)
+		float playerHealthDefault;
+
 	UPROPERTY(EditAnyWhere)
 		float playerMaxHealth;
 
@@ -107,6 +110,8 @@ public:
 		float projectileDamage;
 	UPROPERTY(EditAnywhere)
 		float projectileDefaultDamage;
+
+	bool isSpawningSecondShot;
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -219,11 +224,11 @@ public:
 	void SetMassBuff();
 	void SetVigBuff();
 
-	void ModifyPlayerDamage(float percentDamageIncrease);
+	void ModifyPlayerDamage(float damageMultiplier);
 	void ModifyProjectileSpawnChance(int spawnChanceModifier);
 	void ModifyPlayerHealth(float healthIncrease, bool isHealthRegening, float healthRegenAmount);
 
-	void SpawnAdditionalShots(FVector FireDirection);
+	bool SpawnAdditionalShots(FVector FireDirection);
 	void RegenHealth();
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

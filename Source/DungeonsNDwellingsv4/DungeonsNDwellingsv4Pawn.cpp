@@ -68,12 +68,15 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 	initialSpeed = 250;
 	maxSpeed = 250;
 	lifeSpan = 2;
+	projectileDefaultDamage = 10;
 	projectileDamage = 10;
 
-
 	//set values for player stats
-	playerHealth = 100;
+	playerMaxHealth = 100;
+	playerHealthDefault = 100;
 	playerGold = 0;
+	
+	//Set currency modifier values 
 	goldToAdd = 0;
 	winStreak = 0;
 	loseStreak = 0;
@@ -81,12 +84,12 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 	//pause variables
 	isPaused = false;
 
+	//Set modifier values and stat changes variables
 	strBuffActive = false;
 	massBuffActive = false;
 	vigBuffActive = false;
 
 	spawnChanceValue = 0;
-
 	healthRegenValue = 0;
 }
 
@@ -148,18 +151,32 @@ void ADungeonsNDwellingsv4Pawn::Tick(float DeltaSeconds)
 
 void ADungeonsNDwellingsv4Pawn::FireShot(FVector FireDirection)
 {
+	FVector spawnLocation;
+	isSpawningSecondShot = false;
+
 	// If it's ok to fire again
 	if (bCanFire == true)
 	{
 		// If we are pressing fire stick in a direction
 		if (FireDirection.SizeSquared() > 0.0f)
 		{
+			if (massBuffActive == true)
+			{
+				isSpawningSecondShot = SpawnAdditionalShots(FireDirection);
+			}
+
 			const FRotator FireRotation = FireDirection.Rotation();
 			// Spawn projectile at an offset from this pawn
-			const FVector SpawnLocation = GetActorLocation() + FireRotation.RotateVector(GunOffset);
+			if (isSpawningSecondShot == true)
+			{
+				spawnLocation = GetActorLocation() + FireRotation.RotateVector(GunOffset - FVector(0, 15, 0));
+			}
+			else
+			{
+				spawnLocation = GetActorLocation() + FireRotation.RotateVector(GunOffset);
+			}
 			const FVector Scale = FVector(1, 1, 1);
-
-			const FTransform SpawnPosition = FTransform(FireRotation, SpawnLocation, Scale);
+			const FTransform SpawnPosition = FTransform(FireRotation, spawnLocation, Scale);
 
 			UWorld* const World = GetWorld();
 			if (World != NULL)
@@ -199,6 +216,8 @@ void ADungeonsNDwellingsv4Pawn::BeginPlay()
 	createArrayOfDoors();
 	GetRoomCount();
 	///////////////////////////////////////////////////////////////////////////////////////////////////
+
+	playerHealth = playerHealthDefault;
 
 	isDamageable = false;
 	GetWorldTimerManager().SetTimer(hitControlTimer, this, &ADungeonsNDwellingsv4Pawn::makeDamageable, 1.5f, true, 2.0f);
@@ -329,11 +348,11 @@ void ADungeonsNDwellingsv4Pawn::SetVigBuff()
 	vigBuffActive = true;
 }
 
-void ADungeonsNDwellingsv4Pawn::ModifyPlayerDamage(float percentDamageIncrease)
+void ADungeonsNDwellingsv4Pawn::ModifyPlayerDamage(float damageMultiplier)
 {
 	if (strBuffActive == true)
 	{
-		projectileDamage = projectileDefaultDamage * percentDamageIncrease;
+		projectileDamage = projectileDefaultDamage * damageMultiplier;
 	}
 }
 
@@ -347,19 +366,31 @@ void ADungeonsNDwellingsv4Pawn::ModifyProjectileSpawnChance(int spawnChanceModif
 
 void ADungeonsNDwellingsv4Pawn::ModifyPlayerHealth(float healthIncrease, bool isHealthRegening, float healthRegenAmount)
 {
+	float currentHealthLost;
+
+	currentHealthLost = playerMaxHealth - playerHealth;
+
+	if (currentHealthLost < 0)
+	{
+		currentHealthLost = 0;
+	}
+
 	if (vigBuffActive == true)
 	{
-		playerMaxHealth += healthIncrease;
+		playerMaxHealth = playerHealthDefault + healthIncrease;
+		playerHealth = playerHealthDefault + healthIncrease - currentHealthLost;
 	}
 
 	if (isHealthRegening == true)
 	{
-		healthRegenValue += healthRegenAmount;
+		healthRegenValue = healthRegenAmount;
 	}
 }
 
-void ADungeonsNDwellingsv4Pawn::SpawnAdditionalShots(FVector FireDirection)
+bool ADungeonsNDwellingsv4Pawn::SpawnAdditionalShots(FVector FireDirection)
 {
+	bool secondShotSpawned = false;
+
 	const FRotator FireRotation = FireDirection.Rotation();
 	// Spawn projectile at an offset from this pawn
 	const FVector SpawnLocation = GetActorLocation() + FireRotation.RotateVector(GunOffset + FVector(0, 15, 0));
@@ -374,19 +405,30 @@ void ADungeonsNDwellingsv4Pawn::SpawnAdditionalShots(FVector FireDirection)
 	{
 		if (spawnChance == 1)
 		{
+			secondShotSpawned = true;
 			// spawn the projectile
 			ADungeonsNDwellingsv4Projectile* projectileActor = World->SpawnActorDeferred<ADungeonsNDwellingsv4Projectile>(ADungeonsNDwellingsv4Projectile::StaticClass(), SpawnPosition);
 			projectileActor->updateProperties(initialSpeed, maxSpeed, lifeSpan);
 			projectileActor->FinishSpawning(SpawnPosition);
 		}
 	}
+
+	return (secondShotSpawned);
 }
 
 void ADungeonsNDwellingsv4Pawn::RegenHealth()
 {
-	if (vigBuffActive == true)
+	if (playerHealth < playerMaxHealth)
 	{
-		playerHealth += healthRegenValue;
+		if (vigBuffActive == true)
+		{
+			playerHealth += healthRegenValue;
+		}
+	}
+
+	if (playerHealth > playerMaxHealth)
+	{
+		playerHealth = playerMaxHealth;
 	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -614,12 +656,12 @@ void ADungeonsNDwellingsv4Pawn::GetRoomCount()
 
 float ADungeonsNDwellingsv4Pawn::GetPlayerHealth()
 {
-	return playerHealth;
+	return (playerHealth);
 }
 
 int ADungeonsNDwellingsv4Pawn::GetPlayerCurrency()
 {
-	return playerGold;
+	return (playerGold);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
