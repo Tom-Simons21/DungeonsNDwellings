@@ -17,6 +17,10 @@ AItemManager::AItemManager()
 	massItemCounter = 0;
 	vigItemCounter = 0;
 
+	isStrMaxed = false;
+	isMassMaxed = false;
+	isVigMaxed = false;
+
 	currentAvailableItems.Empty();
 }
 
@@ -25,6 +29,8 @@ void AItemManager::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	regenRate = 0;
+	activeDebuffs = { false, false, false };
 }
 
 // Called every frame
@@ -56,7 +62,6 @@ void AItemManager::SelectItem(FString objectName)
 	}
 }
 
-
 //Controlling functionality of player item interaction, setting items on reroll, setting items to player array on take///////////////////////////////////////////////////////
 void AItemManager::RerollItem(FString objectName)
 {
@@ -65,7 +70,6 @@ void AItemManager::RerollItem(FString objectName)
 	{
 		itemValue = FMath::RandRange(1, itemPool.Num() - 1);
 	}
-
 	if (objectName == "InteractableObject_0")
 	{
 		itemPool.Add(currentAvailableItems[0]);
@@ -97,7 +101,6 @@ void AItemManager::AddItemToPlayer(FString objectName)
 		currentAvailableItems.Insert(itemPool[0], 1);
 		currentAvailableItems.RemoveAt(2);
 	}
-
 	TrackAffects();
 	ApplyAffects();
 }
@@ -172,6 +175,25 @@ void AItemManager::TrackAffects()
 				uniqueClasses.AddUnique("Vigor");
 			}
 		}
+		else if (playerItems[i].Contains("Sacrifice") == true)
+		{
+			sacItemCounter++;
+			if (uniqueClasses.Num() != 0)
+			{
+				for (int j = 0; j < uniqueClasses.Num(); j++)
+				{
+					if (uniqueClasses[j].Contains("Sacrifice") == true)
+					{
+						isNewClass = false;
+						break;
+					}
+				}
+			}
+			if (isNewClass == true)
+			{
+				uniqueClasses.AddUnique("Sacrifice");
+			}
+		}
 	}
 }
 
@@ -185,10 +207,8 @@ void AItemManager::ApplyAffects()
 			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
 			ActorItr->SetStrBuff();
 		}
-
 		StrAffects();
 	}
-
 	if (massItemCounter > 0)
 	{
 		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
@@ -197,10 +217,8 @@ void AItemManager::ApplyAffects()
 			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
 			ActorItr->SetMassBuff();
 		}
-
 		MassesAffects();
 	}
-
 	if (vigItemCounter > 0)
 	{
 		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
@@ -209,14 +227,47 @@ void AItemManager::ApplyAffects()
 			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
 			ActorItr->SetVigBuff();
 		}
-
 		VigAffects();
+	}
+	if (sacItemCounter > 0)
+	{
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->SetSacBuff();
+		}
+		SacAffects();
+	}
+
+	if (uniqueClasses.Num() >= 3)
+	{
+		activeDebuffs[0] = true;
+
+		if (uniqueClasses.Num() >= 6)
+		{
+			activeDebuffs[1] = true;
+
+			if (uniqueClasses.Num() >= 9)
+			{
+				activeDebuffs[2] = true;
+				DebuffAffects();
+			}
+			else
+			{
+				DebuffAffects();
+			}
+		}
+		else
+		{
+			DebuffAffects();
+		}
 	}
 }
 //Functions for each family of affects, keep other two functions clean////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AItemManager::StrAffects()
 {
-	float damageMultiplier;
+	isABuff = true;
 
 	if (strItemCounter == 1)
 	{
@@ -229,19 +280,19 @@ void AItemManager::StrAffects()
 	else if (strItemCounter == 3)
 	{
 		damageMultiplier = 2;
+		isStrMaxed = true;
 	}
-
 	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-		ActorItr->ModifyPlayerDamage(damageMultiplier);
+		ActorItr->ModifyPlayerDamage(isABuff, damageMultiplier);
 	}
 }
 
 void AItemManager::MassesAffects()
 {
-	int spawnerModifier;
+	isABuff = true;
 
 	if (massItemCounter == 1)
 	{
@@ -254,20 +305,19 @@ void AItemManager::MassesAffects()
 	else if (massItemCounter == 3)
 	{
 		spawnerModifier = 1;
+		isMassMaxed = true;
 	}
 	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-		ActorItr->ModifyProjectileSpawnChance(spawnerModifier);
+		ActorItr->ModifyProjectileSpawnChance(isABuff, spawnerModifier);
 	}
 }
 
 void AItemManager::VigAffects()
 {
-	float healthIncrease;
-	bool isHealthRegening = false;
-	float regenRate = 0; //amount per room
+	isABuff = true;
 
 	if (vigItemCounter == 1)
 	{
@@ -282,14 +332,74 @@ void AItemManager::VigAffects()
 		healthIncrease = 40;
 		isHealthRegening = true;
 		regenRate = 2;
+		isVigMaxed = true;
 	}
 	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-		ActorItr->ModifyPlayerHealth(healthIncrease, isHealthRegening, regenRate);
+		ActorItr->ModifyPlayerHealth(isABuff, healthIncrease, isHealthRegening, regenRate);
 	}
 }
+
+void AItemManager::SacAffects()
+{
+	isABuff = true;
+
+	if (sacItemCounter == 1)
+	{
+		healthToRecieve = 1;
+		chanceToRecieve = 20; //100 / 20 = 5% chance
+	}
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		ActorItr->ModifyPlayerKillBonuses(isABuff, healthToRecieve, chanceToRecieve);
+	}
+}
+
+
+//Functions for debuffs and negative affects/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void AItemManager::DebuffAffects()
+{
+	isABuff = false;
+	if (activeDebuffs[0] == true)
+	{
+		damageMultiplier = 0.75;
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->ModifyPlayerDamage(isABuff, damageMultiplier);
+		}
+	}
+	if (activeDebuffs[1] == true)
+	{
+		healthIncrease = 0.5; //this will apply a half health effect
+		isHealthRegening = false;
+		regenRate = 0;
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->ModifyPlayerHealth(isABuff, healthIncrease, isHealthRegening, regenRate);
+		}
+	}
+	if (activeDebuffs[2] == true)
+	{
+		healthIncrease = 1; //this will apply a half health effect
+		isHealthRegening = true;
+		regenRate = 0;
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->ModifyPlayerHealth(isABuff, healthIncrease, isHealthRegening, regenRate);
+		}
+	}
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -298,6 +408,21 @@ void AItemManager::VigAffects()
 TArray<FString> AItemManager::GetCurrentItems()
 {
 	return (currentAvailableItems);
+}
+
+bool AItemManager::IsStrBuffMaxed()
+{
+	return isStrMaxed;
+}
+
+bool AItemManager::IsMassBuffMaxed()
+{
+	return isMassMaxed;
+}
+
+bool AItemManager::IsVigBuffMaxed()
+{
+	return isVigMaxed;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -167,10 +167,16 @@ public:
 	bool strBuffActive;
 	bool massBuffActive;
 	bool vigBuffActive;
+	bool sacBuffActive;
 
 	int spawnChanceValue;
 
 	float healthRegenValue;
+
+	UPROPERTY(EditAnywhere)
+		float healthFromKills;
+	UPROPERTY(EditAnywhere)
+		int chanceToRecieveHealth;
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -223,13 +229,17 @@ public:
 	void SetStrBuff();
 	void SetMassBuff();
 	void SetVigBuff();
+	void SetSacBuff();
 
-	void ModifyPlayerDamage(float damageMultiplier);
-	void ModifyProjectileSpawnChance(int spawnChanceModifier);
-	void ModifyPlayerHealth(float healthIncrease, bool isHealthRegening, float healthRegenAmount);
+	void ModifyPlayerDamage(bool isABuff, float damageMultiplier);
+	void ModifyProjectileSpawnChance(bool isABuff, int spawnChanceModifier);
+	void ModifyPlayerHealth(bool isABuff, float healthIncrease, bool isHealthRegening, float healthRegenAmount);
+	void ModifyPlayerKillBonuses(bool isABuff, float healthToRecieve, int chanceToRecieve);
 
 	bool SpawnAdditionalShots(FVector FireDirection);
 	void RegenHealth();
+
+	void GainHealthOnKill();
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 

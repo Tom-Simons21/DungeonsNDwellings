@@ -298,6 +298,14 @@ void AEnemySpawner::removeArrayItem(FString objName)
 	//To modify this in the future without create a function per enemy the name should be checked for a key word "slug" enemies should be appropriately named for this.
 	FString enemyName;
 
+	//when an enemy dies we are going to check if the player has the sacrifice bonus
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		ActorItr->GainHealthOnKill();
+	}
+
 	for (int i = 0; i < slugEnemyArray.Num(); i++)
 	{
 		enemyName = slugEnemyArray[i]->GetName();

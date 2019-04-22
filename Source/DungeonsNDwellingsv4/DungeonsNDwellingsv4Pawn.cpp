@@ -20,6 +20,7 @@
 #include "EnemySpawner.h"
 #include "BossManager.h"
 #include "MyPlayerController.h"
+#include "ItemManager.h"
 
 const FName ADungeonsNDwellingsv4Pawn::MoveForwardBinding("MoveForward");
 const FName ADungeonsNDwellingsv4Pawn::MoveRightBinding("MoveRight");
@@ -88,6 +89,7 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 	strBuffActive = false;
 	massBuffActive = false;
 	vigBuffActive = false;
+	sacBuffActive = false;
 
 	spawnChanceValue = 0;
 	healthRegenValue = 0;
@@ -337,26 +339,47 @@ void ADungeonsNDwellingsv4Pawn::SetStrBuff()
 {
 	strBuffActive = true;
 }
-
 void ADungeonsNDwellingsv4Pawn::SetMassBuff()
 {
 	massBuffActive = true;
 }
-
 void ADungeonsNDwellingsv4Pawn::SetVigBuff()
 {
 	vigBuffActive = true;
 }
-
-void ADungeonsNDwellingsv4Pawn::ModifyPlayerDamage(float damageMultiplier)
+void ADungeonsNDwellingsv4Pawn::SetSacBuff()
 {
-	if (strBuffActive == true)
+	sacBuffActive = true;
+}
+
+void ADungeonsNDwellingsv4Pawn::ModifyPlayerDamage(bool isABuff, float damageMultiplier)
+{
+	bool strBuffMaxed = false;
+
+	for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
-		projectileDamage = projectileDefaultDamage * damageMultiplier;
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AItemManager *Object = *ActorItr;
+		strBuffMaxed = ActorItr->IsStrBuffMaxed();
+	}
+	if (isABuff == true)
+	{
+		if (strBuffActive == true)
+		{
+			projectileDamage = projectileDefaultDamage * damageMultiplier;
+		}
+	}
+
+	if (isABuff == false)
+	{
+		if (strBuffMaxed != true)
+		{
+			projectileDamage = projectileDamage * damageMultiplier;
+		}
 	}
 }
 
-void ADungeonsNDwellingsv4Pawn::ModifyProjectileSpawnChance(int spawnChanceModifier)
+void ADungeonsNDwellingsv4Pawn::ModifyProjectileSpawnChance(bool isABuff, int spawnChanceModifier)
 {
 	if (massBuffActive == true)
 	{
@@ -364,26 +387,58 @@ void ADungeonsNDwellingsv4Pawn::ModifyProjectileSpawnChance(int spawnChanceModif
 	}
 }
 
-void ADungeonsNDwellingsv4Pawn::ModifyPlayerHealth(float healthIncrease, bool isHealthRegening, float healthRegenAmount)
+void ADungeonsNDwellingsv4Pawn::ModifyPlayerHealth(bool isABuff, float healthIncrease, bool isHealthRegening, float healthRegenAmount)
 {
+	bool vigBuffMaxed;
 	float currentHealthLost;
 
-	currentHealthLost = playerMaxHealth - playerHealth;
+	for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AItemManager *Object = *ActorItr;
+		vigBuffMaxed = ActorItr->IsVigBuffMaxed();
+	}
 
+	currentHealthLost = playerMaxHealth - playerHealth;
 	if (currentHealthLost < 0)
 	{
 		currentHealthLost = 0;
 	}
 
-	if (vigBuffActive == true)
+	if (isABuff == true)
 	{
-		playerMaxHealth = playerHealthDefault + healthIncrease;
-		playerHealth = playerHealthDefault + healthIncrease - currentHealthLost;
-	}
+		if (vigBuffActive == true)
+		{
+			playerMaxHealth = playerHealthDefault + healthIncrease;
+			playerHealth = playerHealthDefault + healthIncrease - currentHealthLost;
 
-	if (isHealthRegening == true)
+			if (isHealthRegening == true)
+			{
+				healthRegenValue = healthRegenAmount;
+			}
+		}
+	}
+	
+	if (isABuff == false)
 	{
-		healthRegenValue = healthRegenAmount;
+		if (vigBuffMaxed != true)
+		{
+			playerHealth = playerHealth * healthIncrease;
+			playerMaxHealth = playerHealth;
+		}
+		if (isHealthRegening == true)
+		{
+			healthRegenValue = (playerHealth / 10) * (-1);
+		}
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::ModifyPlayerKillBonuses(bool isABuff, float healthToRecieve, int chanceToRecieve)
+{
+	if (isABuff == true)
+	{
+		healthFromKills = healthToRecieve;
+		chanceToRecieveHealth = chanceToRecieve;
 	}
 }
 
@@ -429,6 +484,16 @@ void ADungeonsNDwellingsv4Pawn::RegenHealth()
 	if (playerHealth > playerMaxHealth)
 	{
 		playerHealth = playerMaxHealth;
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::GainHealthOnKill()
+{
+	int chanceOfHealth;
+	chanceOfHealth = FMath::RandRange(1, chanceToRecieveHealth);
+	if (chanceOfHealth == 1)
+	{
+		playerHealth += healthFromKills;
 	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
