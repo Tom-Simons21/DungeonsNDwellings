@@ -33,17 +33,15 @@ public:
 	UPROPERTY(EditAnywhere)
 		TArray<FVector> doorStartPoints;
 	UPROPERTY(EditAnywhere)
-		TArray<FVector> doorEndPoints;
+		TArray<FVector> doorMappings;
 	UPROPERTY(EditAnywhere)
-		TArray<FVector> doorExitPoints;
+		TArray<FVector> roomsToAdd;
 	UPROPERTY(EditAnywhere)
-		TArray<FVector> doorCheckArray;
-
-	UPROPERTY(EditAnyWhere)
-		int insertCounter;
-
+		TArray<FVector> remainingRooms;
 	UPROPERTY(EditAnywhere)
-		TArray<bool> isDoorSet;
+		TArray<FVector> remainingRooms_One;
+	UPROPERTY(EditAnywhere)
+		TArray<FVector> remainingRooms_Two;
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -59,7 +57,6 @@ public:
 	//Door mapping functions//////////////////////////////////////////////////////////////////////////////////////////
 	void CreateStartingPointArray();
 	void CreateExitPointArray();
-	void ModifyArrays();
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -67,5 +64,7 @@ public:
 	void CreateArrayOfDoors();
 	void GetRoomPlacementModifier();
 	void GetRoomCount();
+
+	TArray<FVector> GetDoorMappingArray();
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };

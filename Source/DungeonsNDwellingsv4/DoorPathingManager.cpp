@@ -22,7 +22,7 @@ void ADoorPathingManager::BeginPlay()
 
 	arrayOfDoors.Empty();
 	doorStartPoints.Empty();
-	doorEndPoints.Empty();
+	doorMappings.Empty();
 
 
 	GetRoomPlacementModifier();
@@ -95,6 +95,153 @@ void ADoorPathingManager::CreateStartingPointArray()
 
 void ADoorPathingManager::CreateExitPointArray()
 {
+	int roomToAdd;
+	int counter;
+	int roomZCoord;
+	bool isInArray;
+
+	doorMappings.Add(doorStartPoints[0]);
+	counter = roomCount - 1;
+
+	do
+	{
+		roomToAdd = roomCount - counter;
+		roomZCoord = roomToAdd * roomPlacementModifier.Z;
+
+		for (int j = 0; j < doorStartPoints.Num(); j++)
+		{
+			if (doorStartPoints[j].Z == roomZCoord)
+			{
+				roomsToAdd.Add(doorStartPoints[j]);
+				if ((j + 1) < doorStartPoints.Num())
+				{
+					roomsToAdd.Add(doorStartPoints[j + 1]);
+				}
+				break;
+			}
+		}
+
+		counter -= 2;
+
+		if (counter == -1)
+		{
+			counter = 0;
+		}
+	} while (counter > -1);
+
+	for (int k = 0; k < roomsToAdd.Num(); k++)
+	{
+		doorMappings.Add(roomsToAdd[k]);
+	}
+
+	for (int i = 0; i < doorStartPoints.Num(); i++)
+	{
+		isInArray = false;
+
+		for (int j = 0; j < doorMappings.Num(); j++)
+		{
+			if (doorStartPoints[i] == doorMappings[j])
+			{
+				isInArray = true;
+				break;
+			}
+		}
+		if (isInArray == false)
+		{
+			remainingRooms.Add(doorStartPoints[i]);
+		}
+	}
+
+	for (int g = 0; g < remainingRooms.Num(); g++)
+	{
+		if (g < (remainingRooms.Num() / 2))
+		{
+			remainingRooms_One.Add(remainingRooms[g]);
+		}
+		else if (g >= (remainingRooms.Num() / 2))
+		{
+			remainingRooms_Two.Add(remainingRooms[g]);
+		}
+	}
+
+	for (int s = 0; s < remainingRooms_One.Num(); s++)
+	{
+		doorMappings.Add(remainingRooms_One[s]);
+		doorMappings.Add(remainingRooms_Two[s]);
+	}
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//Functions for getting key variables from other classes////////////////////////////////////////////////////////////////////////////////////////
+void ADoorPathingManager::CreateArrayOfDoors()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		arrayOfDoors = ActorItr->getArrayOfDoors();
+	}
+}
+
+void ADoorPathingManager::GetRoomPlacementModifier()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		roomPlacementModifier = ActorItr->getRoomPlacementModifier();
+	}
+}
+
+void ADoorPathingManager::GetRoomCount()
+{
+	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ATileGeneratorParent *Object = *ActorItr;
+		roomCount = ActorItr->getRoomCount();
+	}
+}
+
+TArray<FVector> ADoorPathingManager::GetDoorMappingArray()
+{
+	return (doorMappings);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+void ADoorPathingManager::CreateExitPointArray()
+{
 	int entryToMap;
 	int exitToMap;
 	FVector entryPoint;
@@ -104,7 +251,7 @@ void ADoorPathingManager::CreateExitPointArray()
 
 	isWorking = true;
 
-	
+
 	doorEndPoints.Empty();
 
 	for (int i = 0; i < doorStartPoints.Num(); i++)
@@ -178,38 +325,4 @@ void ADoorPathingManager::CreateExitPointArray()
 		GetWorld()->Exec(GetWorld(), TEXT("RestartLevel"));
 	}
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-//Functions for getting key variables from other classes////////////////////////////////////////////////////////////////////////////////////////
-void ADoorPathingManager::CreateArrayOfDoors()
-{
-	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ATileGeneratorParent *Object = *ActorItr;
-		arrayOfDoors = ActorItr->getArrayOfDoors();
-	}
-}
-
-void ADoorPathingManager::GetRoomPlacementModifier()
-{
-	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ATileGeneratorParent *Object = *ActorItr;
-		roomPlacementModifier = ActorItr->getRoomPlacementModifier();
-	}
-}
-
-void ADoorPathingManager::GetRoomCount()
-{
-	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ATileGeneratorParent *Object = *ActorItr;
-		roomCount = ActorItr->getRoomCount();
-	}
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*/

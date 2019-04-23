@@ -50,7 +50,7 @@ ABasicSlugEnemy::ABasicSlugEnemy()
 	isEnemyActive = false;
 
 	//default values for this specific enemy type
-	moveSpeed = 80;
+	moveSpeed = 90;
 	slugHealth = 40;
 	slugDamage = 15;
 }
@@ -89,6 +89,7 @@ void ABasicSlugEnemy::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 {
 	FString actorName;
 	float playerDmg;
+	float moveSpeedModifier;
 
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
@@ -112,7 +113,9 @@ void ABasicSlugEnemy::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 				ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
 				playerDmg = ActorItr->GetProjectileDamage();
+				moveSpeedModifier = ActorItr->GetMoveSpeedModifier();
 			}
+			this->SetSlugMoveSpeed(moveSpeedModifier);
 			this->takeDamage(playerDmg);
 		}
 	}
@@ -124,6 +127,7 @@ void ABasicSlugEnemy::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 void ABasicSlugEnemy::setIsEnemyActive()
 {
 	isEnemyActive = true;
+	GetWorld()->GetTimerManager().SetTimer(moveSpeed_TimerHandle, this, &ABasicSlugEnemy::MaintainSlugMovementSpeed, 1.f, true, 0.f);
 }
 
 void ABasicSlugEnemy::moveTowardsPlayer(float deltaTime)
@@ -137,6 +141,11 @@ void ABasicSlugEnemy::moveTowardsPlayer(float deltaTime)
 	velocity.Z = 0;
 
 	SetActorLocation(myLocation + velocity);
+}
+
+void ABasicSlugEnemy::MaintainSlugMovementSpeed()
+{
+	moveSpeed = 90;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -186,5 +195,10 @@ void ABasicSlugEnemy::GetRoomPlacementModifier()
 		ATileGeneratorParent *Object = *ActorItr;
 		roomPlacementModifier = ActorItr->getRoomPlacementModifier();
 	}
+}
+
+void ABasicSlugEnemy::SetSlugMoveSpeed(float speedModifier)
+{
+	moveSpeed = moveSpeed * speedModifier;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

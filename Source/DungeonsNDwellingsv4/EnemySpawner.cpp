@@ -29,6 +29,10 @@ AEnemySpawner::AEnemySpawner()
 	enemiesPerRoom.Empty();
 	slugEnemyArray.Empty();
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	//drop on death values
+	moneyDropChance = 1;
+	healthDropChance = 2;
 }
 
 
@@ -299,12 +303,8 @@ void AEnemySpawner::removeArrayItem(FString objName)
 	FString enemyName;
 
 	//when an enemy dies we are going to check if the player has the sacrifice bonus
-	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-		ActorItr->GainHealthOnKill();
-	}
+	GainHealthOnKill();
+	
 
 	for (int i = 0; i < slugEnemyArray.Num(); i++)
 	{
@@ -312,10 +312,54 @@ void AEnemySpawner::removeArrayItem(FString objName)
 
 		if (enemyName == objName)
 		{
+			//effects to happen on enemy death
+			DropMoneyOnDeath(slugEnemyArray[i]->GetActorLocation());
+			DropHealthOnDeath(slugEnemyArray[i]->GetActorLocation());
 			slugEnemyArray.RemoveAt(i);
 		}
 	}
 	
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//Functions to control external features of all enemies/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void AEnemySpawner::GainHealthOnKill()
+{
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		ActorItr->GainHealthOnKill();
+	}
+}
+void AEnemySpawner::DropMoneyOnDeath(FVector loc)
+{
+	float chanceToDrop;
+	FTransform dropLocation;
+
+	chanceToDrop = FMath::RandRange(1, 100);
+	if (chanceToDrop <= moneyDropChance)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Money Dropped")));
+		}
+	}
+}
+void AEnemySpawner::DropHealthOnDeath(FVector loc)
+{
+	float chanceToDrop;
+	FTransform dropLocation;
+
+	chanceToDrop = FMath::RandRange(1, 100);
+	if (chanceToDrop <= healthDropChance)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Health Dropped")));
+		}
+	}
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -362,6 +406,11 @@ void AEnemySpawner::GetSlugEnemyZ()
 		ABasicSlugEnemy *Object = *ActorItr;
 		enemyZOffset = ActorItr->GetZOffset();
 	}
+}
+
+void AEnemySpawner::SetMoneyDropChance(float dropChanceModifier)
+{
+	moneyDropChance = moneyDropChance * dropChanceModifier;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

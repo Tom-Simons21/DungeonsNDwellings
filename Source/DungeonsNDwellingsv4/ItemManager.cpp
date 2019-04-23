@@ -194,6 +194,101 @@ void AItemManager::TrackAffects()
 				uniqueClasses.AddUnique("Sacrifice");
 			}
 		}
+		else if (playerItems[i].Contains("Fire Rate") == true)
+		{
+			rateItemCounter++;
+			if (uniqueClasses.Num() != 0)
+			{
+				for (int j = 0; j < uniqueClasses.Num(); j++)
+				{
+					if (uniqueClasses[j].Contains("Fire Rate") == true)
+					{
+						isNewClass = false;
+						break;
+					}
+				}
+			}
+			if (isNewClass == true)
+			{
+				uniqueClasses.AddUnique("Fire Rate");
+			}
+		}
+		else if (playerItems[i].Contains("Growth") == true)
+		{
+			growthItemCounter++;
+			if (uniqueClasses.Num() != 0)
+			{
+				for (int j = 0; j < uniqueClasses.Num(); j++)
+				{
+					if (uniqueClasses[j].Contains("Growth") == true)
+					{
+						isNewClass = false;
+						break;
+					}
+				}
+			}
+			if (isNewClass == true)
+			{
+				uniqueClasses.AddUnique("Growth");
+			}
+		}
+		else if (playerItems[i].Contains("Slowmo") == true)
+		{
+			slowItemCounter++;
+			if (uniqueClasses.Num() != 0)
+			{
+				for (int j = 0; j < uniqueClasses.Num(); j++)
+				{
+					if (uniqueClasses[j].Contains("Slowmo") == true)
+					{
+						isNewClass = false;
+						break;
+					}
+				}
+			}
+			if (isNewClass == true)
+			{
+			uniqueClasses.AddUnique("Slowmo");
+			}
+		}
+		else if (playerItems[i].Contains("Hyper") == true)
+		{
+			hyperItemCounter++;
+			if (uniqueClasses.Num() != 0)
+			{
+				for (int j = 0; j < uniqueClasses.Num(); j++)
+				{
+					if (uniqueClasses[j].Contains("Hyper") == true)
+					{
+						isNewClass = false;
+						break;
+					}
+				}
+			}
+			if (isNewClass == true)
+			{
+				uniqueClasses.AddUnique("Hyper");
+			}
+		}
+		else if (playerItems[i].Contains("Money Shot") == true)
+		{
+			moneyShotItemCounter++;
+			if (uniqueClasses.Num() != 0)
+			{
+				for (int j = 0; j < uniqueClasses.Num(); j++)
+				{
+					if (uniqueClasses[j].Contains("Money Shot") == true)
+					{
+						isNewClass = false;
+						break;
+					}
+				}
+			}
+			if (isNewClass == true)
+			{
+				uniqueClasses.AddUnique("Money Shot");
+			}
+		}
 	}
 }
 
@@ -239,6 +334,56 @@ void AItemManager::ApplyAffects()
 		}
 		SacAffects();
 	}
+	if (rateItemCounter > 0)
+	{
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->SetRateBuff();
+		}
+		RateAffects();
+	}
+	if (growthItemCounter > 0)
+	{
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->SetGrowthBuff();
+		}
+		GrowthAffects();
+	}
+	if (slowItemCounter > 0)
+	{
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->SetSlowBuff();
+		}
+		SlowAffects();
+	}
+	if (hyperItemCounter > 0)
+	{
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->SetHyperBuff();
+		}
+		HyperAffects();
+	}
+	if (moneyShotItemCounter > 0)
+	{
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->SetMnyShotBuff();
+		}
+		MoneyShotAffects();
+	}
 
 	if (uniqueClasses.Num() >= 3)
 	{
@@ -275,7 +420,7 @@ void AItemManager::StrAffects()
 	}
 	else if (strItemCounter == 2)
 	{
-		damageMultiplier = 1.5;
+		damageMultiplier = 1.25;
 	}
 	else if (strItemCounter == 3)
 	{
@@ -356,6 +501,88 @@ void AItemManager::SacAffects()
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
 		ActorItr->ModifyPlayerKillBonuses(isABuff, healthToRecieve, chanceToRecieve);
+	}
+}
+
+void AItemManager::RateAffects()
+{
+	isABuff = true;
+
+	if (rateItemCounter == 1)
+	{
+		fireRate = 0.25;
+	}
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		ActorItr->ModifyPlayerFireRate(isABuff, fireRate);
+	}
+}
+
+void AItemManager::GrowthAffects()
+{
+	isABuff = true;
+
+	if (growthItemCounter == 1)
+	{
+		initialSpeed = 175;
+		maxSpeed = 175;
+		lifeSpan = 2.5;
+		isGrowing = true;
+		scale = FVector(0.5, 0.5, 1);
+	}
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		ActorItr->ModifyPlayerProjectileStyle(isABuff, initialSpeed, maxSpeed, lifeSpan, isGrowing, scale);
+	}
+}
+
+void AItemManager::SlowAffects()
+{
+	isABuff = true;
+
+	if (slowItemCounter == 1)
+	{
+		speedReductionPercent = 0.75;
+	}
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		ActorItr->ModifyEnemyMoveSpeed(isABuff, speedReductionPercent);
+	}
+}
+
+void AItemManager::HyperAffects()
+{
+	if (hyperItemCounter == 1)
+	{
+		percentDamageIncrease = 0.3;
+	}
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		ActorItr->ActivateHyperMode(percentDamageIncrease);
+	}
+}
+
+void AItemManager::MoneyShotAffects()
+{
+	isABuff = true;
+
+	if (moneyShotItemCounter == 1)
+	{
+		dropChanceIncrease = 2;
+	}
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		ActorItr->ModifyMoneyDropChance(isABuff, dropChanceIncrease);
 	}
 }
 

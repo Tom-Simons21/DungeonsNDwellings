@@ -21,12 +21,12 @@
 #include "BossManager.h"
 #include "MyPlayerController.h"
 #include "ItemManager.h"
+#include "DoorPathingManager.h"
 
 const FName ADungeonsNDwellingsv4Pawn::MoveForwardBinding("MoveForward");
 const FName ADungeonsNDwellingsv4Pawn::MoveRightBinding("MoveRight");
 const FName ADungeonsNDwellingsv4Pawn::FireForwardBinding("FireForward");
 const FName ADungeonsNDwellingsv4Pawn::FireRightBinding("FireRight");
-static float rateOfFire = 0.3f;
 
 ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 {
@@ -69,6 +69,11 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 	initialSpeed = 250;
 	maxSpeed = 250;
 	lifeSpan = 2;
+	FireRate = 0.3;
+	projectileScale = FVector(1, 1, 1);
+	isGrowing = false;
+
+	//projectile damage values
 	projectileDefaultDamage = 10;
 	projectileDamage = 10;
 
@@ -93,6 +98,12 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 
 	spawnChanceValue = 0;
 	healthRegenValue = 0;
+
+	//maintain correct dmg stats
+	otherDmgChanges = 0;
+
+	//set enemy speed modifier
+	enemySpeedReductionPercent = 1;
 }
 
 //Functions to control core functionality/////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +196,7 @@ void ADungeonsNDwellingsv4Pawn::FireShot(FVector FireDirection)
 			{
 				// spawn the projectile
 				ADungeonsNDwellingsv4Projectile* projectileActor = World->SpawnActorDeferred<ADungeonsNDwellingsv4Projectile>(ADungeonsNDwellingsv4Projectile::StaticClass(), SpawnPosition);
-				projectileActor->updateProperties(initialSpeed, maxSpeed, lifeSpan);
+				projectileActor->updateProperties(initialSpeed, maxSpeed, lifeSpan, isGrowing, projectileScale);
 				projectileActor->FinishSpawning(SpawnPosition);
 			}
 
@@ -217,13 +228,13 @@ void ADungeonsNDwellingsv4Pawn::BeginPlay()
 	getTotalOfDoors();
 	createArrayOfDoors();
 	GetRoomCount();
+	GetDoorMappings();
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 
 	playerHealth = playerHealthDefault;
 
 	isDamageable = false;
 	GetWorldTimerManager().SetTimer(hitControlTimer, this, &ADungeonsNDwellingsv4Pawn::makeDamageable, 1.5f, true, 2.0f);
-	FireRate = updateProperties(rateOfFire);
 
 	SetActorLocation(playerStartPoint, false);
 	SetActorScale3D(playerScale);
@@ -351,6 +362,26 @@ void ADungeonsNDwellingsv4Pawn::SetSacBuff()
 {
 	sacBuffActive = true;
 }
+void ADungeonsNDwellingsv4Pawn::SetRateBuff()
+{
+	rateBuffActive = true;
+}
+void ADungeonsNDwellingsv4Pawn::SetGrowthBuff()
+{
+	growthBuffActive = true;
+}
+void ADungeonsNDwellingsv4Pawn::SetSlowBuff()
+{
+	slowBuffActive = true;
+}
+void ADungeonsNDwellingsv4Pawn::SetHyperBuff()
+{
+	hyperBuffActive = true;
+}
+void ADungeonsNDwellingsv4Pawn::SetMnyShotBuff()
+{
+	mnyShotBuffActive = true;
+}
 
 void ADungeonsNDwellingsv4Pawn::ModifyPlayerDamage(bool isABuff, float damageMultiplier)
 {
@@ -364,12 +395,15 @@ void ADungeonsNDwellingsv4Pawn::ModifyPlayerDamage(bool isABuff, float damageMul
 	}
 	if (isABuff == true)
 	{
-		if (strBuffActive == true)
+		if (strBuffMaxed == true)
 		{
-			projectileDamage = projectileDefaultDamage * damageMultiplier;
+			projectileDamage = (projectileDamage + otherDmgChanges) * damageMultiplier;
+		}
+		else if (strBuffActive == true)
+		{
+			projectileDamage = projectileDamage * damageMultiplier;
 		}
 	}
-
 	if (isABuff == false)
 	{
 		if (strBuffMaxed != true)
@@ -418,7 +452,6 @@ void ADungeonsNDwellingsv4Pawn::ModifyPlayerHealth(bool isABuff, float healthInc
 			}
 		}
 	}
-	
 	if (isABuff == false)
 	{
 		if (vigBuffMaxed != true)
@@ -437,8 +470,94 @@ void ADungeonsNDwellingsv4Pawn::ModifyPlayerKillBonuses(bool isABuff, float heal
 {
 	if (isABuff == true)
 	{
-		healthFromKills = healthToRecieve;
-		chanceToRecieveHealth = chanceToRecieve;
+		if (sacBuffActive == true)
+		{
+			healthFromKills = healthToRecieve;
+			chanceToRecieveHealth = chanceToRecieve;
+		}
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::ModifyPlayerFireRate(bool isABuff, float fireRate)
+{
+	if (isABuff == true)
+	{
+		if (rateBuffActive == true)
+		{
+			FireRate = fireRate;
+		}
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::ModifyPlayerProjectileStyle(bool isABuff, float initSpeed, float topSpeed, float lifeTime, bool isGrow, FVector scale)
+{
+	if (isABuff == true)
+	{
+		if (growthBuffActive == true)
+		{
+			initialSpeed = initSpeed;
+			maxSpeed = topSpeed;
+			lifeSpan = lifeTime;
+			isGrowing = isGrow;
+			projectileScale = scale;
+		}
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::ModifyEnemyMoveSpeed(bool isABuff, float reductionPercent)
+{
+	if (isABuff == true)
+	{
+		if (slowBuffActive == true)
+		{
+			enemySpeedReductionPercent = reductionPercent;
+		}
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::ModifyMoneyDropChance(bool isABuff, float dropChanceIncrease)
+{
+	if (isABuff == true)
+	{
+		if (mnyShotBuffActive == true)
+		{
+			moneyDropModifier = dropChanceIncrease;
+
+			for (TActorIterator<AEnemySpawner> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+			{
+				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+				AEnemySpawner *Object = *ActorItr;
+				ActorItr->SetMoneyDropChance(moneyDropModifier);
+			}
+		}
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::ActivateHyperMode(float percentDmgIncrease)
+{
+	float healthLost;
+	float highHealthPenalty;
+	float dmgIncrease;
+
+	healthLost = playerMaxHealth - playerHealth;
+	if (healthLost < 0)
+	{
+		healthLost = 0;
+	}
+	else if (healthLost > (playerMaxHealth / 2))
+	{
+		dmgIncrease = healthLost * percentDmgIncrease;
+	}
+	else if (healthLost < (playerMaxHealth / 2))
+	{
+		highHealthPenalty = ((playerMaxHealth / 2) - healthLost) + 10;
+		dmgIncrease = (highHealthPenalty / 20) * (-1);
+	}
+
+	if (hyperBuffActive == true)
+	{
+		projectileDamage += dmgIncrease;
+		otherDmgChanges += dmgIncrease;
 	}
 }
 
@@ -463,7 +582,7 @@ bool ADungeonsNDwellingsv4Pawn::SpawnAdditionalShots(FVector FireDirection)
 			secondShotSpawned = true;
 			// spawn the projectile
 			ADungeonsNDwellingsv4Projectile* projectileActor = World->SpawnActorDeferred<ADungeonsNDwellingsv4Projectile>(ADungeonsNDwellingsv4Projectile::StaticClass(), SpawnPosition);
-			projectileActor->updateProperties(initialSpeed, maxSpeed, lifeSpan);
+			projectileActor->updateProperties(initialSpeed, maxSpeed, lifeSpan, isGrowing, projectileScale);
 			projectileActor->FinishSpawning(SpawnPosition);
 		}
 	}
@@ -496,6 +615,17 @@ void ADungeonsNDwellingsv4Pawn::GainHealthOnKill()
 		playerHealth += healthFromKills;
 	}
 }
+
+//Functions for modifying properties of the player projectile object///////////////////////////////////////////////////////////////////////////////////////////
+void ADungeonsNDwellingsv4Pawn::UpdateProjectileValues(float initSpeed, float topSpeed, float lifeTime, bool growing, FVector scale)
+{
+	initialSpeed = initSpeed;
+	maxSpeed = topSpeed;
+	lifeSpan = lifeTime;
+	isGrowing = growing;
+	projectileScale = scale;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -523,67 +653,174 @@ void ADungeonsNDwellingsv4Pawn::checkPlayerLocation(FVector playerCurrentLoc, FV
 	FVector playerZPosition = actorZValue;
 	FVector newLocationAdjust;
 	FVector doorLocation;
-	int doorNum;
+	FString testing;
 
 	if ((playerPosition.X <= 0 || playerPosition.X >= 800) && (playerPosition.Y <= 430 && playerPosition.Y >= 370))
 	{
 		if (playerPosition.X <= 0)
 		{
-			newLocationAdjust = FVector(100, 400, 0);
 			doorLocation = FVector(0, 400, 0);
-			doorNum = 1;
+			doorLocation.Z += playerCurrentLoc.Z - playerZElevation.Z;
+
+			for (int i = 0; i < doorMapping.Num(); i++)
+			{
+				if (doorLocation == doorMapping[i])
+				{
+					if ((i % 2) == 0)
+					{
+						exitPoint = doorMapping[i + 1];
+					}
+					else if ((i % 2) != 0)
+					{
+						exitPoint = doorMapping[i - 1];
+					}
+				}
+			}
+			newLocationAdjust = exitPoint;
+			if (exitPoint.X == 400 && exitPoint.Y == 0)
+			{
+				newLocationAdjust.Y += 100;
+			}
+			else if (exitPoint.X == 400 && exitPoint.Y == 800)
+			{
+				newLocationAdjust.Y -= 100;
+			}
+			else if (exitPoint.X == 0 && exitPoint.Y == 400)
+			{
+				newLocationAdjust.X += 100;
+			}
+			else if (exitPoint.X == 800 && exitPoint.Y == 400)
+			{
+				newLocationAdjust.X -= 100;
+			}
+			moveToRoom(newLocationAdjust);
 		}
 		else if (playerPosition.X >= 800)
 		{
-			newLocationAdjust = FVector(700, 400, 0);
 			doorLocation = FVector(800, 400, 0);
-			doorNum = 3;
+			doorLocation.Z += playerCurrentLoc.Z - playerZElevation.Z;
+
+			for (int i = 0; i < doorMapping.Num(); i++)
+			{
+				if (doorLocation == doorMapping[i])
+				{
+					if ((i % 2) == 0)
+					{
+						exitPoint = doorMapping[i + 1];
+					}
+					else if ((i % 2) != 0)
+					{
+						exitPoint = doorMapping[i - 1];
+					}
+				}
+			}
+			newLocationAdjust = exitPoint;
+			if (exitPoint.X == 400 && exitPoint.Y == 0)
+			{
+				newLocationAdjust.Y += 100;
+			}
+			else if (exitPoint.X == 400 && exitPoint.Y == 800)
+			{
+				newLocationAdjust.Y -= 100;
+			}
+			else if (exitPoint.X == 0 && exitPoint.Y == 400)
+			{
+				newLocationAdjust.X += 100;
+			}
+			else if (exitPoint.X == 800 && exitPoint.Y == 400)
+			{
+				newLocationAdjust.X -= 100;
+			}
+			moveToRoom(newLocationAdjust);
 		}
-		moveToRoom(playerZPosition, newLocationAdjust);
 	}
 	else if ((playerPosition.Y <= 0 || playerPosition.Y >= 800) && (playerPosition.X <= 430 && playerPosition.X >= 370))
 	{
 		if (playerPosition.Y <= 0)
 		{
-			newLocationAdjust = FVector(400, 100, 0);
 			doorLocation = FVector(400, 0, 0);
-			doorNum = 4;
+			doorLocation.Z += playerCurrentLoc.Z - playerZElevation.Z;
+
+			for (int i = 0; i < doorMapping.Num(); i++)
+			{
+				if (doorLocation == doorMapping[i])
+				{
+					if ((i % 2) == 0)
+					{
+						exitPoint = doorMapping[i + 1];
+					}
+					else if ((i % 2) != 0)
+					{
+						exitPoint = doorMapping[i - 1];
+					}
+				}
+			}
+			newLocationAdjust = exitPoint;
+			if (exitPoint.X == 400 && exitPoint.Y == 0)
+			{
+				newLocationAdjust.Y += 100;
+			}
+			else if (exitPoint.X == 400 && exitPoint.Y == 800)
+			{
+				newLocationAdjust.Y -= 100;
+			}
+			else if (exitPoint.X == 0 && exitPoint.Y == 400)
+			{
+				newLocationAdjust.X += 100;
+			}
+			else if (exitPoint.X == 800 && exitPoint.Y == 400)
+			{
+				newLocationAdjust.X -= 100;
+			}
+			moveToRoom(newLocationAdjust);
 		}
 		else if (playerPosition.Y >= 800)
 		{
-			newLocationAdjust = FVector(400, 700, 0);
 			doorLocation = FVector(400, 800, 0);
-			doorNum = 2;
+			doorLocation.Z += playerCurrentLoc.Z - playerZElevation.Z;
+
+			for (int i = 0; i < doorMapping.Num(); i++)
+			{
+				if (doorLocation == doorMapping[i])
+				{
+					if ((i % 2) == 0)
+					{
+						exitPoint = doorMapping[i + 1];
+					}
+					else if ((i % 2) != 0)
+					{
+						exitPoint = doorMapping[i - 1];
+					}
+				}
+			}
+			newLocationAdjust = exitPoint;
+			if (exitPoint.X == 400 && exitPoint.Y == 0)
+			{
+				newLocationAdjust.Y += 100;
+			}
+			else if (exitPoint.X == 400 && exitPoint.Y == 800)
+			{
+				newLocationAdjust.Y -= 100;
+			}
+			else if (exitPoint.X == 0 && exitPoint.Y == 400)
+			{
+				newLocationAdjust.X += 100;
+			}
+			else if (exitPoint.X == 800 && exitPoint.Y == 400)
+			{
+				newLocationAdjust.X -= 100;
+			}
+			moveToRoom(newLocationAdjust);
 		}
-		moveToRoom(playerZPosition, newLocationAdjust);
 	}
 }
 
-void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector actorZ, FVector doorLocation)
+void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector newLocation)
 {
-	FVector playerZ = actorZ;   //this equals 22 or will equal 22 + (roomPlacementModifier * floorNumber)
-	FVector playerZNoElevation = (playerZ - playerZElevation);
-	int floorPickMultiplier;
-	FVector floorCoord;
-	bool isNewRoom;
 	FVector playerNewLoc;
-
 	bool isRoomNew = true;
 
-	do
-	{
-		isNewRoom = true;
-		floorPickMultiplier = FMath::RandRange(0, roomCount);
-		floorCoord = floorPickMultiplier * roomPlacementModifier;
-
-		if (floorCoord.Z == playerZNoElevation.Z)
-		{
-			isNewRoom = false;
-		}
-
-	} while (isNewRoom == false);
-
-	playerNewLoc = doorLocation + floorCoord + playerZElevation;
+	playerNewLoc = newLocation + playerZElevation;
 
 	for (TActorIterator<AEnemySpawner> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
@@ -597,8 +834,6 @@ void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector actorZ, FVector doorLocation)
 		ABossManager *Object = *ActorItr;
 		ActorItr->ActivateBoss(playerNewLoc);
 	}
-
-
 	for (int i = 0; i < uniqueZTracker.Num(); i++)
 	{
 		if (uniqueZTracker[i] == (playerNewLoc.Z - playerZElevation.Z))
@@ -606,7 +841,6 @@ void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector actorZ, FVector doorLocation)
 			isRoomNew = false;
 		}
 	}
-
 	if (isRoomNew == true)
 	{
 		uniqueZTracker.AddUnique(playerNewLoc.Z - playerZElevation.Z);
@@ -640,23 +874,6 @@ void ADungeonsNDwellingsv4Pawn::takeDamage(float dmg)
 
 		isDamageable = false;
 	}
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-//Functions for modifying properties of the player projectile object////////////////////////////////////////////////////////////////////////////
-void ADungeonsNDwellingsv4Pawn::updateProjectileValues(float initSpeed, float topSpeed, float lifeTime)
-{
-	initialSpeed = initSpeed;
-	maxSpeed = topSpeed;
-	lifeSpan = lifeTime;
-}
-
-float ADungeonsNDwellingsv4Pawn::updateProperties(float defaultValue)
-{
-	float rateOfFire = defaultValue;
-
-	return(rateOfFire);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -716,6 +933,21 @@ void ADungeonsNDwellingsv4Pawn::GetRoomCount()
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ATileGeneratorParent *Object = *ActorItr;
 		roomCount = ActorItr->getRoomCount();
+	}
+}
+
+float ADungeonsNDwellingsv4Pawn::GetMoveSpeedModifier()
+{
+	return (enemySpeedReductionPercent);
+}
+
+void ADungeonsNDwellingsv4Pawn::GetDoorMappings()
+{
+	for (TActorIterator<ADoorPathingManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADoorPathingManager *Object = *ActorItr;
+		doorMapping = ActorItr->GetDoorMappingArray();
 	}
 }
 

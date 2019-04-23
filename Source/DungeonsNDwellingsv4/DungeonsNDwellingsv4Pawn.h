@@ -84,22 +84,18 @@ public:
 	//Player Stats/////////////////////////////////////////////////////////////////////////////////////////
 	UPROPERTY(EditAnywhere)
 		bool isDamageable;
-
 	UPROPERTY(EditAnywhere)
 		float playerHealth;
-
 	UPROPERTY(EditAnywhere)
 		float playerHealthDefault;
-
 	UPROPERTY(EditAnyWhere)
 		float playerMaxHealth;
-
 	UPROPERTY(EditAnywhere)
 		int playerGold;
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	//Projectile Stats/////////////////////////////////////////////////////////////////////////////////
+	//Projectile Stats////////////////////////////////////////////////////////////////////////////////////
 	UPROPERTY(EditAnywhere)
 		float initialSpeed;
 	UPROPERTY(EditAnywhere)
@@ -107,33 +103,38 @@ public:
 	UPROPERTY(EditAnywhere)
 		float lifeSpan;
 	UPROPERTY(EditAnywhere)
-		float projectileDamage;
+		bool isGrowing;
 	UPROPERTY(EditAnywhere)
-		float projectileDefaultDamage;
+		FVector projectileScale;
 
-	bool isSpawningSecondShot;
-	///////////////////////////////////////////////////////////////////////////////////////////////////
+	//Local projectile modifiers/////////////////////////////////////////////////////////////////////////
+	/**/UPROPERTY(EditAnywhere)
+	/**/	float projectileDamage;
+	/**/UPROPERTY(EditAnywhere)
+	/**/	float projectileDefaultDamage;
+	/**/bool isSpawningSecondShot;
+	/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	//Currency variables///////////////////////////////////////////////////////////////////////////////
+	//Currency variables/////////////////////////////////////////////////////////////////////////////////
 	int goldToAdd;
 	int winStreak;
 	int loseStreak;
-	///////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	//Key vector locations////////////////////////////////////////////////////////////////////////////
-	UPROPERTY(EditAnywhere)
-		FVector playerZElevation;
-
-	UPROPERTY(EditAnywhere)
-		FVector roomPlacementModifier;
+	//Key vector locations///////////////////////////////////////////////////////////////////////////////
+	FVector playerZElevation;
+	FVector roomPlacementModifier;
+	TArray<float> uniqueZTracker = { 0 };
 
 	FVector playerStartPoint = FVector(175, 400, 22);
 	FVector playerScale = FVector(0.4, 0.4, 0.4);
-	
+
 	UPROPERTY(EditAnywhere)
-		TArray<float> uniqueZTracker = { 0 };
+		FVector exitPoint;
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -153,13 +154,7 @@ public:
 	UPROPERTY(EditAnywhere)
 		TArray<int32> arrayOfDoors;
 	UPROPERTY(EditAnywhere)
-		TArray<FVector> doorStartPoints;
-	UPROPERTY(EditAnywhere)
-		TArray<FVector> doorEndPoints;
-	UPROPERTY(EditAnywhere)
-		FVector playerExitLoc;
-	UPROPERTY(EditAnywhere)
-		bool isNewDoor;
+		TArray<FVector> doorMapping;
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 
 	
@@ -168,15 +163,27 @@ public:
 	bool massBuffActive;
 	bool vigBuffActive;
 	bool sacBuffActive;
-
-	int spawnChanceValue;
-
-	float healthRegenValue;
+	bool rateBuffActive;
+	bool growthBuffActive;
+	bool slowBuffActive;
+	bool hyperBuffActive;
+	bool mnyShotBuffActive;
 
 	UPROPERTY(EditAnywhere)
 		float healthFromKills;
 	UPROPERTY(EditAnywhere)
 		int chanceToRecieveHealth;
+
+	int spawnChanceValue;
+	float healthRegenValue;
+
+	UPROPERTY(EditAnywhere)
+		float enemySpeedReductionPercent;
+
+	UPROPERTY(EditAnywhere)
+		float otherDmgChanges;
+
+	float moneyDropModifier;
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -193,8 +200,7 @@ public:
 	/*************************************************************************PUBLIC FUNCTIONS***************************************************************************/
 
 	//Functions for updating variables relative to projectile/////////////////////////////////////////////////////////
-	float updateProperties(float defaultVal);
-	void updateProjectileValues(float initSpeed, float maxSpeed, float life);
+	void UpdateProjectileValues(float initSpeed, float maxSpeed, float life, bool isGrowing, FVector scale);
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -207,7 +213,7 @@ public:
 
 	//Functions for tracking player movement through level and current location///////////////////////////////////////
 	void getPlayerLocation();										//passes player location to other objects
-	void moveToRoom(FVector zLoc, FVector doorLocation);
+	void moveToRoom(FVector newLocation);
 	void checkPlayerLocation(FVector playLoc, FVector zLoc);
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -230,16 +236,25 @@ public:
 	void SetMassBuff();
 	void SetVigBuff();
 	void SetSacBuff();
+	void SetRateBuff();
+	void SetGrowthBuff();
+	void SetSlowBuff();
+	void SetHyperBuff();
+	void SetMnyShotBuff();
 
 	void ModifyPlayerDamage(bool isABuff, float damageMultiplier);
 	void ModifyProjectileSpawnChance(bool isABuff, int spawnChanceModifier);
 	void ModifyPlayerHealth(bool isABuff, float healthIncrease, bool isHealthRegening, float healthRegenAmount);
 	void ModifyPlayerKillBonuses(bool isABuff, float healthToRecieve, int chanceToRecieve);
+	void ModifyPlayerFireRate(bool isABuff, float fireRate);
+	void ModifyPlayerProjectileStyle(bool isABuff, float initSpeed, float topSpeed, float lifeTime, bool isGrow, FVector scale);
+	void ModifyEnemyMoveSpeed(bool isABuff, float reductionPercent);
+	void ModifyMoneyDropChance(bool isABuff, float dropChanceIncrease);
 
 	bool SpawnAdditionalShots(FVector FireDirection);
 	void RegenHealth();
-
 	void GainHealthOnKill();
+	void ActivateHyperMode(float percentDmgIncrease);
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -251,6 +266,9 @@ public:
 	void createArrayOfDoors();
 	float GetProjectileDamage();
 	void GetRoomCount();
+	float GetMoveSpeedModifier();
+
+	void GetDoorMappings();
 
 	UFUNCTION(BlueprintPure, Category = "PlayerHealth")
 		float GetPlayerHealth();

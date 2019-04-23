@@ -29,22 +29,35 @@ ADungeonsNDwellingsv4Projectile::ADungeonsNDwellingsv4Projectile()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.f; // No gravity
+
+
+	//Modify projectile stats
+	isProjectileGrowing = false;
 }
 
 
 void ADungeonsNDwellingsv4Projectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Only add impulse and destroy projectile if we hit a physics
-	//if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL) && OtherComp->IsSimulatingPhysics())
-	//{
-		//OtherComp->AddImpulseAtLocation(GetVelocity() * 20.0f, GetActorLocation());
-	//}
 	Destroy();
 }
 
-void ADungeonsNDwellingsv4Projectile::updateProperties(float speedStart, float speedMax, float projLife)
+void ADungeonsNDwellingsv4Projectile::updateProperties(float speedStart, float speedMax, float projLife, bool isGrowing, FVector scale)
 {
 	ProjectileMovement->InitialSpeed = speedStart;
 	ProjectileMovement->MaxSpeed = speedMax;
 	InitialLifeSpan = projLife;
+	isProjectileGrowing = isGrowing;
+	projectileScale = scale;
+
+	if (isProjectileGrowing == true)
+	{
+		GetWorldTimerManager().SetTimer(growthTimer, this, &ADungeonsNDwellingsv4Projectile::GrowProjectile, 0.25f, true, 0.f);
+	}
+}
+
+void ADungeonsNDwellingsv4Projectile::GrowProjectile()
+{
+	projectileScale += FVector(0.35, 0.35, 0);
+
+	this->SetActorScale3D(projectileScale);
 }
