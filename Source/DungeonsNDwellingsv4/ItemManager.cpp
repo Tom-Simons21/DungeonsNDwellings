@@ -4,6 +4,7 @@
 #include "InteractableObject.h"
 #include "DungeonsNDwellingsv4Pawn.h"
 #include "Engine.h"
+#include "DungeonsNDwellingsInstance.h"
 
 // Sets default values
 AItemManager::AItemManager()
@@ -21,6 +22,9 @@ AItemManager::AItemManager()
 	isMassMaxed = false;
 	isVigMaxed = false;
 
+	regenRate = 0;
+	activeDebuffs = { false, false, false };
+
 	currentAvailableItems.Empty();
 }
 
@@ -28,9 +32,6 @@ AItemManager::AItemManager()
 void AItemManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	regenRate = 0;
-	activeDebuffs = { false, false, false };
 }
 
 // Called every frame
@@ -111,185 +112,180 @@ void AItemManager::AddItemToPlayer(FString objectName)
 void AItemManager::TrackAffects()
 {
 	bool isNewClass;
-	strItemCounter = 0;
-	massItemCounter = 0;
-	vigItemCounter = 0;
+	int valueToCheck = (playerItems.Num() - 1); //check the last item added
 
-	for (int i = 0; i < playerItems.Num(); i++)
+	isNewClass = true;
+	if (playerItems[valueToCheck].Contains("Strength") == true)
 	{
-		isNewClass = true;
-		if (playerItems[i].Contains("Strength") == true)
+		strItemCounter++;
+		if (uniqueClasses.Num() != 0)
 		{
-			strItemCounter++;
-			if (uniqueClasses.Num() != 0)
+			for (int j = 0; j < uniqueClasses.Num(); j++)
 			{
-				for (int j = 0; j < uniqueClasses.Num(); j++)
+				if (uniqueClasses[j].Contains("Strength") == true)
 				{
-					if (uniqueClasses[j].Contains("Strength") == true)
-					{
-						isNewClass = false;
-						break;
-					}
+					isNewClass = false;
+					break;
 				}
-			}
-			if (isNewClass == true)
-			{
-				uniqueClasses.AddUnique("Strength");
 			}
 		}
-		else if (playerItems[i].Contains("Masses") == true)
+		if (isNewClass == true)
 		{
-			massItemCounter++;
-			if (uniqueClasses.Num() != 0)
-			{
-				for (int j = 0; j < uniqueClasses.Num(); j++)
-				{
-					if (uniqueClasses[j].Contains("Masses") == true)
-					{
-						isNewClass = false;
-						break;
-					}
-				}
-			}
-			if (isNewClass == true)
-			{
-				uniqueClasses.AddUnique("Masses");
-			}
-		}
-		else if (playerItems[i].Contains("Vigor") == true)
-		{
-			vigItemCounter++;
-			if (uniqueClasses.Num() != 0)
-			{
-				for (int j = 0; j < uniqueClasses.Num(); j++)
-				{
-					if (uniqueClasses[j].Contains("Vigor") == true)
-					{
-						isNewClass = false;
-						break;
-					}
-				}
-			}
-			if (isNewClass == true)
-			{
-				uniqueClasses.AddUnique("Vigor");
-			}
-		}
-		else if (playerItems[i].Contains("Sacrifice") == true)
-		{
-			sacItemCounter++;
-			if (uniqueClasses.Num() != 0)
-			{
-				for (int j = 0; j < uniqueClasses.Num(); j++)
-				{
-					if (uniqueClasses[j].Contains("Sacrifice") == true)
-					{
-						isNewClass = false;
-						break;
-					}
-				}
-			}
-			if (isNewClass == true)
-			{
-				uniqueClasses.AddUnique("Sacrifice");
-			}
-		}
-		else if (playerItems[i].Contains("Fire Rate") == true)
-		{
-			rateItemCounter++;
-			if (uniqueClasses.Num() != 0)
-			{
-				for (int j = 0; j < uniqueClasses.Num(); j++)
-				{
-					if (uniqueClasses[j].Contains("Fire Rate") == true)
-					{
-						isNewClass = false;
-						break;
-					}
-				}
-			}
-			if (isNewClass == true)
-			{
-				uniqueClasses.AddUnique("Fire Rate");
-			}
-		}
-		else if (playerItems[i].Contains("Growth") == true)
-		{
-			growthItemCounter++;
-			if (uniqueClasses.Num() != 0)
-			{
-				for (int j = 0; j < uniqueClasses.Num(); j++)
-				{
-					if (uniqueClasses[j].Contains("Growth") == true)
-					{
-						isNewClass = false;
-						break;
-					}
-				}
-			}
-			if (isNewClass == true)
-			{
-				uniqueClasses.AddUnique("Growth");
-			}
-		}
-		else if (playerItems[i].Contains("Slowmo") == true)
-		{
-			slowItemCounter++;
-			if (uniqueClasses.Num() != 0)
-			{
-				for (int j = 0; j < uniqueClasses.Num(); j++)
-				{
-					if (uniqueClasses[j].Contains("Slowmo") == true)
-					{
-						isNewClass = false;
-						break;
-					}
-				}
-			}
-			if (isNewClass == true)
-			{
-			uniqueClasses.AddUnique("Slowmo");
-			}
-		}
-		else if (playerItems[i].Contains("Hyper") == true)
-		{
-			hyperItemCounter++;
-			if (uniqueClasses.Num() != 0)
-			{
-				for (int j = 0; j < uniqueClasses.Num(); j++)
-				{
-					if (uniqueClasses[j].Contains("Hyper") == true)
-					{
-						isNewClass = false;
-						break;
-					}
-				}
-			}
-			if (isNewClass == true)
-			{
-				uniqueClasses.AddUnique("Hyper");
-			}
-		}
-		else if (playerItems[i].Contains("Money Shot") == true)
-		{
-			moneyShotItemCounter++;
-			if (uniqueClasses.Num() != 0)
-			{
-				for (int j = 0; j < uniqueClasses.Num(); j++)
-				{
-					if (uniqueClasses[j].Contains("Money Shot") == true)
-					{
-						isNewClass = false;
-						break;
-					}
-				}
-			}
-			if (isNewClass == true)
-			{
-				uniqueClasses.AddUnique("Money Shot");
-			}
+			uniqueClasses.AddUnique("Strength");
 		}
 	}
+	else if (playerItems[valueToCheck].Contains("Masses") == true)
+	{
+		massItemCounter++;
+		if (uniqueClasses.Num() != 0)
+		{
+			for (int j = 0; j < uniqueClasses.Num(); j++)
+			{
+				if (uniqueClasses[j].Contains("Masses") == true)
+				{
+					isNewClass = false;
+					break;
+				}
+			}
+		}
+		if (isNewClass == true)
+		{
+			uniqueClasses.AddUnique("Masses");
+		}
+	}
+	else if (playerItems[valueToCheck].Contains("Vigor") == true)
+	{
+		vigItemCounter++;
+		if (uniqueClasses.Num() != 0)
+		{
+			for (int j = 0; j < uniqueClasses.Num(); j++)
+			{
+				if (uniqueClasses[j].Contains("Vigor") == true)
+				{
+					isNewClass = false;
+					break;
+				}
+			}
+		}
+		if (isNewClass == true)
+		{
+			uniqueClasses.AddUnique("Vigor");
+		}
+	}
+	else if (playerItems[valueToCheck].Contains("Sacrifice") == true)
+	{
+		sacItemCounter++;
+		if (uniqueClasses.Num() != 0)
+		{
+			for (int j = 0; j < uniqueClasses.Num(); j++)
+			{
+				if (uniqueClasses[j].Contains("Sacrifice") == true)
+				{
+					isNewClass = false;
+					break;
+				}
+			}
+		}
+		if (isNewClass == true)
+		{
+			uniqueClasses.AddUnique("Sacrifice");
+		}
+	}
+	else if (playerItems[valueToCheck].Contains("Fire Rate") == true)
+	{
+		rateItemCounter++;
+		if (uniqueClasses.Num() != 0)
+		{
+			for (int j = 0; j < uniqueClasses.Num(); j++)
+			{
+				if (uniqueClasses[j].Contains("Fire Rate") == true)
+				{
+					isNewClass = false;
+					break;
+				}
+			}
+		}
+		if (isNewClass == true)
+		{
+			uniqueClasses.AddUnique("Fire Rate");
+		}
+	}
+	else if (playerItems[valueToCheck].Contains("Growth") == true)
+	{
+		growthItemCounter++;
+		if (uniqueClasses.Num() != 0)
+		{
+			for (int j = 0; j < uniqueClasses.Num(); j++)
+			{
+				if (uniqueClasses[j].Contains("Growth") == true)
+				{
+					isNewClass = false;
+					break;
+				}
+			}
+		}
+		if (isNewClass == true)
+		{
+			uniqueClasses.AddUnique("Growth");
+		}
+	}
+	else if (playerItems[valueToCheck].Contains("Slowmo") == true)
+	{
+		slowItemCounter++;
+		if (uniqueClasses.Num() != 0)
+		{
+			for (int j = 0; j < uniqueClasses.Num(); j++)
+			{
+				if (uniqueClasses[j].Contains("Slowmo") == true)
+				{
+					isNewClass = false;
+					break;
+				}
+			}
+		}
+		if (isNewClass == true)
+		{
+			uniqueClasses.AddUnique("Slowmo");
+		}
+	}
+	else if (playerItems[valueToCheck].Contains("Hyper") == true)
+	{
+		hyperItemCounter++;
+		if (uniqueClasses.Num() != 0)
+		{
+			for (int j = 0; j < uniqueClasses.Num(); j++)
+			{
+				if (uniqueClasses[j].Contains("Hyper") == true)
+				{
+					isNewClass = false;
+					break;
+				}
+			}
+		}
+		if (isNewClass == true)
+		{
+			uniqueClasses.AddUnique("Hyper");
+		}
+	}
+	else if (playerItems[valueToCheck].Contains("Money Shot") == true)
+	{
+		moneyShotItemCounter++;
+		if (uniqueClasses.Num() != 0)
+		{
+			for (int j = 0; j < uniqueClasses.Num(); j++)
+			{
+				if (uniqueClasses[j].Contains("Money Shot") == true)
+				{
+					isNewClass = false;
+					break;
+				}
+			}
+		}
+		if (isNewClass == true)
+		{
+			uniqueClasses.AddUnique("Money Shot");
+		}
+	}	
 }
 
 void AItemManager::ApplyAffects()
@@ -654,5 +650,92 @@ bool AItemManager::IsVigBuffMaxed()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+//Functions for getting world values
+void AItemManager::GetLevelNumber()
+{
+	FString levelName = GetWorld()->GetMapName();;
+	FString levelNameLeft;
+	FString levelNameRight;
+	FString splitCon = "-";
+
+	levelName.Split(splitCon, &levelNameLeft, &levelNameRight, ESearchCase::CaseSensitive, ESearchDir::FromStart);
+
+	levelNumber = FCString::Atoi(*levelNameRight);
+}
+///////////////////////////////////////////////////////////////////////////////
+
+
+//Level transition function////////////////////////////////////////////////////
+void AItemManager::TransitionToNewLevel()
+{
+	for (int i = 0; i < currentAvailableItems.Num(); i++)
+	{
+		if (currentAvailableItems[i] != itemPool[0])
+		{
+			itemPool.Add(currentAvailableItems[i]);
+		}
+	}
+	SetGameInstanceVariables();
+}
+////////////////////////////////////////////////////////////////////////////////
+
+
+//Functions for GET and SET
+void AItemManager::SetGameInstanceVariables()
+{
+	UDungeonsNDwellingsInstance* GI = Cast<UDungeonsNDwellingsInstance>(GetGameInstance());
+	if (GI)
+	{
+		GI->GI_itemPool = itemPool;
+		GI->GI_playerItems = playerItems;
+		GI->GI_uniqueClasses = uniqueClasses;
+
+		GI->GI_strItemCounter = strItemCounter;
+		GI->GI_massItemCounter = massItemCounter;
+		GI->GI_vigItemCounter = vigItemCounter;
+		GI->GI_sacItemCounter = sacItemCounter;
+		GI->GI_rateItemCounter = rateItemCounter;
+		GI->GI_growthItemCounter = growthItemCounter;
+		GI->GI_slowItemCounter = slowItemCounter;
+		GI->GI_hyperItemCounter = hyperItemCounter;
+		GI->GI_moneyShotItemCounter = moneyShotItemCounter;
+
+		GI->GI_isStrMaxed = isStrMaxed;
+		GI->GI_isMassMaxed = isMassMaxed;
+		GI->GI_isVigMaxed = isVigMaxed;
+
+		GI->GI_activeDebuffs = activeDebuffs;
+	}
+}
+
+void AItemManager::GetItemStatsFromGI()
+{
+	UDungeonsNDwellingsInstance* GI = Cast<UDungeonsNDwellingsInstance>(GetGameInstance());
+	if (levelNumber != 1)
+	{
+		if (GI)
+		{
+			itemPool = GI->GI_itemPool;
+			playerItems = GI->GI_playerItems;
+			uniqueClasses = GI->GI_uniqueClasses;
+
+			strItemCounter = GI->GI_strItemCounter;
+			massItemCounter = GI->GI_massItemCounter;
+			vigItemCounter = GI->GI_vigItemCounter;
+			sacItemCounter = GI->GI_sacItemCounter;
+			rateItemCounter = GI->GI_rateItemCounter;
+			growthItemCounter = GI->GI_growthItemCounter;
+			slowItemCounter = GI->GI_slowItemCounter;
+			hyperItemCounter = GI->GI_hyperItemCounter;
+			moneyShotItemCounter = GI->GI_moneyShotItemCounter;
+
+			isStrMaxed = GI->GI_isStrMaxed;
+			isMassMaxed = GI->GI_isMassMaxed;
+			isVigMaxed = GI->GI_isVigMaxed;
+
+			activeDebuffs = GI->GI_activeDebuffs;
+		}
+	}
+}
 
 

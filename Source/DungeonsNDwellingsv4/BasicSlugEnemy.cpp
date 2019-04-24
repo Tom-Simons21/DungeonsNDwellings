@@ -88,8 +88,8 @@ void ABasicSlugEnemy::Tick(float DeltaTime)
 void ABasicSlugEnemy::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	FString actorName;
-	float playerDmg;
-	float moveSpeedModifier;
+	float playerDmg = 0;
+	float moveSpeedModifier = 1;
 
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{

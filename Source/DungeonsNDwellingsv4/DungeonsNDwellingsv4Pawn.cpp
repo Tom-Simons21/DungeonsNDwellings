@@ -22,6 +22,7 @@
 #include "MyPlayerController.h"
 #include "ItemManager.h"
 #include "DoorPathingManager.h"
+#include "DungeonsNDwellingsInstance.h"
 
 const FName ADungeonsNDwellingsv4Pawn::MoveForwardBinding("MoveForward");
 const FName ADungeonsNDwellingsv4Pawn::MoveRightBinding("MoveRight");
@@ -222,6 +223,13 @@ void ADungeonsNDwellingsv4Pawn::ShotTimerExpired()
 void ADungeonsNDwellingsv4Pawn::BeginPlay()
 {
 	Super::BeginPlay();
+	GetLevelNumber();
+
+	isLevelComplete = false;
+
+	playerHealth = playerHealthDefault;
+
+	GetPlayerStatsFromGI();
 
 	//Initialise all variables from external classes asap//////////////////////////////////////////////
 	GetRoomPlacementModifier();
@@ -230,8 +238,6 @@ void ADungeonsNDwellingsv4Pawn::BeginPlay()
 	GetRoomCount();
 	GetDoorMappings();
 	///////////////////////////////////////////////////////////////////////////////////////////////////
-
-	playerHealth = playerHealthDefault;
 
 	isDamageable = false;
 	GetWorldTimerManager().SetTimer(hitControlTimer, this, &ADungeonsNDwellingsv4Pawn::makeDamageable, 1.5f, true, 2.0f);
@@ -272,11 +278,6 @@ void ADungeonsNDwellingsv4Pawn::OnReroll()
 
 void ADungeonsNDwellingsv4Pawn::OnPauseGame()
 {
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Pause pressed.")));
-	}
-
 	UWorld* const World = GetWorld();
 	UGameplayStatics::SetGamePaused(World, true);
 
@@ -289,9 +290,33 @@ void ADungeonsNDwellingsv4Pawn::OnPauseGame()
 
 void ADungeonsNDwellingsv4Pawn::OnNextLevel()
 {
-	if (GEngine)
+	FString nextLevel;
+	FString nextLevelName;
+	FName name;
+
+	if (levelNumber + 1 < 6)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Next Level Pressed.")));
+		nextLevel = FString::FromInt(levelNumber + 1);
+		nextLevelName = levelPrefix + nextLevel;
+
+		name = FName(*nextLevelName);
+	}
+	else
+	{
+		name = "WinGame";
+	}
+
+	if (isLevelComplete)
+	{
+		for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			AItemManager *Object = *ActorItr;
+			ActorItr->TransitionToNewLevel();
+		}
+
+		SetGameInstanceVariables();
+		UGameplayStatics::OpenLevel(GetWorld(), name);
 	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -341,6 +366,11 @@ void ADungeonsNDwellingsv4Pawn::UpdatePlayerCurrency()
 	{
 		loseStreak++;
 	}	
+
+	if (playerGold > 100)
+	{
+		playerGold = 100;
+	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -423,7 +453,7 @@ void ADungeonsNDwellingsv4Pawn::ModifyProjectileSpawnChance(bool isABuff, int sp
 
 void ADungeonsNDwellingsv4Pawn::ModifyPlayerHealth(bool isABuff, float healthIncrease, bool isHealthRegening, float healthRegenAmount)
 {
-	bool vigBuffMaxed;
+	bool vigBuffMaxed = false;
 	float currentHealthLost;
 
 	for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
@@ -537,7 +567,7 @@ void ADungeonsNDwellingsv4Pawn::ActivateHyperMode(float percentDmgIncrease)
 {
 	float healthLost;
 	float highHealthPenalty;
-	float dmgIncrease;
+	float dmgIncrease = 0;
 
 	healthLost = playerMaxHealth - playerHealth;
 	if (healthLost < 0)
@@ -653,7 +683,6 @@ void ADungeonsNDwellingsv4Pawn::checkPlayerLocation(FVector playerCurrentLoc, FV
 	FVector playerZPosition = actorZValue;
 	FVector newLocationAdjust;
 	FVector doorLocation;
-	FString testing;
 
 	if ((playerPosition.X <= 0 || playerPosition.X >= 800) && (playerPosition.Y <= 430 && playerPosition.Y >= 370))
 	{
@@ -868,12 +897,36 @@ void ADungeonsNDwellingsv4Pawn::setIsDamageable(bool isD)
 
 void ADungeonsNDwellingsv4Pawn::takeDamage(float dmg)
 {
+	FName gameOver;
+
 	if (isDamageable == true)
 	{
 		playerHealth -= dmg;
 
 		isDamageable = false;
 	}
+
+	gameOver = "GameOver";
+
+	if (playerHealth <= 0)
+	{
+		UGameplayStatics::OpenLevel(GetWorld(), gameOver);
+	}
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//Functions for getting world values////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ADungeonsNDwellingsv4Pawn::GetLevelNumber()
+{
+	FString levelName = GetWorld()->GetMapName();;
+	FString levelNameLeft;
+	FString levelNameRight;
+	FString splitCon = "-";
+
+	levelName.Split(splitCon, &levelNameLeft, &levelNameRight, ESearchCase::CaseSensitive, ESearchDir::FromStart);
+
+	levelNumber = FCString::Atoi(*levelNameRight);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -959,6 +1012,96 @@ float ADungeonsNDwellingsv4Pawn::GetPlayerHealth()
 int ADungeonsNDwellingsv4Pawn::GetPlayerCurrency()
 {
 	return (playerGold);
+}
+
+void ADungeonsNDwellingsv4Pawn::SetLevelComplete()
+{
+	isLevelComplete = true;
+}
+
+void ADungeonsNDwellingsv4Pawn::SetGameInstanceVariables()
+{
+	UDungeonsNDwellingsInstance* GI = Cast<UDungeonsNDwellingsInstance>(GetGameInstance());
+	if (GI)
+	{
+		GI->GI_playerHealth = playerHealth;
+		GI->GI_playerMaxHealth = playerMaxHealth;
+		GI->GI_playerGold = playerGold;
+		GI->GI_initialSpeed = initialSpeed;
+		GI->GI_maxSpeed = maxSpeed;
+		GI->GI_lifeSpan = lifeSpan;
+		GI->GI_fireRate = FireRate;
+		GI->GI_isGrowing = isGrowing;
+		GI->GI_projectileScale = projectileScale;
+		GI->GI_projectileDamage = projectileDamage;
+		GI->GI_isSpawningSecondShot = isSpawningSecondShot;
+
+		GI->GI_strBuffActive = strBuffActive;
+		GI->GI_massBuffActive = massBuffActive;
+		GI->GI_vigBuffActive = vigBuffActive;
+		GI->GI_sacBuffActive = sacBuffActive;
+		GI->GI_rateBuffActive = rateBuffActive;
+		GI->GI_growthBuffActive = growthBuffActive;
+		GI->GI_slowBuffActive = slowBuffActive;
+		GI->GI_hyperBuffActive = hyperBuffActive;
+		GI->GI_mnyShotBuffActive = mnyShotBuffActive;
+
+		GI->GI_healthFromKills = healthFromKills;
+		GI->GI_chanceToRecieveHealth = chanceToRecieveHealth;
+
+		GI->GI_spawnChanceValue = spawnChanceValue;
+		GI->GI_healthRegenValue = healthRegenValue;
+
+		GI->GI_enemySpeedReductionPercent = enemySpeedReductionPercent;
+
+		GI->GI_otherDmgChanges = otherDmgChanges;
+
+		GI->GI_moneyDropModifier = moneyDropModifier;
+	}
+}
+
+void ADungeonsNDwellingsv4Pawn::GetPlayerStatsFromGI()
+{
+	UDungeonsNDwellingsInstance* GI = Cast<UDungeonsNDwellingsInstance>(GetGameInstance());
+	if (levelNumber != 1)
+	{
+		if (GI)
+		{
+			playerHealth = GI->GI_playerHealth;
+			playerMaxHealth = GI->GI_playerMaxHealth;
+			playerGold = GI->GI_playerGold;
+			initialSpeed = GI->GI_initialSpeed;
+			maxSpeed = GI->GI_maxSpeed;
+			lifeSpan = GI->GI_lifeSpan;
+			FireRate = GI->GI_fireRate;
+			isGrowing = GI->GI_isGrowing;
+			projectileScale = GI->GI_projectileScale;
+			projectileDamage = GI->GI_projectileDamage;
+			isSpawningSecondShot = GI->GI_isSpawningSecondShot;
+
+			strBuffActive = GI->GI_strBuffActive;
+			massBuffActive = GI->GI_massBuffActive;
+			vigBuffActive = GI->GI_vigBuffActive;
+			sacBuffActive = GI->GI_sacBuffActive;
+			rateBuffActive = GI->GI_rateBuffActive;
+			growthBuffActive = GI->GI_growthBuffActive;
+			slowBuffActive = GI->GI_slowBuffActive;
+			hyperBuffActive = GI->GI_hyperBuffActive;
+			mnyShotBuffActive = GI->GI_mnyShotBuffActive;
+
+			healthFromKills = GI->GI_healthFromKills;
+			chanceToRecieveHealth = GI->GI_chanceToRecieveHealth;
+
+			spawnChanceValue = GI->GI_spawnChanceValue;
+			healthRegenValue = GI->GI_healthRegenValue;
+
+			enemySpeedReductionPercent = GI->GI_enemySpeedReductionPercent;
+
+			otherDmgChanges = GI->GI_otherDmgChanges;
+
+			moneyDropModifier = GI->GI_moneyDropModifier;
+		}
+	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

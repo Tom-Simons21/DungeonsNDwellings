@@ -3,6 +3,7 @@
 #include "InteractableObjectManager.h"
 #include "InteractableObject.h"
 #include "TileGeneratorParent.h"
+#include "ItemManager.h"
 #include "Engine.h"
 
 // Sets default values
@@ -23,6 +24,14 @@ void AInteractableObjectManager::BeginPlay()
 
 	interactableObjectArray.Empty();
 	itemSpawnedCounter = 0;
+
+	for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AItemManager *Object = *ActorItr;
+		ActorItr->GetLevelNumber();
+		ActorItr->GetItemStatsFromGI();
+	}
 
 	SpawnInteractableObject();
 }

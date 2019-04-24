@@ -98,6 +98,13 @@ void ABossManager::AddLevelCompleteElements()
 		AInteractableObjectManager *Object = *ActorItr;
 		ActorItr->SpawnInteractableOnComplete();
 	}
+
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		ActorItr->SetLevelComplete();
+	}
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
