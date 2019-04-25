@@ -48,29 +48,26 @@ AProjectileBoss::AProjectileBoss()
 	//Set up boss stats
 	projectileBossContactDamage = 25;
 	projectileBossDmg = 10;
-	projectileBossHealth = 200;
+	projectileBossHealth = 300;
 
 	//is boss turned on - off by default
 	isBossActive = false;
 }
 
-
-//Functions to control the basic functionality of the Projectile Boss object//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Functions to control collision and hit detection on projectile boss//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AProjectileBoss::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	FString actorName;
-
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
 		actorName = *OtherActor->GetName();
-
 		if (actorName == "TP_TwinStickPawn_1")
 		{
 			for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 			{
 				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 				ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-				ActorItr->takeDamage(projectileBossContactDamage);
+				ActorItr->PlayerTakeDamage(projectileBossContactDamage);
 			}
 		}
 		else if (actorName.Contains("DungeonsNDwellingsv4Projectile_"))
@@ -85,19 +82,16 @@ void AProjectileBoss::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 		}
 	}
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Called when the game starts or when spawned
+//Functions to control basic functionality/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AProjectileBoss::BeginPlay()
 {
 	Super::BeginPlay();
 
 	GetRoomCount();
-	GetSelfZOffset();
-	
 	loc = GetActorLocation();
 }
-
-// Called every frame
 void AProjectileBoss::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -107,25 +101,23 @@ void AProjectileBoss::Tick(float DeltaTime)
 		SetActorLocation(loc);
 		SetActorRotation(rot);
 		SetActorScale3D(sca);
-
 		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-			playerLocation = ActorItr->getCurrentLocation();
+			playerLocation = ActorItr->GetPlayersCurrentLocation();
 		}
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-//Functions to control boss behaviour///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Functions to control boss attack decision making//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AProjectileBoss::SetIsBossActive()
 {
 	isBossActive = true;
 	SelectBossAttack();
 }
-
 void AProjectileBoss::SelectBossAttack()
 {
 	int attackSelector;
@@ -150,7 +142,7 @@ void AProjectileBoss::SelectBossAttack()
 	}
 	else if (attackName == "circular")
 	{
-		timeToRun = 4.5;
+		timeToRun = 3.0;
 		endTime = GetWorld()->GetTimeSeconds() + timeToRun;
 		//Binding the function with specific values
 		timerDel.BindUFunction(this, FName("CircularAttack"), endTime);
@@ -159,7 +151,7 @@ void AProjectileBoss::SelectBossAttack()
 	}
 	else if (attackName == "pulsating")
 	{
-		timeToRun = 4.8;
+		timeToRun = 4.2;
 		endTime = GetWorld()->GetTimeSeconds() + timeToRun;
 		//Binding the function with specific values
 		timerDel.BindUFunction(this, FName("PulsatingAttack_One"), endTime);
@@ -169,7 +161,9 @@ void AProjectileBoss::SelectBossAttack()
 		GetWorld()->GetTimerManager().SetTimer(attackTimerHandle_Two, timerDel_Two, 0.7f, true, 0.7f);
 	}
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//Functions to perform all boss attacks////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AProjectileBoss::StraightAttack(float endTime)
 {
 	float currentTime = GetWorld()->GetTimeSeconds();
@@ -196,14 +190,13 @@ void AProjectileBoss::StraightAttack(float endTime)
 		SelectBossAttack();
 	}
 }
-
 void AProjectileBoss::CircularAttack(float endTime)
 {
 	float currentTime = GetWorld()->GetTimeSeconds();
 
 	FVector sca = FVector(1, 1, 1);
 	float radius = 25;
-	int quantity = 10;
+	int quantity = 12;
 
 	float position;
 	FRotator rotation;
@@ -235,7 +228,6 @@ void AProjectileBoss::CircularAttack(float endTime)
 		SelectBossAttack();
 	}
 }
-
 void AProjectileBoss::PulsatingAttack_One(float endTime)
 {
 	float currentTime = GetWorld()->GetTimeSeconds();
@@ -273,7 +265,6 @@ void AProjectileBoss::PulsatingAttack_One(float endTime)
 		GetWorld()->GetTimerManager().ClearTimer(attackTimerHandle);
 	}
 }
-
 void AProjectileBoss::PulsatingAttack_Two(float endTime)
 {
 	float currentTime = GetWorld()->GetTimeSeconds();
@@ -314,10 +305,9 @@ void AProjectileBoss::PulsatingAttack_Two(float endTime)
 		SelectBossAttack();
 	}
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-//Functions to control boss taking damage and negative effects//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Functions to control boss taking damage and negative effects/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AProjectileBoss::BossTakeDamage(float dmg)
 {
 	projectileBossHealth -= dmg;
@@ -328,7 +318,7 @@ void AProjectileBoss::BossTakeDamage(float dmg)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 			ADoorSealSpawner *Object = *ActorItr;
-			ActorItr->openDoors(roomCount);
+			ActorItr->OpenDoors(roomCount);
 		}
 		for (TActorIterator<ABossManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
@@ -339,31 +329,20 @@ void AProjectileBoss::BossTakeDamage(float dmg)
 		Destroy();
 	}
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-//Functions to GET and SET key variables from external functions////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void AProjectileBoss::GetSelfZOffset()
-{
-	for (TActorIterator<ABossManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ABossManager *Object = *ActorItr;
-		zOffset = ActorItr->GetZOffset();
-	}
-}
-
+//Functions to GET and SET key variables from external functions///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AProjectileBoss::GetRoomCount()
 {
 	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ATileGeneratorParent *Object = *ActorItr;
-		roomCount = ActorItr->getRoomCount();
+		roomCount = ActorItr->GetRoomCount();
 	}
 }
 float AProjectileBoss::GetBossProjectileDmg()
 {
 	return projectileBossDmg;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

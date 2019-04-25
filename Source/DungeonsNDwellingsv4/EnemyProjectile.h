@@ -28,34 +28,29 @@ public:
 	/** Function to handle the projectile hitting something */
 	UFUNCTION()
 		void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
 	/** Returns ProjectileMesh subobject **/
 	FORCEINLINE UStaticMeshComponent* GetProjectileMesh() const { return ProjectileMesh; }
 	/** Returns ProjectileMovement subobject **/
 	FORCEINLINE UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Materials)
-		UMaterialInterface* theMaterial;
-
+	UMaterialInterface* theMaterial;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Materials)
 		UMaterialInstanceDynamic* dynamicMaterial;
-
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:
-
-	/**********************************************************************PUBLIC VARIABLES***************************************************************************/
-	
+private:
+	/*********************************************************************PRIVATE VARIABLES***************************************************************************/
 	//variables for boss properties////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	float bossDmg;
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	/**********************************************************************PUBLIC FUNCTIONS***************************************************************************/
 
+public:
+	/**********************************************************************PUBLIC FUNCTIONS***************************************************************************/
 	//Functions for updating properties of enemy projectile////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	void UpdateMaterials();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

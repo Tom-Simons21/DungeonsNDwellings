@@ -16,13 +16,25 @@ class ADungeonsNDwellingsv4GameMode : public AGameModeBase
 public:
 	ADungeonsNDwellingsv4GameMode();
 
+private:
+	FString mapName;
+
 protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Health", Meta = (BlueprintProtected = "true"))
 		TSubclassOf<class UUserWidget> PlayerHUDClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Loading", Meta = (BlueprintProtected = "true"))
+		TSubclassOf<class UUserWidget> LoadingScreenClass;
 
 	UPROPERTY()
 		class UUserWidget* CurrentWidget;
+	UPROPERTY()
+		class UUserWidget* LoadingWidget;
+
+public:
+
+	void DisplayLoadingScreen();
+	void RemoveLoadingScreen();
 };
 
 

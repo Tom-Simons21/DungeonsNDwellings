@@ -35,33 +35,25 @@ AEnemySpawner::AEnemySpawner()
 	healthDropChance = 2;
 }
 
-
-//Functions to control basic functionality and on load features of the enemy manager///////////////////////////////////////////////////////////////////////////////////////////////////
-// Called when the game starts or when spawned
+//Functions to control basic functionality and on load features of the enemy manager//////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AEnemySpawner::BeginPlay()
 {
 	Super::BeginPlay();
-	
 	GetRoomCount();
 	GetRoomPlacementModifier();
 	GetPlayerZOffset();
 
 	roomsUsed = usedRooms.Num();
-
 	enemyKilledCounter = 0;
-
 	//enemy spawner always uses roomCount - 2 to account for no spawning in first or last room
 	for (int i = 0; i <= (roomCount - 2); i++)
 	{
 		if (roomsUsed <= (roomCount - 2))
 		{
-			enemyTypePicker = enemySpawnSelector();
-
-			enemyCount = enemyCountSelector(enemyTypePicker);
-
-			roomToSpawnIn = spawnRoomSelector();
-
-			spawnEnemy(enemyTypePicker, enemyCount, roomToSpawnIn);
+			enemyTypePicker = EnemySpawnSelector();
+			enemyCount = EnemyCountSelector(enemyTypePicker);
+			roomToSpawnIn = SpawnRoomSelector();
+			SpawnEnemy(enemyTypePicker, enemyCount, roomToSpawnIn);
 		}
 		else
 		{
@@ -69,20 +61,12 @@ void AEnemySpawner::BeginPlay()
 		}
 	}
 	GetSlugEnemyZ();
-	getEnemiesPerRoom();
+	GetEnemiesPerRoom();
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Called every frame
-void AEnemySpawner::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-//Functions to control randomly generating all values respective to enemy spawning, should be expandable to multiple enemy types///////////////////////////////////////////////////////////
-int AEnemySpawner::enemySpawnSelector()
+//Functions to control randomly generating all values respective to enemy spawning, should be expandable to multiple enemy types//////////////////////////////////////////////////////////////
+int AEnemySpawner::EnemySpawnSelector()
 {
 	spawnChanceSelector = FMath::RandRange(1, 100);
 
@@ -94,11 +78,9 @@ int AEnemySpawner::enemySpawnSelector()
 	{
 		enemyTypePicker = 1;
 	}
-
 	return (enemyTypePicker);
 }
-
-int AEnemySpawner::enemyCountSelector(int enemyType)
+int AEnemySpawner::EnemyCountSelector(int enemyType)
 {
 	if (enemyType == 0)
 	{
@@ -108,24 +90,18 @@ int AEnemySpawner::enemyCountSelector(int enemyType)
 	{
 		enemyMinSpawn = minimumSpawnValue[enemyType];
 		enemyMaxSpawn = maximumSpawnValue[enemyType];
-
 		enemyCount = FMath::RandRange(enemyMinSpawn, enemyMaxSpawn);
 	}
-
 	return (enemyCount);
 }
-
-int AEnemySpawner::spawnRoomSelector()
+int AEnemySpawner::SpawnRoomSelector()
 {
 	bool isRoomFree;
 	roomsUsed = usedRooms.Num();
-	FString roomOutput;
-	
 	do
 	{
 		isRoomFree = true;
 		roomToSpawnIn = FMath::RandRange(1, (roomCount - 1));
-
 		if (roomsUsed == 0)
 		{
 			break;
@@ -134,7 +110,6 @@ int AEnemySpawner::spawnRoomSelector()
 		{
 			break;
 		}
-
 		for (int i = 0; i < roomsUsed; i++)
 		{
 			if (usedRooms[i] == roomToSpawnIn)
@@ -143,14 +118,11 @@ int AEnemySpawner::spawnRoomSelector()
 				break;
 			}
 		}
-
 	} while (isRoomFree == false);
-	
 	usedRooms.Add(roomToSpawnIn);
 	return (roomToSpawnIn);
 }
-
-FTransform AEnemySpawner::getSpawnLocation(int enemyNum, int enemyType)
+FTransform AEnemySpawner::GetSpawnLocation(int enemyNum, int enemyType)
 {
 	FVector loc;
 	FRotator rot = FRotator(0, 0, 0);
@@ -182,19 +154,16 @@ FTransform AEnemySpawner::getSpawnLocation(int enemyNum, int enemyType)
 		rot = FRotator(0, 0, 0);
 		scale = FVector(0, 0, 0);
 	}
-
 	enemyPosition = FTransform(rot, loc, scale);
-
 	return (enemyPosition);
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-void AEnemySpawner::spawnEnemy(int enemyType, int enemyCount, int spawnRoom)
+//Function to spawn respective enemies////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void AEnemySpawner::SpawnEnemy(int enemyType, int enemyCount, int spawnRoom)
 {
-	FString roomSelected;
+	FString roomSelected = FString::FromInt(spawnRoom);;
 	FTransform spawnLocation;
-
-	roomSelected = FString::FromInt(spawnRoom);
 
 	UWorld* const World = GetWorld();
 	if (enemyType == 0)
@@ -203,12 +172,11 @@ void AEnemySpawner::spawnEnemy(int enemyType, int enemyCount, int spawnRoom)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("No enemy has spawned in: %s"), *roomSelected));
 		}
-
 		for (TActorIterator<ADoorSealSpawner> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 			ADoorSealSpawner *Object = *ActorItr;
-			ActorItr->openDoors(spawnRoom);
+			ActorItr->OpenDoors(spawnRoom);
 		}
 	}
 	else if (enemyType == 1)
@@ -217,18 +185,19 @@ void AEnemySpawner::spawnEnemy(int enemyType, int enemyCount, int spawnRoom)
 		{
 			for (int i = 1; i <= enemyCount; i++)
 			{
-				spawnLocation = getSpawnLocation(i, enemyType);
+				spawnLocation = GetSpawnLocation(i, enemyType);
 				spawnLocation.AddToTranslation((roomPlacementModifier * spawnRoom));
 				spawnLocation.AddToTranslation(FVector(0, 0, 61));
 				ABasicSlugEnemy* slugActor = World->SpawnActor<ABasicSlugEnemy>(ABasicSlugEnemy::StaticClass(), spawnLocation);
-
 				slugEnemyArray.Add(slugActor);
 			}
 		}
 	}
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AEnemySpawner::getEnemiesPerRoom()
+//Track how many enemies have been spawned in each room - then we know how many to kill to clear each room////////////////////////////////////////////////////////////////////////////////////
+void AEnemySpawner::GetEnemiesPerRoom()
 {
 	int enemyCounter;
 	float zLoc = enemyZOffset;
@@ -247,7 +216,6 @@ void AEnemySpawner::getEnemiesPerRoom()
 				enemyCounter++;
 			}
 		}
-
 		enemiesPerRoom.Add(enemyCounter);
 		zLoc += roomPlacementModifier.Z;
 	}
@@ -255,61 +223,50 @@ void AEnemySpawner::getEnemiesPerRoom()
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 //Functions to modify and affect enemy behaviour and passing any logic or stat functions//////////////////////////////////////////////////////////////////////////////////////////////////////
-void AEnemySpawner::activateEnemies(FVector playLoc)
+void AEnemySpawner::ActivateEnemies(FVector playLoc)
 {
 	float objectZLoc;
-
 	for (int i = 0; i < slugEnemyArray.Num(); i++)
 	{
 		objectZLoc = slugEnemyArray[i]->GetZLocation();
 
 		if ((objectZLoc - enemyZOffset) == (playLoc.Z - playerZOffset))
 		{
-			slugEnemyArray[i]->setIsEnemyActive();
+			slugEnemyArray[i]->SetIsEnemyActive();
 		}
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 //Functions to check room status and manage enemy objects - this will check if rooms have been emptied + remove destroyed enemies from their respective arrays////////////////////////////////
-void AEnemySpawner::checkRoomCleared(int roomNum)
+void AEnemySpawner::CheckRoomCleared(int roomNum)
 {
 	int enemiesInRoom;
 	int roomVal = roomNum;
 
 	enemiesInRoom = enemiesPerRoom[roomNum];
-
 	enemyKilledCounter++;
 
 	if (enemyKilledCounter == enemiesInRoom)
 	{
 		enemyKilledCounter = 0;
-		
 		for (TActorIterator<ADoorSealSpawner> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 			ADoorSealSpawner *Object = *ActorItr;
-			ActorItr->openDoors(roomVal);
+			ActorItr->OpenDoors(roomVal);
 		}
 	}
 }
-
-void AEnemySpawner::removeArrayItem(FString objName)
+void AEnemySpawner::RemoveArrayItem(FString objName)
 {
-	//To modify this in the future without create a function per enemy the name should be checked for a key word "slug" enemies should be appropriately named for this.
-	FString enemyName;
-
-	//when an enemy dies we are going to check if the player has the sacrifice bonus
-	GainHealthOnKill();
+	FString enemyName; //To modify this in the future without create a function per enemy the name should be checked for a key word "slug" enemies should be appropriately named for this.
 	
-
+	GainHealthOnKill(); //when an enemy dies we are going to check if the player has the sacrifice bonus
 	for (int i = 0; i < slugEnemyArray.Num(); i++)
 	{
 		enemyName = slugEnemyArray[i]->GetName();
-
 		if (enemyName == objName)
 		{
 			//effects to happen on enemy death
@@ -321,7 +278,6 @@ void AEnemySpawner::removeArrayItem(FString objName)
 	
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 //Functions to control external features of all enemies/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AEnemySpawner::GainHealthOnKill()
@@ -335,10 +291,9 @@ void AEnemySpawner::GainHealthOnKill()
 }
 void AEnemySpawner::DropMoneyOnDeath(FVector loc)
 {
-	float chanceToDrop;
+	float chanceToDrop = FMath::RandRange(1, 100);
 	FTransform dropLocation;
 
-	chanceToDrop = FMath::RandRange(1, 100);
 	if (chanceToDrop <= moneyDropChance)
 	{
 		if (GEngine)
@@ -349,10 +304,9 @@ void AEnemySpawner::DropMoneyOnDeath(FVector loc)
 }
 void AEnemySpawner::DropHealthOnDeath(FVector loc)
 {
-	float chanceToDrop;
+	float chanceToDrop = FMath::RandRange(1, 100);
 	FTransform dropLocation;
 
-	chanceToDrop = FMath::RandRange(1, 100);
 	if (chanceToDrop <= healthDropChance)
 	{
 		if (GEngine)
@@ -363,7 +317,6 @@ void AEnemySpawner::DropHealthOnDeath(FVector loc)
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 //Functions to GET and SET key variables between classes////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AEnemySpawner::GetRoomCount()
 {
@@ -371,17 +324,16 @@ void AEnemySpawner::GetRoomCount()
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ATileGeneratorParent *Object = *ActorItr;
-		roomCount = ActorItr->getRoomCount();
+		roomCount = ActorItr->GetRoomCount();
 	}
 }
-
 void AEnemySpawner::GetRoomPlacementModifier()
 {
 	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ATileGeneratorParent *Object = *ActorItr;
-		roomPlacementModifier = ActorItr->getRoomPlacementModifier();
+		roomPlacementModifier = ActorItr->GetRoomPlacementModifier();
 	}
 }
 void AEnemySpawner::GetPlayerZOffset()
@@ -397,7 +349,6 @@ void AEnemySpawner::GetPlayerZOffset()
 
 	playerZOffset = zOffset.Z;
 }
-
 void AEnemySpawner::GetSlugEnemyZ()
 {
 	for (TActorIterator<ABasicSlugEnemy> ActorItr(GetWorld()); ActorItr; ++ActorItr)
@@ -407,7 +358,6 @@ void AEnemySpawner::GetSlugEnemyZ()
 		enemyZOffset = ActorItr->GetZOffset();
 	}
 }
-
 void AEnemySpawner::SetMoneyDropChance(float dropChanceModifier)
 {
 	moneyDropChance = moneyDropChance * dropChanceModifier;

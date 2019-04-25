@@ -31,18 +31,21 @@ protected:
 	// Override BeginPlay()
 	virtual void BeginPlay() override;
 
-	virtual void Tick(float DeltaTime) override;
+private:
+	/**********************************************************************PRIVATE VARIABLES*******************************************************************************/
+	
+	//Variable to check if text popup widget is currently on screen////////////////////////////////////////////////////////////////////////////////////////////////////////
+	bool isTextPopupActive;
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
+	/**********************************************************************PUBLIC FUNCTIONS********************************************************************************/
 
-	bool isTextPopupActive;
-
-
+	//widget functions, display, remove and pass variables respecitively to be used to add widgets to viewport/////////////////////////////////////////////////////////////
+	void OpenPauseMenu();
 	void DisplayTextPopup();
 	void RemoveTextPopup();
-
-	void OpenPauseMenu();
-
 	UFUNCTION(BlueprintPure, Category = "Item Popup")
 		FString GetItemText();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };

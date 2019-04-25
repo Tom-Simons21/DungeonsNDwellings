@@ -11,11 +11,10 @@ ADoorPathingManager::ADoorPathingManager()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 	doorDefaults = { FVector(0, 400, 0), FVector(400, 800, 0), FVector(800, 400, 0), FVector(400, 0, 0) };
 }
 
-// Called when the game starts or when spawned
+//Functions to initialise and set up basic functionality on play///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ADoorPathingManager::BeginPlay()
 {
 	Super::BeginPlay();
@@ -24,22 +23,15 @@ void ADoorPathingManager::BeginPlay()
 	doorStartPoints.Empty();
 	doorMappings.Empty();
 
-
 	GetRoomPlacementModifier();
 	GetRoomCount();
 	CreateArrayOfDoors();
 	CreateStartingPointArray();
 	CreateExitPointArray();
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Called every frame
-void ADoorPathingManager::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-//Door mapping functions////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Door mapping functions - this function creates an array of all doors in order of creation////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ADoorPathingManager::CreateStartingPointArray()
 {
 	int doorCount;
@@ -83,31 +75,25 @@ void ADoorPathingManager::CreateStartingPointArray()
 			doorLocation = doorDefaults[3] + zLocation;
 			doorStartPoints.Add(doorLocation);
 		}
-		else
-		{
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Error: Improper Value")));
-			}
-		}
 	}
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//Function builds the exit points array////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//This array plots a path from room 1 to end///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Then this room plots and pairs all remaining doors together - ensures each door always leads to a different room/////////////////////////////////////////////////////////////////////////////////
 void ADoorPathingManager::CreateExitPointArray()
 {
 	int roomToAdd;
-	int counter;
+	int counter = roomCount - 1;
 	int roomZCoord;
 	bool isInArray;
 
 	doorMappings.Add(doorStartPoints[0]);
-	counter = roomCount - 1;
-
 	do
 	{
 		roomToAdd = roomCount - counter;
 		roomZCoord = roomToAdd * roomPlacementModifier.Z;
-
 		for (int j = 0; j < doorStartPoints.Num(); j++)
 		{
 			if (doorStartPoints[j].Z == roomZCoord)
@@ -120,9 +106,7 @@ void ADoorPathingManager::CreateExitPointArray()
 				break;
 			}
 		}
-
 		counter -= 2;
-
 		if (counter == -1)
 		{
 			counter = 0;
@@ -133,11 +117,9 @@ void ADoorPathingManager::CreateExitPointArray()
 	{
 		doorMappings.Add(roomsToAdd[k]);
 	}
-
 	for (int i = 0; i < doorStartPoints.Num(); i++)
 	{
 		isInArray = false;
-
 		for (int j = 0; j < doorMappings.Num(); j++)
 		{
 			if (doorStartPoints[i] == doorMappings[j])
@@ -151,7 +133,6 @@ void ADoorPathingManager::CreateExitPointArray()
 			remainingRooms.Add(doorStartPoints[i]);
 		}
 	}
-
 	for (int g = 0; g < remainingRooms.Num(); g++)
 	{
 		if (g < (remainingRooms.Num() / 2))
@@ -163,54 +144,47 @@ void ADoorPathingManager::CreateExitPointArray()
 			remainingRooms_Two.Add(remainingRooms[g]);
 		}
 	}
-
 	for (int s = 0; s < remainingRooms_One.Num(); s++)
 	{
 		doorMappings.Add(remainingRooms_One[s]);
 		doorMappings.Add(remainingRooms_Two[s]);
 	}
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-//Functions for getting key variables from other classes////////////////////////////////////////////////////////////////////////////////////////
+//Functions for getting key variables from other classes///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ADoorPathingManager::CreateArrayOfDoors()
 {
 	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ATileGeneratorParent *Object = *ActorItr;
-		arrayOfDoors = ActorItr->getArrayOfDoors();
+		arrayOfDoors = ActorItr->GetArrayOfDoors();
 	}
 }
-
 void ADoorPathingManager::GetRoomPlacementModifier()
 {
 	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ATileGeneratorParent *Object = *ActorItr;
-		roomPlacementModifier = ActorItr->getRoomPlacementModifier();
+		roomPlacementModifier = ActorItr->GetRoomPlacementModifier();
 	}
 }
-
 void ADoorPathingManager::GetRoomCount()
 {
 	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ATileGeneratorParent *Object = *ActorItr;
-		roomCount = ActorItr->getRoomCount();
+		roomCount = ActorItr->GetRoomCount();
 	}
 }
-
 TArray<FVector> ADoorPathingManager::GetDoorMappingArray()
 {
 	return (doorMappings);
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 

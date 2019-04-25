@@ -13,9 +13,6 @@
 // Sets default values
 AEnemyProjectile::AEnemyProjectile()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
 	// Static reference to the mesh to use for the projectile
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> EnemyProjectileMeshAsset(TEXT("/Game/TwinStick/Meshes/EnemyProjectile.EnemyProjectile"));
 
@@ -37,17 +34,20 @@ AEnemyProjectile::AEnemyProjectile()
 	//Mobility
 	ProjectileMesh->SetMobility(EComponentMobility::Movable);
 
+	//sets material component
 	static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> Material(TEXT("/Game/TwinStick/Meshes/YellowMaterial.YellowMaterial"));
 	if (Material.Object != NULL)
 	{
 		theMaterial = (UMaterialInstanceConstant*)Material.Object;
 	}
 
+	//sets projectile stats
 	ProjectileMovement->InitialSpeed = 300;
 	ProjectileMovement->MaxSpeed = 300;
 	InitialLifeSpan = 4;
 }
 
+//gets the damage on begin play - this means the projectile stats can be altered per boss///////////////////////////////////////////////////////////////////////////////////////////////////
 void AEnemyProjectile::BeginPlay()
 {
 	Super::BeginPlay();
@@ -59,12 +59,12 @@ void AEnemyProjectile::BeginPlay()
 		bossDmg = ActorItr->GetCurrentBossDmg();
 	}
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//Functions to control enemy projectile stats and effects///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	FString actorName;
-
-	actorName = OtherActor->GetName();
+	FString actorName = OtherActor->GetName();
 
 	if (actorName == "TP_TwinStickPawn_1")
 	{
@@ -72,15 +72,14 @@ void AEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, U
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-			ActorItr->takeDamage(bossDmg);
+			ActorItr->PlayerTakeDamage(bossDmg);
 		}
 	}
 	Destroy();
 }
-
 void AEnemyProjectile::UpdateMaterials()
 {
 	dynamicMaterial = UMaterialInstanceDynamic::Create(theMaterial, this);
 	ProjectileMesh->SetMaterial(0, dynamicMaterial);
 }
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

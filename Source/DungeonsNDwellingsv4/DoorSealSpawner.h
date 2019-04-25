@@ -19,56 +19,41 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+private:
+	/**********************************************************************PRIVATE VARIABLES***************************************************************************/
 
-
-	/**********************************************************************PUBLIC VARIABLES***************************************************************************/
+	bool isArrayUpdated = false;
 
 	//Variables to manage door spawning and management/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	FTransform position;
-
 	FVector const scale = FVector(0.3, 0.95, 1.2);
-
+	float const doorZOffset = 61;
 	UPROPERTY(EditAnywhere)
 		TArray<ADoorSeal*> doorSealArray;
-
+	TArray<FVector> doorPositionsArray = { FVector(0, 0, 0), FVector(20, 400, 61), FVector(400, 780, 61), FVector(780, 400, 61), FVector(400, 20, 61) };
+	TArray<FRotator> doorRotationsArray = { FRotator(0, 0, 0), FRotator(0, 0, 0), FRotator(0, 90, 0), FRotator(0, 0, 0), FRotator(0, 90, 0) };
 	UPROPERTY(EditAnywhere)
 		int roomsOpened;
-
-
-	UPROPERTY(EditAnywhere)
-		TArray<FVector> doorPositionsArray = { FVector(0, 0, 0), FVector(20, 400, 61), FVector(400, 780, 61), FVector(780, 400, 61), FVector(400, 20, 61) };
-
-	UPROPERTY(EditAnywhere)
-		TArray<FRotator> doorRotationsArray = { FRotator(0, 0, 0), FRotator(0, 0, 0), FRotator(0, 90, 0), FRotator(0, 0, 0), FRotator(0, 90, 0) };
-
-	float const doorZOffset = 61;
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	
 	//Variables to GET and/or SET as necessary to external classes/////////////////////////////////////////////////////////////////////////////////////////////////////
 	int roomCount;
 	FVector roomPlacementModifier;
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-
+public:	
 	/**********************************************************************PUBLIC FUNCTIONS***************************************************************************/
 
 	//Functions to spawn and manage door placement/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void setupSpawns();
-	void spawnDoorSeals(FTransform spawnLocation, FVector loc, FRotator rot, FVector scale);
+	void SetupSpawns();
+	void SpawnDoorSeals(FTransform spawnLocation, FVector loc, FRotator rot, FVector scale);
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 	//Functions to open/modify doors in relation to player activities//////////////////////////////////////////////////////////////////////////////////////////////////
-	void openDoors(int roomNum);
+	void OpenDoors(int roomNum);
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 	//Functions to GET and SET key variables between classes///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	void GetRoomCount();

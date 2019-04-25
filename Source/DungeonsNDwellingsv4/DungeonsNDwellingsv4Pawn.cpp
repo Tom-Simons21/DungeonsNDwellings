@@ -1,5 +1,3 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
-
 #include "DungeonsNDwellingsv4Pawn.h"
 #include "DungeonsNDwellingsv4Projectile.h"
 #include "TimerManager.h"
@@ -16,7 +14,6 @@
 #include "InteractableObject.h"
 #include "InteractableObjectManager.h"
 #include "TileGeneratorParent.h"
-#include "DoorSeal.h"
 #include "EnemySpawner.h"
 #include "BossManager.h"
 #include "MyPlayerController.h"
@@ -81,6 +78,7 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 	//set values for player stats
 	playerMaxHealth = 100;
 	playerHealthDefault = 100;
+	playerHealth = playerHealthDefault;
 	playerGold = 0;
 	
 	//Set currency modifier values 
@@ -96,15 +94,27 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 	massBuffActive = false;
 	vigBuffActive = false;
 	sacBuffActive = false;
+	rateBuffActive = false;
+	growthBuffActive = false;
+	slowBuffActive = false;
+	hyperBuffActive = false;
+	mnyShotBuffActive = false;
 
+	//value for multishot runs from 4 - 1, calculated by chance at rolling a 1 so 4 = 25% chance
 	spawnChanceValue = 0;
+	
+	//amount of health being regen'd per room cleared
 	healthRegenValue = 0;
 
 	//maintain correct dmg stats
+	hyperModePercent = 1;
 	otherDmgChanges = 0;
 
 	//set enemy speed modifier
 	enemySpeedReductionPercent = 1;
+
+	//checks if the boss has been killed
+	isLevelComplete = false;
 }
 
 //Functions to control core functionality/////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -160,7 +170,7 @@ void ADungeonsNDwellingsv4Pawn::Tick(float DeltaSeconds)
 	// Try and fire a shot
 	FireShot(FireDirection);
 
-	getPlayerLocation();
+	CalcPlayerLocation();
 }
 
 void ADungeonsNDwellingsv4Pawn::FireShot(FVector FireDirection)
@@ -197,7 +207,7 @@ void ADungeonsNDwellingsv4Pawn::FireShot(FVector FireDirection)
 			{
 				// spawn the projectile
 				ADungeonsNDwellingsv4Projectile* projectileActor = World->SpawnActorDeferred<ADungeonsNDwellingsv4Projectile>(ADungeonsNDwellingsv4Projectile::StaticClass(), SpawnPosition);
-				projectileActor->updateProperties(initialSpeed, maxSpeed, lifeSpan, isGrowing, projectileScale);
+				projectileActor->UpdateProperties(initialSpeed, maxSpeed, lifeSpan, isGrowing, projectileScale);
 				projectileActor->FinishSpawning(SpawnPosition);
 			}
 
@@ -223,25 +233,17 @@ void ADungeonsNDwellingsv4Pawn::ShotTimerExpired()
 void ADungeonsNDwellingsv4Pawn::BeginPlay()
 {
 	Super::BeginPlay();
-	GetLevelNumber();
-
-	isLevelComplete = false;
-
-	playerHealth = playerHealthDefault;
-
-	GetPlayerStatsFromGI();
-
+	
 	//Initialise all variables from external classes asap//////////////////////////////////////////////
+	GetLevelNumber();
+	GetPlayerStatsFromGI();
 	GetRoomPlacementModifier();
-	getTotalOfDoors();
-	createArrayOfDoors();
 	GetRoomCount();
 	GetDoorMappings();
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 
 	isDamageable = false;
-	GetWorldTimerManager().SetTimer(hitControlTimer, this, &ADungeonsNDwellingsv4Pawn::makeDamageable, 1.5f, true, 2.0f);
-
+	GetWorldTimerManager().SetTimer(hitControlTimer, this, &ADungeonsNDwellingsv4Pawn::MakeDamageable, 1.5f, true, 2.0f);
 	SetActorLocation(playerStartPoint, false);
 	SetActorScale3D(playerScale);
 }
@@ -255,7 +257,6 @@ void ADungeonsNDwellingsv4Pawn::OnInteract()
 		ActorItr->Claim();
 	}
 }
-
 void ADungeonsNDwellingsv4Pawn::OnReroll()
 {
 	bool isRerolled = false;
@@ -268,26 +269,22 @@ void ADungeonsNDwellingsv4Pawn::OnReroll()
 			AInteractableObjectManager *Object = *ActorItr;
 			isRerolled = ActorItr->Reroll();
 		}
-
 		if (isRerolled == true)
 		{
 			playerGold -= 2;
 		}
 	}
 }
-
 void ADungeonsNDwellingsv4Pawn::OnPauseGame()
 {
 	UWorld* const World = GetWorld();
 	UGameplayStatics::SetGamePaused(World, true);
-
 	AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
 	if (MyPlayer != NULL)
 	{
 		MyPlayer->OpenPauseMenu();
 	}
 }
-
 void ADungeonsNDwellingsv4Pawn::OnNextLevel()
 {
 	FString nextLevel;
@@ -305,7 +302,6 @@ void ADungeonsNDwellingsv4Pawn::OnNextLevel()
 	{
 		name = "WinGame";
 	}
-
 	if (isLevelComplete)
 	{
 		for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
@@ -314,7 +310,6 @@ void ADungeonsNDwellingsv4Pawn::OnNextLevel()
 			AItemManager *Object = *ActorItr;
 			ActorItr->TransitionToNewLevel();
 		}
-
 		SetGameInstanceVariables();
 		UGameplayStatics::OpenLevel(GetWorld(), name);
 	}
@@ -326,9 +321,7 @@ void ADungeonsNDwellingsv4Pawn::OnNextLevel()
 void ADungeonsNDwellingsv4Pawn::UpdatePlayerCurrency()
 {
 	int goldBonus;
-	int interest;
-
-	interest = playerGold / 10;
+	int interest = playerGold / 10;
 
 	if (interest > 5)
 	{
@@ -353,9 +346,7 @@ void ADungeonsNDwellingsv4Pawn::UpdatePlayerCurrency()
 	}
 	
 	goldBonus = goldToAdd + interest + winStreak + loseStreak;
-
 	playerGold += goldBonus;
-
 	goldToAdd = 1;
 
 	if (playerHealth == 100)
@@ -366,7 +357,6 @@ void ADungeonsNDwellingsv4Pawn::UpdatePlayerCurrency()
 	{
 		loseStreak++;
 	}	
-
 	if (playerGold > 100)
 	{
 		playerGold = 100;
@@ -423,20 +413,20 @@ void ADungeonsNDwellingsv4Pawn::ModifyPlayerDamage(bool isABuff, float damageMul
 		AItemManager *Object = *ActorItr;
 		strBuffMaxed = ActorItr->IsStrBuffMaxed();
 	}
-	if (isABuff == true)
+	if (isABuff == false)
 	{
-		if (strBuffMaxed == true)
-		{
-			projectileDamage = (projectileDamage + otherDmgChanges) * damageMultiplier;
-		}
-		else if (strBuffActive == true)
+		if (strBuffMaxed != true)
 		{
 			projectileDamage = projectileDamage * damageMultiplier;
 		}
 	}
-	if (isABuff == false)
+	if (isABuff == true)
 	{
-		if (strBuffMaxed != true)
+		if (strBuffMaxed == true)
+		{
+			projectileDamage = (projectileDefaultDamage + otherDmgChanges) * damageMultiplier;
+		}
+		else if (strBuffActive == true)
 		{
 			projectileDamage = projectileDamage * damageMultiplier;
 		}
@@ -454,7 +444,7 @@ void ADungeonsNDwellingsv4Pawn::ModifyProjectileSpawnChance(bool isABuff, int sp
 void ADungeonsNDwellingsv4Pawn::ModifyPlayerHealth(bool isABuff, float healthIncrease, bool isHealthRegening, float healthRegenAmount)
 {
 	bool vigBuffMaxed = false;
-	float currentHealthLost;
+	float currentHealthLost = playerMaxHealth - playerHealth;
 
 	for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
@@ -462,20 +452,16 @@ void ADungeonsNDwellingsv4Pawn::ModifyPlayerHealth(bool isABuff, float healthInc
 		AItemManager *Object = *ActorItr;
 		vigBuffMaxed = ActorItr->IsVigBuffMaxed();
 	}
-
-	currentHealthLost = playerMaxHealth - playerHealth;
 	if (currentHealthLost < 0)
 	{
 		currentHealthLost = 0;
 	}
-
 	if (isABuff == true)
 	{
 		if (vigBuffActive == true)
 		{
 			playerMaxHealth = playerHealthDefault + healthIncrease;
 			playerHealth = playerHealthDefault + healthIncrease - currentHealthLost;
-
 			if (isHealthRegening == true)
 			{
 				healthRegenValue = healthRegenAmount;
@@ -563,7 +549,12 @@ void ADungeonsNDwellingsv4Pawn::ModifyMoneyDropChance(bool isABuff, float dropCh
 	}
 }
 
-void ADungeonsNDwellingsv4Pawn::ActivateHyperMode(float percentDmgIncrease)
+void ADungeonsNDwellingsv4Pawn::ModifyHyperModePercent(float hyperPercent)
+{
+	hyperModePercent = hyperPercent;
+}
+
+void ADungeonsNDwellingsv4Pawn::ActivateHyperMode()
 {
 	float healthLost;
 	float highHealthPenalty;
@@ -576,16 +567,20 @@ void ADungeonsNDwellingsv4Pawn::ActivateHyperMode(float percentDmgIncrease)
 	}
 	else if (healthLost > (playerMaxHealth / 2))
 	{
-		dmgIncrease = healthLost * percentDmgIncrease;
+		dmgIncrease = (healthLost - (playerMaxHealth / 2)) * hyperModePercent;
 	}
 	else if (healthLost < (playerMaxHealth / 2))
 	{
 		highHealthPenalty = ((playerMaxHealth / 2) - healthLost) + 10;
 		dmgIncrease = (highHealthPenalty / 20) * (-1);
 	}
-
 	if (hyperBuffActive == true)
 	{
+		if (otherDmgChanges < 0)
+		{
+			otherDmgChanges = otherDmgChanges * (-1);
+		}
+		projectileDamage += otherDmgChanges;
 		projectileDamage += dmgIncrease;
 		otherDmgChanges += dmgIncrease;
 	}
@@ -596,12 +591,9 @@ bool ADungeonsNDwellingsv4Pawn::SpawnAdditionalShots(FVector FireDirection)
 	bool secondShotSpawned = false;
 
 	const FRotator FireRotation = FireDirection.Rotation();
-	// Spawn projectile at an offset from this pawn
 	const FVector SpawnLocation = GetActorLocation() + FireRotation.RotateVector(GunOffset + FVector(0, 15, 0));
 	const FVector Scale = FVector(1, 1, 1);
-
 	const FTransform SpawnPosition = FTransform(FireRotation, SpawnLocation, Scale);
-
 	int spawnChance = FMath::RandRange(1, spawnChanceValue);
 
 	UWorld* const World = GetWorld();
@@ -612,11 +604,10 @@ bool ADungeonsNDwellingsv4Pawn::SpawnAdditionalShots(FVector FireDirection)
 			secondShotSpawned = true;
 			// spawn the projectile
 			ADungeonsNDwellingsv4Projectile* projectileActor = World->SpawnActorDeferred<ADungeonsNDwellingsv4Projectile>(ADungeonsNDwellingsv4Projectile::StaticClass(), SpawnPosition);
-			projectileActor->updateProperties(initialSpeed, maxSpeed, lifeSpan, isGrowing, projectileScale);
+			projectileActor->UpdateProperties(initialSpeed, maxSpeed, lifeSpan, isGrowing, projectileScale);
 			projectileActor->FinishSpawning(SpawnPosition);
 		}
 	}
-
 	return (secondShotSpawned);
 }
 
@@ -627,12 +618,12 @@ void ADungeonsNDwellingsv4Pawn::RegenHealth()
 		if (vigBuffActive == true)
 		{
 			playerHealth += healthRegenValue;
-		}
-	}
 
-	if (playerHealth > playerMaxHealth)
-	{
-		playerHealth = playerMaxHealth;
+			if (playerHealth > playerMaxHealth)
+			{
+				playerHealth = playerMaxHealth;
+			}
+		}
 	}
 }
 
@@ -660,28 +651,20 @@ void ADungeonsNDwellingsv4Pawn::UpdateProjectileValues(float initSpeed, float to
 
 
 //Functions to control and track player location and movement within a level///////////////////////////////////////////////////////////////////////////////////
-void ADungeonsNDwellingsv4Pawn::getPlayerLocation()
+void ADungeonsNDwellingsv4Pawn::CalcPlayerLocation()
 {
-	FVector actorLoc = GetActorLocation();
-	FVector actorZVector = FVector(0.f, 0.f, 0.f);
-
-	actorZVector.Z += actorLoc.Z;
-
 	for (TActorIterator<AInteractableObject> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		AInteractableObject *Object = *ActorItr;
-		ActorItr->getPlayerLocation(actorLoc);
+		ActorItr->GetPlayerDistance();
 	}
-
-	checkPlayerLocation(actorLoc, actorZVector);
+	CheckPlayerLocation();
 }
 
-void ADungeonsNDwellingsv4Pawn::checkPlayerLocation(FVector playerCurrentLoc, FVector actorZValue)
+void ADungeonsNDwellingsv4Pawn::CheckPlayerLocation()
 {
-	FVector playerPosition = playerCurrentLoc;
-	FVector playerZPosition = actorZValue;
-	FVector newLocationAdjust;
+	FVector playerPosition = GetActorLocation();
 	FVector doorLocation;
 
 	if ((playerPosition.X <= 0 || playerPosition.X >= 800) && (playerPosition.Y <= 430 && playerPosition.Y >= 370))
@@ -689,78 +672,14 @@ void ADungeonsNDwellingsv4Pawn::checkPlayerLocation(FVector playerCurrentLoc, FV
 		if (playerPosition.X <= 0)
 		{
 			doorLocation = FVector(0, 400, 0);
-			doorLocation.Z += playerCurrentLoc.Z - playerZElevation.Z;
-
-			for (int i = 0; i < doorMapping.Num(); i++)
-			{
-				if (doorLocation == doorMapping[i])
-				{
-					if ((i % 2) == 0)
-					{
-						exitPoint = doorMapping[i + 1];
-					}
-					else if ((i % 2) != 0)
-					{
-						exitPoint = doorMapping[i - 1];
-					}
-				}
-			}
-			newLocationAdjust = exitPoint;
-			if (exitPoint.X == 400 && exitPoint.Y == 0)
-			{
-				newLocationAdjust.Y += 100;
-			}
-			else if (exitPoint.X == 400 && exitPoint.Y == 800)
-			{
-				newLocationAdjust.Y -= 100;
-			}
-			else if (exitPoint.X == 0 && exitPoint.Y == 400)
-			{
-				newLocationAdjust.X += 100;
-			}
-			else if (exitPoint.X == 800 && exitPoint.Y == 400)
-			{
-				newLocationAdjust.X -= 100;
-			}
-			moveToRoom(newLocationAdjust);
+			doorLocation.Z += playerPosition.Z - playerZElevation.Z;
+			SetLocationAdjustment(doorLocation);
 		}
 		else if (playerPosition.X >= 800)
 		{
 			doorLocation = FVector(800, 400, 0);
-			doorLocation.Z += playerCurrentLoc.Z - playerZElevation.Z;
-
-			for (int i = 0; i < doorMapping.Num(); i++)
-			{
-				if (doorLocation == doorMapping[i])
-				{
-					if ((i % 2) == 0)
-					{
-						exitPoint = doorMapping[i + 1];
-					}
-					else if ((i % 2) != 0)
-					{
-						exitPoint = doorMapping[i - 1];
-					}
-				}
-			}
-			newLocationAdjust = exitPoint;
-			if (exitPoint.X == 400 && exitPoint.Y == 0)
-			{
-				newLocationAdjust.Y += 100;
-			}
-			else if (exitPoint.X == 400 && exitPoint.Y == 800)
-			{
-				newLocationAdjust.Y -= 100;
-			}
-			else if (exitPoint.X == 0 && exitPoint.Y == 400)
-			{
-				newLocationAdjust.X += 100;
-			}
-			else if (exitPoint.X == 800 && exitPoint.Y == 400)
-			{
-				newLocationAdjust.X -= 100;
-			}
-			moveToRoom(newLocationAdjust);
+			doorLocation.Z += playerPosition.Z - playerZElevation.Z;
+			SetLocationAdjustment(doorLocation);
 		}
 	}
 	else if ((playerPosition.Y <= 0 || playerPosition.Y >= 800) && (playerPosition.X <= 430 && playerPosition.X >= 370))
@@ -768,83 +687,57 @@ void ADungeonsNDwellingsv4Pawn::checkPlayerLocation(FVector playerCurrentLoc, FV
 		if (playerPosition.Y <= 0)
 		{
 			doorLocation = FVector(400, 0, 0);
-			doorLocation.Z += playerCurrentLoc.Z - playerZElevation.Z;
-
-			for (int i = 0; i < doorMapping.Num(); i++)
-			{
-				if (doorLocation == doorMapping[i])
-				{
-					if ((i % 2) == 0)
-					{
-						exitPoint = doorMapping[i + 1];
-					}
-					else if ((i % 2) != 0)
-					{
-						exitPoint = doorMapping[i - 1];
-					}
-				}
-			}
-			newLocationAdjust = exitPoint;
-			if (exitPoint.X == 400 && exitPoint.Y == 0)
-			{
-				newLocationAdjust.Y += 100;
-			}
-			else if (exitPoint.X == 400 && exitPoint.Y == 800)
-			{
-				newLocationAdjust.Y -= 100;
-			}
-			else if (exitPoint.X == 0 && exitPoint.Y == 400)
-			{
-				newLocationAdjust.X += 100;
-			}
-			else if (exitPoint.X == 800 && exitPoint.Y == 400)
-			{
-				newLocationAdjust.X -= 100;
-			}
-			moveToRoom(newLocationAdjust);
+			doorLocation.Z += playerPosition.Z - playerZElevation.Z;
+			SetLocationAdjustment(doorLocation);
 		}
 		else if (playerPosition.Y >= 800)
 		{
 			doorLocation = FVector(400, 800, 0);
-			doorLocation.Z += playerCurrentLoc.Z - playerZElevation.Z;
-
-			for (int i = 0; i < doorMapping.Num(); i++)
-			{
-				if (doorLocation == doorMapping[i])
-				{
-					if ((i % 2) == 0)
-					{
-						exitPoint = doorMapping[i + 1];
-					}
-					else if ((i % 2) != 0)
-					{
-						exitPoint = doorMapping[i - 1];
-					}
-				}
-			}
-			newLocationAdjust = exitPoint;
-			if (exitPoint.X == 400 && exitPoint.Y == 0)
-			{
-				newLocationAdjust.Y += 100;
-			}
-			else if (exitPoint.X == 400 && exitPoint.Y == 800)
-			{
-				newLocationAdjust.Y -= 100;
-			}
-			else if (exitPoint.X == 0 && exitPoint.Y == 400)
-			{
-				newLocationAdjust.X += 100;
-			}
-			else if (exitPoint.X == 800 && exitPoint.Y == 400)
-			{
-				newLocationAdjust.X -= 100;
-			}
-			moveToRoom(newLocationAdjust);
+			doorLocation.Z += playerPosition.Z - playerZElevation.Z;
+			SetLocationAdjustment(doorLocation);
 		}
 	}
 }
 
-void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector newLocation)
+void ADungeonsNDwellingsv4Pawn::SetLocationAdjustment(FVector doorLocation)
+{
+	FVector newLocationAdjust;
+
+	for (int i = 0; i < doorMapping.Num(); i++)
+	{
+		if (doorLocation == doorMapping[i])
+		{
+			if ((i % 2) == 0)
+			{
+				exitPoint = doorMapping[i + 1];
+			}
+			else if ((i % 2) != 0)
+			{
+				exitPoint = doorMapping[i - 1];
+			}
+		}
+	}
+	newLocationAdjust = exitPoint;
+	if (exitPoint.X == 400 && exitPoint.Y == 0)
+	{
+		newLocationAdjust.Y += 100;
+	}
+	else if (exitPoint.X == 400 && exitPoint.Y == 800)
+	{
+		newLocationAdjust.Y -= 100;
+	}
+	else if (exitPoint.X == 0 && exitPoint.Y == 400)
+	{
+		newLocationAdjust.X += 100;
+	}
+	else if (exitPoint.X == 800 && exitPoint.Y == 400)
+	{
+		newLocationAdjust.X -= 100;
+	}
+	MoveToRoom(newLocationAdjust);
+}
+
+void ADungeonsNDwellingsv4Pawn::MoveToRoom(FVector newLocation)
 {
 	FVector playerNewLoc;
 	bool isRoomNew = true;
@@ -855,7 +748,7 @@ void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector newLocation)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		AEnemySpawner *Object = *ActorItr;
-		ActorItr->activateEnemies(playerNewLoc);
+		ActorItr->ActivateEnemies(playerNewLoc);
 	}
 	for (TActorIterator<ABossManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
@@ -883,31 +776,26 @@ void ADungeonsNDwellingsv4Pawn::moveToRoom(FVector newLocation)
 
 
 //Functions for controlling player taking damage/////////////////////////////////////////////////////////////////////////////////////////////////////
-void ADungeonsNDwellingsv4Pawn::makeDamageable()
+void ADungeonsNDwellingsv4Pawn::MakeDamageable()
 {
 	bool makeDamageable = true;
 
-	setIsDamageable(makeDamageable);
+	ApplyInvulnerability(makeDamageable);
 }
-
-void ADungeonsNDwellingsv4Pawn::setIsDamageable(bool isD)
+void ADungeonsNDwellingsv4Pawn::ApplyInvulnerability(bool isD)
 {
 	isDamageable = isD;
 }
-
-void ADungeonsNDwellingsv4Pawn::takeDamage(float dmg)
+void ADungeonsNDwellingsv4Pawn::PlayerTakeDamage(float dmg)
 {
-	FName gameOver;
+	FName gameOver = "GameOver";
 
 	if (isDamageable == true)
 	{
 		playerHealth -= dmg;
-
+		ActivateHyperMode();
 		isDamageable = false;
 	}
-
-	gameOver = "GameOver";
-
 	if (playerHealth <= 0)
 	{
 		UGameplayStatics::OpenLevel(GetWorld(), gameOver);
@@ -925,27 +813,15 @@ void ADungeonsNDwellingsv4Pawn::GetLevelNumber()
 	FString splitCon = "-";
 
 	levelName.Split(splitCon, &levelNameLeft, &levelNameRight, ESearchCase::CaseSensitive, ESearchDir::FromStart);
-
 	levelNumber = FCString::Atoi(*levelNameRight);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 //Functions for getting key variables from other classes////////////////////////////////////////////////////////////////////////////////////////
-void ADungeonsNDwellingsv4Pawn::getTotalOfDoors()
-{
-	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ATileGeneratorParent *Object = *ActorItr;
-		totalDoorNum = ActorItr->getRunningTotal();
-	}
-}
-
-FVector ADungeonsNDwellingsv4Pawn::getCurrentLocation()
+FVector ADungeonsNDwellingsv4Pawn::GetPlayersCurrentLocation()
 {
 	FVector currentLoc = GetActorLocation();
-
 	return (currentLoc);
 }
 
@@ -955,23 +831,13 @@ void ADungeonsNDwellingsv4Pawn::GetRoomPlacementModifier()
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ATileGeneratorParent *Object = *ActorItr;
-		roomPlacementModifier = ActorItr->getRoomPlacementModifier();
+		roomPlacementModifier = ActorItr->GetRoomPlacementModifier();
 	}
 }
 
 FVector ADungeonsNDwellingsv4Pawn::GetPlayerZOffset()
 {
 	return (playerZElevation);
-}
-
-void ADungeonsNDwellingsv4Pawn::createArrayOfDoors()
-{
-	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		ATileGeneratorParent *Object = *ActorItr;
-		arrayOfDoors = ActorItr->getArrayOfDoors();
-	}
 }
 
 float ADungeonsNDwellingsv4Pawn::GetProjectileDamage()
@@ -985,7 +851,7 @@ void ADungeonsNDwellingsv4Pawn::GetRoomCount()
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ATileGeneratorParent *Object = *ActorItr;
-		roomCount = ActorItr->getRoomCount();
+		roomCount = ActorItr->GetRoomCount();
 	}
 }
 

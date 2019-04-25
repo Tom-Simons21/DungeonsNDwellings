@@ -19,28 +19,11 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = InteractableObject, meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* CylinderMeshComponent;
-
-	/** Function to handle the enemy hitting something */
-	UFUNCTION()
-	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
-
-
-	/**********************************************************************PUBLIC VARIABLES***************************************************************************/
+private:
+	/**********************************************************************PRIVATE VARIABLES***************************************************************************/
 
 	//These variables set the basic objects properties/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	UPROPERTY(EditAnywhere)
-		FVector slugLocation;
-	UPROPERTY(EditAnywhere)
-		FRotator slugRotation;
-	UPROPERTY(EditAnywhere)
-		FVector slugScale;
 	UPROPERTY(EditAnywhere)
 		bool isEnemyActive;
 	float const slugZOffset = 61;
@@ -63,7 +46,19 @@ public:
 	FVector playerLocation;
 	FVector roomPlacementModifier;
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+
+
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = InteractableObject, meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* CylinderMeshComponent;
+
+	/** Function to handle the enemy hitting something */
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	/**********************************************************************PUBLIC FUNCTIONS***************************************************************************/
 
@@ -75,12 +70,12 @@ public:
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Functions to control slug enemy behaviour////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void setIsEnemyActive();
-	void moveTowardsPlayer(float deltaTime);
+	void SetIsEnemyActive();
+	void MoveTowardsPlayer(float deltaTime);
 	void MaintainSlugMovementSpeed();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Functions to control damage and status effects applied to slug enemies///////////////////////////////////////////////////////////////////////////////////////////
-	void takeDamage(float damage);
+	void SlugTakeDamage(float damage);
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };

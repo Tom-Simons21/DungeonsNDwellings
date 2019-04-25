@@ -9,23 +9,48 @@
 void ADungeonsNDwellingsv4GameMode::BeginPlay()
 {
 	Super::BeginPlay();
+	mapName = GetWorld()->GetMapName();
 
 	ADungeonsNDwellingsv4Pawn* playerCharacter = Cast<ADungeonsNDwellingsv4Pawn>(UGameplayStatics::GetPlayerPawn(this, 0));
-
 	if (PlayerHUDClass != nullptr)
 	{
 		CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), PlayerHUDClass);
-
 		if (CurrentWidget != nullptr)
 		{
 			CurrentWidget->AddToViewport();
 		}
 	}
+	if (mapName.Contains("Dwelling"))
+	{
+		DisplayLoadingScreen();
+	}
 }
 
 ADungeonsNDwellingsv4GameMode::ADungeonsNDwellingsv4GameMode()
 {
-	// set default pawn class to our character class
 	DefaultPawnClass = ADungeonsNDwellingsv4Pawn::StaticClass();
+}
+
+void ADungeonsNDwellingsv4GameMode::DisplayLoadingScreen()
+{
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
+
+	if (LoadingScreenClass != nullptr)
+	{
+		LoadingWidget = CreateWidget<UUserWidget>(GetWorld(), LoadingScreenClass);
+		if (LoadingWidget != nullptr)
+		{
+			LoadingWidget->AddToViewport();
+		}
+	}
+}
+
+void ADungeonsNDwellingsv4GameMode::RemoveLoadingScreen()
+{
+	if (LoadingWidget != nullptr)
+	{
+		LoadingWidget->RemoveFromViewport();
+	}
+	UGameplayStatics::SetGamePaused(GetWorld(), false);
 }
 

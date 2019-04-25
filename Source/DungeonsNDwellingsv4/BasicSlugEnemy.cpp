@@ -6,7 +6,6 @@
 #include "Engine/StaticMesh.h"
 #include "Engine.h"
 #include "DungeonsNDwellingsv4Pawn.h"
-#include "DungeonsNDwellingsv4Projectile.h"
 #include "EnemySpawner.h"
 #include "TileGeneratorParent.h"
 
@@ -42,49 +41,38 @@ ABasicSlugEnemy::ABasicSlugEnemy()
 	//keep track of the players location so we can move towards them
 	playerLocation = FVector(0, 0, 0);
 
-	//current generic values incase we need to more directly modify enemy transform
-	slugLocation = FVector(0, 0, 0);
-	slugRotation = FRotator(0, 0, 0);
-	slugScale = FVector(0, 0, 0);
 	//enemies start in the "off" state where they will not call their respective tick functions
 	isEnemyActive = false;
 
 	//default values for this specific enemy type
-	moveSpeed = 90;
+	moveSpeed = 100;
 	slugHealth = 40;
 	slugDamage = 15;
 }
 
 
-//Functions to control the basic functionality of the slug enemy object///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Called when the game starts or when spawned
+//Functions to control the basic functionality of the slug enemy object///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ABasicSlugEnemy::BeginPlay()
 {
 	Super::BeginPlay();
-
 	GetRoomPlacementModifier();
 }
-
-// Called every frame
 void ABasicSlugEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 	if (isEnemyActive == true)
 	{
 		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-			playerLocation = ActorItr->getCurrentLocation();
+			playerLocation = ActorItr->GetPlayersCurrentLocation();
 		}
-		moveTowardsPlayer(DeltaTime);
+		MoveTowardsPlayer(DeltaTime);
 	}
 }
 
-//Checks if the slug enemy has been hit, this function should be present on all enemy objects, 
-//effects of this type are being managed on the player + enemy as this combination is less 
-//volatile as all processes can complete before destroy
+//Checks if the slug enemy has been hit, this function should be present on all enemy objects////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ABasicSlugEnemy::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	FString actorName;
@@ -101,7 +89,7 @@ void ABasicSlugEnemy::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 			{
 				// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 				ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-				ActorItr->takeDamage(slugDamage);
+				ActorItr->PlayerTakeDamage(slugDamage);
 			}
 		}
 		else if (actorName.Contains("DungeonsNDwellingsv4Projectile_"))
@@ -116,21 +104,20 @@ void ABasicSlugEnemy::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				moveSpeedModifier = ActorItr->GetMoveSpeedModifier();
 			}
 			this->SetSlugMoveSpeed(moveSpeedModifier);
-			this->takeDamage(playerDmg);
+			this->SlugTakeDamage(playerDmg);
 		}
 	}
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-//Functions to control the behaviour of the slug enemies/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ABasicSlugEnemy::setIsEnemyActive()
+//Functions to control the behaviour of the slug enemies///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ABasicSlugEnemy::SetIsEnemyActive()
 {
 	isEnemyActive = true;
 	GetWorld()->GetTimerManager().SetTimer(moveSpeed_TimerHandle, this, &ABasicSlugEnemy::MaintainSlugMovementSpeed, 1.f, true, 0.f);
 }
-
-void ABasicSlugEnemy::moveTowardsPlayer(float deltaTime)
+void ABasicSlugEnemy::MoveTowardsPlayer(float deltaTime)
 {
 	FVector myLocation = GetActorLocation();
 	FVector distanceToPlayer = myLocation - playerLocation;
@@ -142,31 +129,28 @@ void ABasicSlugEnemy::moveTowardsPlayer(float deltaTime)
 
 	SetActorLocation(myLocation + velocity);
 }
-
 void ABasicSlugEnemy::MaintainSlugMovementSpeed()
 {
 	moveSpeed = 90;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 //Functions to control slug enemies taking damage and the application of status effects////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ABasicSlugEnemy::takeDamage(float dmg)
+void ABasicSlugEnemy::SlugTakeDamage(float dmg)
 {
 	float zLoc = GetZLocation();
 	FString enemyName = this->GetName();
 	int roomNumber = (zLoc - slugZOffset) / roomPlacementModifier.Z;
 
 	slugHealth -= dmg;
-
 	if (slugHealth <= 0)
 	{
 		for (TActorIterator<AEnemySpawner> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 			AEnemySpawner *Object = *ActorItr;
-			ActorItr->checkRoomCleared(roomNumber);
-			ActorItr->removeArrayItem(enemyName);
+			ActorItr->CheckRoomCleared(roomNumber);
+			ActorItr->RemoveArrayItem(enemyName);
 		}
 		Destroy();
 	}
@@ -181,22 +165,19 @@ float ABasicSlugEnemy::GetZLocation()
 	float zLoc = loc.Z;
 	return (zLoc);
 }
-
 float ABasicSlugEnemy::GetZOffset()
 {
 	return (slugZOffset);
 }
-
 void ABasicSlugEnemy::GetRoomPlacementModifier()
 {
 	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ATileGeneratorParent *Object = *ActorItr;
-		roomPlacementModifier = ActorItr->getRoomPlacementModifier();
+		roomPlacementModifier = ActorItr->GetRoomPlacementModifier();
 	}
 }
-
 void ABasicSlugEnemy::SetSlugMoveSpeed(float speedModifier)
 {
 	moveSpeed = moveSpeed * speedModifier;

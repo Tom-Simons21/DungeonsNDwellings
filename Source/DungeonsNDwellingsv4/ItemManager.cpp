@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "ItemManager.h"
 #include "InteractableObject.h"
 #include "DungeonsNDwellingsv4Pawn.h"
@@ -12,23 +10,50 @@ AItemManager::AItemManager()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	//inialise item counters
 	availableItemsCounter = 0;
-
 	strItemCounter = 0;
 	massItemCounter = 0;
 	vigItemCounter = 0;
+	sacItemCounter = 0;
+	rateItemCounter = 0;
+	growthItemCounter = 0;
+	slowItemCounter = 0;
+	hyperItemCounter = 0;
+	moneyShotItemCounter = 0;
 
+	//on start no buffs should be maxed
 	isStrMaxed = false;
 	isMassMaxed = false;
 	isVigMaxed = false;
 
+	//initialise all variables prior to ensure all are initialised
+	damageMultiplier = 1;
+	spawnerModifier = 1;
+	healthIncrease = 0;
+	isHealthRegening = false;
 	regenRate = 0;
+	healthToRecieve = 0;
+	chanceToRecieve = 0;
+	fireRate = 0;
+	initialSpeed = 0;
+	maxSpeed = 0;
+	lifeSpan = 0;
+	isGrowing = false;
+	scale = FVector(1, 1, 1);
+	speedReductionPercent = 1;
+	percentDamageIncrease = 1;
+	dropChanceIncrease = 0;
+
+	//clear + initialise all arrays
 	activeDebuffs = { false, false, false };
-
 	currentAvailableItems.Empty();
+	playerItems.Empty();
+	uniqueClasses.Empty();
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Called when the game starts or when spawned
+//Basic functionality functions////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AItemManager::BeginPlay()
 {
 	Super::BeginPlay();
@@ -38,8 +63,8 @@ void AItemManager::BeginPlay()
 void AItemManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Function to select items from the current item pool and allow player collections
 void AItemManager::SelectItem(FString objectName)
@@ -51,19 +76,17 @@ void AItemManager::SelectItem(FString objectName)
 		if (objectName == "InteractableObject_0")
 		{
 			currentAvailableItems.Add(itemPool[itemValue]);
-
 			itemPool.RemoveAt(itemValue);
 		}
 		else if (objectName == "InteractableObject_1")
 		{
 			currentAvailableItems.Add(itemPool[itemValue]);
-
 			itemPool.RemoveAt(itemValue);
 		}
 	}
 }
 
-//Controlling functionality of player item interaction, setting items on reroll, setting items to player array on take///////////////////////////////////////////////////////
+//Controlling functionality of player item interaction, setting items on reroll, setting items to player array on take/////////////////////////////////////////////////////////////////////////////////////////////
 void AItemManager::RerollItem(FString objectName)
 {
 	//We use a lot of hard set variables in these functions because the current design is only to have 2 items per level
@@ -103,195 +126,18 @@ void AItemManager::AddItemToPlayer(FString objectName)
 		currentAvailableItems.RemoveAt(2);
 	}
 	TrackAffects();
-	ApplyAffects();
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-//Functions to control and apply affects to players based off of item selection//////////////////////////////////////////////////////////////////////////////////////////////
+//Functions to control and apply affects to players based off of item selection////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AItemManager::TrackAffects()
 {
-	bool isNewClass;
 	int valueToCheck = (playerItems.Num() - 1); //check the last item added
 
-	isNewClass = true;
 	if (playerItems[valueToCheck].Contains("Strength") == true)
 	{
 		strItemCounter++;
-		if (uniqueClasses.Num() != 0)
-		{
-			for (int j = 0; j < uniqueClasses.Num(); j++)
-			{
-				if (uniqueClasses[j].Contains("Strength") == true)
-				{
-					isNewClass = false;
-					break;
-				}
-			}
-		}
-		if (isNewClass == true)
-		{
-			uniqueClasses.AddUnique("Strength");
-		}
-	}
-	else if (playerItems[valueToCheck].Contains("Masses") == true)
-	{
-		massItemCounter++;
-		if (uniqueClasses.Num() != 0)
-		{
-			for (int j = 0; j < uniqueClasses.Num(); j++)
-			{
-				if (uniqueClasses[j].Contains("Masses") == true)
-				{
-					isNewClass = false;
-					break;
-				}
-			}
-		}
-		if (isNewClass == true)
-		{
-			uniqueClasses.AddUnique("Masses");
-		}
-	}
-	else if (playerItems[valueToCheck].Contains("Vigor") == true)
-	{
-		vigItemCounter++;
-		if (uniqueClasses.Num() != 0)
-		{
-			for (int j = 0; j < uniqueClasses.Num(); j++)
-			{
-				if (uniqueClasses[j].Contains("Vigor") == true)
-				{
-					isNewClass = false;
-					break;
-				}
-			}
-		}
-		if (isNewClass == true)
-		{
-			uniqueClasses.AddUnique("Vigor");
-		}
-	}
-	else if (playerItems[valueToCheck].Contains("Sacrifice") == true)
-	{
-		sacItemCounter++;
-		if (uniqueClasses.Num() != 0)
-		{
-			for (int j = 0; j < uniqueClasses.Num(); j++)
-			{
-				if (uniqueClasses[j].Contains("Sacrifice") == true)
-				{
-					isNewClass = false;
-					break;
-				}
-			}
-		}
-		if (isNewClass == true)
-		{
-			uniqueClasses.AddUnique("Sacrifice");
-		}
-	}
-	else if (playerItems[valueToCheck].Contains("Fire Rate") == true)
-	{
-		rateItemCounter++;
-		if (uniqueClasses.Num() != 0)
-		{
-			for (int j = 0; j < uniqueClasses.Num(); j++)
-			{
-				if (uniqueClasses[j].Contains("Fire Rate") == true)
-				{
-					isNewClass = false;
-					break;
-				}
-			}
-		}
-		if (isNewClass == true)
-		{
-			uniqueClasses.AddUnique("Fire Rate");
-		}
-	}
-	else if (playerItems[valueToCheck].Contains("Growth") == true)
-	{
-		growthItemCounter++;
-		if (uniqueClasses.Num() != 0)
-		{
-			for (int j = 0; j < uniqueClasses.Num(); j++)
-			{
-				if (uniqueClasses[j].Contains("Growth") == true)
-				{
-					isNewClass = false;
-					break;
-				}
-			}
-		}
-		if (isNewClass == true)
-		{
-			uniqueClasses.AddUnique("Growth");
-		}
-	}
-	else if (playerItems[valueToCheck].Contains("Slowmo") == true)
-	{
-		slowItemCounter++;
-		if (uniqueClasses.Num() != 0)
-		{
-			for (int j = 0; j < uniqueClasses.Num(); j++)
-			{
-				if (uniqueClasses[j].Contains("Slowmo") == true)
-				{
-					isNewClass = false;
-					break;
-				}
-			}
-		}
-		if (isNewClass == true)
-		{
-			uniqueClasses.AddUnique("Slowmo");
-		}
-	}
-	else if (playerItems[valueToCheck].Contains("Hyper") == true)
-	{
-		hyperItemCounter++;
-		if (uniqueClasses.Num() != 0)
-		{
-			for (int j = 0; j < uniqueClasses.Num(); j++)
-			{
-				if (uniqueClasses[j].Contains("Hyper") == true)
-				{
-					isNewClass = false;
-					break;
-				}
-			}
-		}
-		if (isNewClass == true)
-		{
-			uniqueClasses.AddUnique("Hyper");
-		}
-	}
-	else if (playerItems[valueToCheck].Contains("Money Shot") == true)
-	{
-		moneyShotItemCounter++;
-		if (uniqueClasses.Num() != 0)
-		{
-			for (int j = 0; j < uniqueClasses.Num(); j++)
-			{
-				if (uniqueClasses[j].Contains("Money Shot") == true)
-				{
-					isNewClass = false;
-					break;
-				}
-			}
-		}
-		if (isNewClass == true)
-		{
-			uniqueClasses.AddUnique("Money Shot");
-		}
-	}	
-}
-
-void AItemManager::ApplyAffects()
-{
-	if (strItemCounter > 0)
-	{
+		UpdateUniqueArray("Strength");
 		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
@@ -300,8 +146,10 @@ void AItemManager::ApplyAffects()
 		}
 		StrAffects();
 	}
-	if (massItemCounter > 0)
+	else if (playerItems[valueToCheck].Contains("Masses") == true)
 	{
+		massItemCounter++;
+		UpdateUniqueArray("Masses");
 		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
@@ -310,8 +158,10 @@ void AItemManager::ApplyAffects()
 		}
 		MassesAffects();
 	}
-	if (vigItemCounter > 0)
+	else if (playerItems[valueToCheck].Contains("Vigor") == true)
 	{
+		vigItemCounter++;
+		UpdateUniqueArray("Vigor");
 		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
@@ -320,8 +170,10 @@ void AItemManager::ApplyAffects()
 		}
 		VigAffects();
 	}
-	if (sacItemCounter > 0)
+	else if (playerItems[valueToCheck].Contains("Sacrifice") == true)
 	{
+		sacItemCounter++;
+		UpdateUniqueArray("Sacrifice");
 		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
@@ -330,8 +182,10 @@ void AItemManager::ApplyAffects()
 		}
 		SacAffects();
 	}
-	if (rateItemCounter > 0)
+	else if (playerItems[valueToCheck].Contains("Fire Rate") == true)
 	{
+		rateItemCounter++;
+		UpdateUniqueArray("Fire Rate");
 		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
@@ -340,8 +194,10 @@ void AItemManager::ApplyAffects()
 		}
 		RateAffects();
 	}
-	if (growthItemCounter > 0)
+	else if (playerItems[valueToCheck].Contains("Growth") == true)
 	{
+		growthItemCounter++;
+		UpdateUniqueArray("Growth");
 		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
@@ -350,8 +206,10 @@ void AItemManager::ApplyAffects()
 		}
 		GrowthAffects();
 	}
-	if (slowItemCounter > 0)
+	else if (playerItems[valueToCheck].Contains("Slowmo") == true)
 	{
+		slowItemCounter++;
+		UpdateUniqueArray("Slowmo");
 		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
@@ -360,8 +218,10 @@ void AItemManager::ApplyAffects()
 		}
 		SlowAffects();
 	}
-	if (hyperItemCounter > 0)
+	else if (playerItems[valueToCheck].Contains("Hyper") == true)
 	{
+		hyperItemCounter++;
+		UpdateUniqueArray("Hyper");
 		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
@@ -370,8 +230,10 @@ void AItemManager::ApplyAffects()
 		}
 		HyperAffects();
 	}
-	if (moneyShotItemCounter > 0)
+	else if (playerItems[valueToCheck].Contains("Money Shot") == true)
 	{
+		moneyShotItemCounter++;
+		UpdateUniqueArray("Money Shot");
 		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
@@ -384,7 +246,6 @@ void AItemManager::ApplyAffects()
 	if (uniqueClasses.Num() >= 3)
 	{
 		activeDebuffs[0] = true;
-
 		if (uniqueClasses.Num() >= 6)
 		{
 			activeDebuffs[1] = true;
@@ -405,7 +266,30 @@ void AItemManager::ApplyAffects()
 		}
 	}
 }
-//Functions for each family of affects, keep other two functions clean////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AItemManager::UpdateUniqueArray(FString itemString)
+{
+	bool isNewClass = true;
+
+	if (uniqueClasses.Num() != 0)
+	{
+		for (int i = 0; i < uniqueClasses.Num(); i++)
+		{
+			if (uniqueClasses[i].Contains(itemString) == true)
+			{
+				isNewClass = false;
+				break;
+			}
+		}
+	}
+	if (isNewClass == true)
+	{
+		uniqueClasses.AddUnique(itemString);
+	}
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Functions for each family of affects, keep other two functions clean/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AItemManager::StrAffects()
 {
 	isABuff = true;
@@ -430,7 +314,6 @@ void AItemManager::StrAffects()
 		ActorItr->ModifyPlayerDamage(isABuff, damageMultiplier);
 	}
 }
-
 void AItemManager::MassesAffects()
 {
 	isABuff = true;
@@ -455,7 +338,6 @@ void AItemManager::MassesAffects()
 		ActorItr->ModifyProjectileSpawnChance(isABuff, spawnerModifier);
 	}
 }
-
 void AItemManager::VigAffects()
 {
 	isABuff = true;
@@ -482,7 +364,6 @@ void AItemManager::VigAffects()
 		ActorItr->ModifyPlayerHealth(isABuff, healthIncrease, isHealthRegening, regenRate);
 	}
 }
-
 void AItemManager::SacAffects()
 {
 	isABuff = true;
@@ -499,7 +380,6 @@ void AItemManager::SacAffects()
 		ActorItr->ModifyPlayerKillBonuses(isABuff, healthToRecieve, chanceToRecieve);
 	}
 }
-
 void AItemManager::RateAffects()
 {
 	isABuff = true;
@@ -515,7 +395,6 @@ void AItemManager::RateAffects()
 		ActorItr->ModifyPlayerFireRate(isABuff, fireRate);
 	}
 }
-
 void AItemManager::GrowthAffects()
 {
 	isABuff = true;
@@ -535,7 +414,6 @@ void AItemManager::GrowthAffects()
 		ActorItr->ModifyPlayerProjectileStyle(isABuff, initialSpeed, maxSpeed, lifeSpan, isGrowing, scale);
 	}
 }
-
 void AItemManager::SlowAffects()
 {
 	isABuff = true;
@@ -551,21 +429,25 @@ void AItemManager::SlowAffects()
 		ActorItr->ModifyEnemyMoveSpeed(isABuff, speedReductionPercent);
 	}
 }
-
 void AItemManager::HyperAffects()
 {
 	if (hyperItemCounter == 1)
 	{
 		percentDamageIncrease = 0.3;
+		for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+			ActorItr->ModifyHyperModePercent(percentDamageIncrease);
+		}
 	}
 	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-		ActorItr->ActivateHyperMode(percentDamageIncrease);
+		ActorItr->ActivateHyperMode();
 	}
 }
-
 void AItemManager::MoneyShotAffects()
 {
 	isABuff = true;
@@ -581,9 +463,9 @@ void AItemManager::MoneyShotAffects()
 		ActorItr->ModifyMoneyDropChance(isABuff, dropChanceIncrease);
 	}
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-//Functions for debuffs and negative affects/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Functions for debuffs and negative affects///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AItemManager::DebuffAffects()
 {
 	isABuff = false;
@@ -622,35 +504,9 @@ void AItemManager::DebuffAffects()
 		}
 	}
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-//Public GET and SET functions///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-TArray<FString> AItemManager::GetCurrentItems()
-{
-	return (currentAvailableItems);
-}
-
-bool AItemManager::IsStrBuffMaxed()
-{
-	return isStrMaxed;
-}
-
-bool AItemManager::IsMassBuffMaxed()
-{
-	return isMassMaxed;
-}
-
-bool AItemManager::IsVigBuffMaxed()
-{
-	return isVigMaxed;
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-//Functions for getting world values
+//Functions for getting world values///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AItemManager::GetLevelNumber()
 {
 	FString levelName = GetWorld()->GetMapName();;
@@ -662,10 +518,10 @@ void AItemManager::GetLevelNumber()
 
 	levelNumber = FCString::Atoi(*levelNameRight);
 }
-///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-//Level transition function////////////////////////////////////////////////////
+//Level transition function////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AItemManager::TransitionToNewLevel()
 {
 	for (int i = 0; i < currentAvailableItems.Num(); i++)
@@ -677,10 +533,25 @@ void AItemManager::TransitionToNewLevel()
 	}
 	SetGameInstanceVariables();
 }
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-//Functions for GET and SET
+//Public GET and SET functions/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+TArray<FString> AItemManager::GetCurrentItems()
+{
+	return (currentAvailableItems);
+}
+bool AItemManager::IsStrBuffMaxed()
+{
+	return isStrMaxed;
+}
+bool AItemManager::IsMassBuffMaxed()
+{
+	return isMassMaxed;
+}
+bool AItemManager::IsVigBuffMaxed()
+{
+	return isVigMaxed;
+}
 void AItemManager::SetGameInstanceVariables()
 {
 	UDungeonsNDwellingsInstance* GI = Cast<UDungeonsNDwellingsInstance>(GetGameInstance());
@@ -737,5 +608,5 @@ void AItemManager::GetItemStatsFromGI()
 		}
 	}
 }
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

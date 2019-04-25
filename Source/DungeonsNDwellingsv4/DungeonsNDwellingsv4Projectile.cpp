@@ -7,8 +7,6 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine.h"
-#include "EnemySpawner.h"
-
 
 ADungeonsNDwellingsv4Projectile::ADungeonsNDwellingsv4Projectile() 
 {
@@ -30,18 +28,19 @@ ADungeonsNDwellingsv4Projectile::ADungeonsNDwellingsv4Projectile()
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.f; // No gravity
 
-
 	//Modify projectile stats
 	isProjectileGrowing = false;
 }
 
-
+//Function destroys projectile on hit///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ADungeonsNDwellingsv4Projectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	Destroy();
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ADungeonsNDwellingsv4Projectile::updateProperties(float speedStart, float speedMax, float projLife, bool isGrowing, FVector scale)
+//Function to modify statistics and behaviours of the projectile////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ADungeonsNDwellingsv4Projectile::UpdateProperties(float speedStart, float speedMax, float projLife, bool isGrowing, FVector scale)
 {
 	ProjectileMovement->InitialSpeed = speedStart;
 	ProjectileMovement->MaxSpeed = speedMax;
@@ -54,10 +53,9 @@ void ADungeonsNDwellingsv4Projectile::updateProperties(float speedStart, float s
 		GetWorldTimerManager().SetTimer(growthTimer, this, &ADungeonsNDwellingsv4Projectile::GrowProjectile, 0.25f, true, 0.f);
 	}
 }
-
 void ADungeonsNDwellingsv4Projectile::GrowProjectile()
 {
 	projectileScale += FVector(0.35, 0.35, 0);
-
 	this->SetActorScale3D(projectileScale);
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

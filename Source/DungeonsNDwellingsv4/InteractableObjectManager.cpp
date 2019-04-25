@@ -12,19 +12,18 @@ AInteractableObjectManager::AInteractableObjectManager()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	interactableObjectArray.Empty();
+	itemSpawnedCounter = 0;
 }
 
-// Called when the game starts or when spawned
+//Functions to control basic functionality/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AInteractableObjectManager::BeginPlay()
 {
 	Super::BeginPlay();
 
 	GetRoomCount();
 	GetRoomPlacementModifier();
-
-	interactableObjectArray.Empty();
-	itemSpawnedCounter = 0;
-
+	
 	for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
@@ -32,17 +31,15 @@ void AInteractableObjectManager::BeginPlay()
 		ActorItr->GetLevelNumber();
 		ActorItr->GetItemStatsFromGI();
 	}
-
 	SpawnInteractableObject();
 }
-
-// Called every frame
 void AInteractableObjectManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//Functions to control interactable object spawning///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AInteractableObjectManager::SpawnInteractableObject()
 {
 	itemSpawnedCounter++;
@@ -73,19 +70,20 @@ void AInteractableObjectManager::SpawnInteractableObject()
 		}
 	}
 }
-
 void AInteractableObjectManager::SpawnInteractableOnComplete()
 {
 	SpawnInteractableObject();
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//Functions to apply functionality to interactable object - functions are applied here to ensure they apply to the correct 1 if 2 are currently spawned///////////////////////////////
 bool AInteractableObjectManager::CheckDistanceFromPlayer()
 {
 	bool isCloseEnough = false;
 
 	for (int i = 0; i < interactableObjectArray.Num(); i++)
 	{
-		distance = interactableObjectArray[i]->distanceFromPlayer;
+		distance = interactableObjectArray[i]->GetDistanceFromPlayer();
 
 		if (distance < minimumDistanceToInteract)
 		{
@@ -96,14 +94,13 @@ bool AInteractableObjectManager::CheckDistanceFromPlayer()
 	}
 	return (isCloseEnough);
 }
-
 bool AInteractableObjectManager::Reroll()
 {
 	bool isRerolled = false;
 
 	for (int i = 0; i < interactableObjectArray.Num(); i++)
 	{
-		distance = interactableObjectArray[i]->distanceFromPlayer;
+		distance = interactableObjectArray[i]->GetDistanceFromPlayer();
 
 		if (distance < minimumDistanceToInteract)
 		{
@@ -113,12 +110,11 @@ bool AInteractableObjectManager::Reroll()
 	}
 	return (isRerolled);
 }
-
 void AInteractableObjectManager::Claim()
 {
 	for (int i = 0; i < interactableObjectArray.Num(); i++)
 	{
-		distance = interactableObjectArray[i]->distanceFromPlayer;
+		distance = interactableObjectArray[i]->GetDistanceFromPlayer();
 
 		if (distance < minimumDistanceToInteract)
 		{
@@ -127,24 +123,25 @@ void AInteractableObjectManager::Claim()
 		}
 	}
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//Functions to GET and pass variables to external classes, all too be called in BeginPlay()////////////////////////////////////////////////////////////////////////
+//Functions to GET and pass variables to external classes, all too be called in BeginPlay()///////////////////////////////////////////////////////////////////////////////////////////
 void AInteractableObjectManager::GetRoomCount()
 {
 	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ATileGeneratorParent *Object = *ActorItr;
-		roomCount = ActorItr->getRoomCount();
+		roomCount = ActorItr->GetRoomCount();
 	}
 }
-
 void AInteractableObjectManager::GetRoomPlacementModifier()
 {
 	for (TActorIterator<ATileGeneratorParent> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ATileGeneratorParent *Object = *ActorItr;
-		roomPlacementModifier = ActorItr->getRoomPlacementModifier();
+		roomPlacementModifier = ActorItr->GetRoomPlacementModifier();
 	}
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

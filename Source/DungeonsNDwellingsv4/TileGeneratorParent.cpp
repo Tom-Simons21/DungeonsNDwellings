@@ -35,38 +35,20 @@ ATileGeneratorParent::ATileGeneratorParent()
 	valueToChange = 0;
 }
 
-//Standard begin play and tick functions, unlikely these should ever be used as this class only exists to expose blueprint variables to other classes//////////////////////////
-// Called when the game starts or when spawned
-void ATileGeneratorParent::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-// Called every frame
-void ATileGeneratorParent::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 //Functions to pass blueprint variable values to the other classes as necessary////////////////////////////////////////////////////////////////////////////////////////////////
-TArray<int32> ATileGeneratorParent::getArrayOfDoors()
+TArray<int32> ATileGeneratorParent::GetArrayOfDoors()
 {
 	return (arrayOfDoors);
 }
-
-int32 ATileGeneratorParent::getRunningTotal()
+int32 ATileGeneratorParent::GetRunningTotal()
 {
 	return (totalNumDoors);
 }
-
-int32 ATileGeneratorParent::getRoomCount()
+int32 ATileGeneratorParent::GetRoomCount()
 {
 	return (roomCount);
 }
-
-FVector ATileGeneratorParent::getRoomPlacementModifier()
+FVector ATileGeneratorParent::GetRoomPlacementModifier()
 {
 	return (roomPlacementModifier);
 }

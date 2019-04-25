@@ -9,9 +9,6 @@
 // Sets default values
 ADoorSeal::ADoorSeal()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
 	// Static reference to the mesh to use for the Interactable object
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>DoorSealAsset(TEXT("/Game/TwinStick/Meshes/Cuboid.Cuboid"));
 
@@ -22,27 +19,10 @@ ADoorSeal::ADoorSeal()
 	CuboidMesh->SetupAttachment(RootComponent);
 	CuboidMesh->BodyInstance.SetCollisionProfileName("Door");
 
-	SetActorScale3D(FVector(1, 1, 1));
-
 	doorSealLocation = FVector(0, 0, 0);
 	doorSealRotation = FRotator(0, 0, 0);
 	doorSealScale = FVector(0.3, 0.95, 1.2);
 }
-
-//Basic functionality - doors do not do anything themselves//////////////////////////////////////////////////////////////////////////////////
-// Called when the game starts or when spawned
-void ADoorSeal::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-// Called every frame
-void ADoorSeal::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 //Functions for controlling door locations///////////////////////////////////////////////////////////////////////////////////////////////////
 void ADoorSeal::updateVariables(FVector loc, FRotator rot, FVector sca)
@@ -51,14 +31,12 @@ void ADoorSeal::updateVariables(FVector loc, FRotator rot, FVector sca)
 	doorSealRotation = rot;
 	doorSealScale = sca;
 }
-
 void ADoorSeal::setLocation(FVector newLocation)
 {
 	doorSealLocation = newLocation;
 	SetActorLocation(doorSealLocation);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 //GET and SET functions//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 FVector ADoorSeal::getLocation()

@@ -6,9 +6,6 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Engine.h"
 #include "DungeonsNDwellingsv4Pawn.h"
-#include "TileGeneratorParent.h"
-#include "Components/TextBlock.h"
-#include "Blueprint/UserWidget.h"
 #include "MyPlayerController.h"
 #include "ItemManager.h"
 #include "InteractableObjectManager.h"
@@ -28,17 +25,15 @@ AInteractableObject::AInteractableObject()
 	ConeMesh->SetStaticMesh(InteractableObjectAsset.Object);
 	ConeMesh->SetupAttachment(RootComponent);
 	SetActorScale3D(FVector(1, 1, 1));
+
+	isInteractable = true;
 }
 
 
-//Functions to control the core functionality of the interactable object////////////////////////////////////////////////////////////////////////////////////////////
-// Called when the game starts or when spawned
+//Functions to control the core functionality of the interactable object////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AInteractableObject::BeginPlay()
 {
 	Super::BeginPlay();
-
-	this->isInteractable = true;
-
 	SelectItem();
 }
 
@@ -46,14 +41,11 @@ void AInteractableObject::BeginPlay()
 void AInteractableObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-//Functions to control item generation, selection, display, management////////////////////////////////////////////////////////////////////////////////////////////
-//function to generate a random number, each number will correspond to an item the player can collect.
-void AInteractableObject::SelectItem()
+//Functions to control item generation, selection, display, management//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void AInteractableObject::SelectItem() //function to generate a random number, each number will correspond to an item the player can collect
 {
 	FString name = this->GetName();
 
@@ -64,33 +56,36 @@ void AInteractableObject::SelectItem()
 		ActorItr->SelectItem(name);
 	}
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-//Functions to control the players interactions with the interactable object/////////////////////////////////////////////////////////////////////////////////////////
-//function to get the current location of the player
-void AInteractableObject::getPlayerLocation(FVector playerPos)
+//Functions to control the players interactions with the interactable object////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void AInteractableObject::GetPlayerDistance() //function to get the current location of the player
 {
-	bool isCloseEnough;
-	FVector playerLoc = playerPos;
-	FVector interactableLoc = GetActorLocation();
+	bool isCloseEnough = false;
+	FVector playerLocation;
+	FVector objectLocation = GetActorLocation();
 
-	distanceFromPlayer = FVector::Dist(playerLoc, interactableLoc); //checking if distance is < 120
+	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr) //get the players location
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
+		playerLocation = ActorItr->GetPlayersCurrentLocation();
+	}
 
-	for (TActorIterator<AInteractableObjectManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	distanceFromPlayer = FVector::Dist(playerLocation, objectLocation); //how far is the player from an interactable item
+
+	for (TActorIterator<AInteractableObjectManager> ActorItr(GetWorld()); ActorItr; ++ActorItr) //check if player is close enough, manager provides key functionality
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		AInteractableObjectManager *Object = *ActorItr;
 		isCloseEnough = ActorItr->CheckDistanceFromPlayer();
 	}
-
 	if (isCloseEnough == false)
 	{
-		RemoveItemText();
+		RemoveItemText(); //remove text when player is out of range
 	}
 }
-
-void AInteractableObject::DisplayItemText()
+void AInteractableObject::DisplayItemText() //display item text widget
 {
 	AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
 	if (MyPlayer != NULL)
@@ -98,8 +93,7 @@ void AInteractableObject::DisplayItemText()
 		MyPlayer->DisplayTextPopup();
 	}
 }
-
-void AInteractableObject::RemoveItemText()
+void AInteractableObject::RemoveItemText() //remove item text widget
 {
 	AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
 	if (MyPlayer != NULL)
@@ -108,8 +102,10 @@ void AInteractableObject::RemoveItemText()
 	}
 }
 
-//function to modify the players projectiles so that they will have a different effect after an item is taken
-void AInteractableObject::playerTakesItem()
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Functions to interact with the interactable items, these allow the player to pick up or reroll the item provided//////////////////////////////////////////////////////////////////////////////
+void AInteractableObject::playerTakesItem() 
 {
 	if (isInteractable == true)
 	{		
@@ -132,7 +128,6 @@ void AInteractableObject::playerTakesItem()
 		}
 	}
 }
-
 bool AInteractableObject::PlayerRerollItem()
 {
 	isItemRerolled = false;
@@ -145,17 +140,16 @@ bool AInteractableObject::PlayerRerollItem()
 			AItemManager *Object = *ActorItr;
 			ActorItr->RerollItem(this->GetName());
 		}
-
 		isItemRerolled = true;
 	}
 	return (isItemRerolled);
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-
-//Functions to GET and pass variables to external classes, all too be called in BeginPlay()////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Functions to GET and pass variables to external classes, all too be called in BeginPlay()/////////////////////////////////////////////////////////////////////////////////////////////////////
+float AInteractableObject::GetDistanceFromPlayer()
+{
+	return (distanceFromPlayer);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
