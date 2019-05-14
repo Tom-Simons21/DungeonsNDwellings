@@ -24,26 +24,26 @@ private:
 	
 	//Door Modifier + Tracker Variables used for player move algorithms//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	UPROPERTY(EditAnywhere)
-		TArray<FVector> doorDefaults;
+		TArray<FVector> doorDefaults;						//default position for doors - holds 4 items
 	UPROPERTY(EditAnywhere)
-		TArray<int32> arrayOfDoors;
+		TArray<int32> arrayOfDoors;							//holds all the doors generated
 	UPROPERTY(EditAnywhere)
-		TArray<FVector> doorStartPoints;
+		TArray<FVector> doorStartPoints;					//sets the doors in appropriate order
 	UPROPERTY(EditAnywhere)
-		TArray<FVector> doorMappings;
+		TArray<FVector> doorMappings;						//sets the output and pairings for doors
 	UPROPERTY(EditAnywhere)
-		TArray<FVector> roomsToAdd;
+		TArray<FVector> roomsToAdd;							//array to hold critical path
 	UPROPERTY(EditAnywhere)
-		TArray<FVector> remainingRooms;
+		TArray<FVector> remainingRooms;						//array to hold all rooms not on critcal path
 	UPROPERTY(EditAnywhere)
-		TArray<FVector> remainingRooms_One;
+		TArray<FVector> remainingRooms_One;					//array to split remaining rooms into
 	UPROPERTY(EditAnywhere)
-		TArray<FVector> remainingRooms_Two;
+		TArray<FVector> remainingRooms_Two;					//array to split remainign rooms into
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Variables to hold values from external classes/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	FVector roomPlacementModifier;
-	int roomCount;
+	FVector roomPlacementModifier;							//distance between rooms
+	int roomCount;											//number of rooms
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -51,14 +51,14 @@ public:
 	/****************************************************************************************PUBLIC FUNCTIONS****************************************************************************************/
 
 	//Door mapping functions/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void CreateStartingPointArray();
-	void CreateExitPointArray();
+	void CreateStartingPointArray();						//create the array to order doors
+	void CreateExitPointArray();							//create array to map/pair doors together
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Functions for getting and passing key variables to other classes///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void CreateArrayOfDoors();
-	void GetRoomPlacementModifier();
-	void GetRoomCount();
-	TArray<FVector> GetDoorMappingArray();
+	void CreateArrayOfDoors();								//get doors from generator
+	void GetRoomPlacementModifier();						//get distance between doors
+	void GetRoomCount();									//get number of rooms
+	TArray<FVector> GetDoorMappingArray();					//pass mapping to player
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };

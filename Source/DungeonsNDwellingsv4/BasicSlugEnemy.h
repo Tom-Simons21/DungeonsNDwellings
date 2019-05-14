@@ -25,26 +25,26 @@ private:
 
 	//These variables set the basic objects properties/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	UPROPERTY(EditAnywhere)
-		bool isEnemyActive;
-	float const slugZOffset = 61;
+		bool isEnemyActive;					//turns enemy on/off
+	float const slugZOffset = 61;			//how far off the floor
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//These variables control and regulate the gameplay stats of the slug enemy object/////////////////////////////////////////////////////////////////////////////////
 	UPROPERTY(EditAnywhere)
-		float moveSpeed;
+		float moveSpeed;					//speed to move at
 	UPROPERTY(EditAnywhere)
-		float slugHealth;
+		float slugHealth;					//amount of health
 	UPROPERTY(EditAnywhere)
-		float slugDamage;
+		float slugDamage;					//damage to deal to player
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Timers///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	FTimerHandle moveSpeed_TimerHandle;
+	FTimerHandle moveSpeed_TimerHandle;		//handles timer for resetting enemy speed after a modify
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//These variables hold values from classes outside of this one get / set///////////////////////////////////////////////////////////////////////////////////////////
-	FVector playerLocation;
-	FVector roomPlacementModifier;
+	FVector playerLocation;					//holds player location
+	FVector roomPlacementModifier;			//holds distance between rooms
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -54,28 +54,28 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = InteractableObject, meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* CylinderMeshComponent;
+	UStaticMeshComponent* CylinderMeshComponent; //component used for mesh
 
 	/** Function to handle the enemy hitting something */
 	UFUNCTION()
-	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit); //tracks hits
 
 	/**********************************************************************PUBLIC FUNCTIONS***************************************************************************/
 
 	//Functions for getting and setting key variables from other classes///////////////////////////////////////////////////////////////////////////////////////////////
-	float GetZLocation();
-	float GetZOffset();
-	void GetRoomPlacementModifier();
-	void SetSlugMoveSpeed(float speedModifier);
+	float GetZLocation();									//gets Z vector value
+	float GetZOffset();										//gets and passes distance off of floor
+	void GetRoomPlacementModifier();						//gets distance between rooms
+	void SetSlugMoveSpeed(float speedModifier);				//allows other objects to modify slug move speed
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Functions to control slug enemy behaviour////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void SetIsEnemyActive();
-	void MoveTowardsPlayer(float deltaTime);
-	void MaintainSlugMovementSpeed();
+	void SetIsEnemyActive();								//turns on enemy
+	void MoveTowardsPlayer(float deltaTime);				//moves enemy towards player once on
+	void MaintainSlugMovementSpeed();						//resets slug move speed periodically
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Functions to control damage and status effects applied to slug enemies///////////////////////////////////////////////////////////////////////////////////////////
-	void SlugTakeDamage(float damage);
+	void SlugTakeDamage(float damage);						//applies damage to slug
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };

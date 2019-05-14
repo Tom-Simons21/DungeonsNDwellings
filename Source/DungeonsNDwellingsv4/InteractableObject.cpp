@@ -17,16 +17,16 @@ AInteractableObject::AInteractableObject()
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Static reference to the mesh to use for the Interactable object
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> InteractableObjectAsset(TEXT("/Game/TwinStick/Meshes/Cone.Cone"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> InteractableObjectAsset(TEXT("/Game/TwinStick/Meshes/Cone.Cone")); //select asset
 
 	// Create mesh component for the projectile sphere
-	ConeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ConeMesh0"));
-	RootComponent = ConeMesh;
-	ConeMesh->SetStaticMesh(InteractableObjectAsset.Object);
-	ConeMesh->SetupAttachment(RootComponent);
-	SetActorScale3D(FVector(1, 1, 1));
+	ConeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ConeMesh0"));	//create mesh object
+	RootComponent = ConeMesh;	//set root
+	ConeMesh->SetStaticMesh(InteractableObjectAsset.Object);	//attach to asset
+	//ConeMesh->SetupAttachment(RootComponent);
+	SetActorScale3D(FVector(1, 1, 1));		//scale is default
 
-	isInteractable = true;
+	isInteractable = true;  //item is usable on spawn
 }
 
 
@@ -34,7 +34,7 @@ AInteractableObject::AInteractableObject()
 void AInteractableObject::BeginPlay()
 {
 	Super::BeginPlay();
-	SelectItem();
+	SelectItem();			//selects an item as soon as it is spawned
 }
 
 // Called every frame
@@ -47,13 +47,13 @@ void AInteractableObject::Tick(float DeltaTime)
 //Functions to control item generation, selection, display, management//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AInteractableObject::SelectItem() //function to generate a random number, each number will correspond to an item the player can collect
 {
-	FString name = this->GetName();
+	FString name = GetName();	//selects its own name so item manager know which interactable to apply the item to
 
 	for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		AItemManager *Object = *ActorItr;
-		ActorItr->SelectItem(name);
+		ActorItr->SelectItem(name);		//calls to item manager for an item
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,44 +61,51 @@ void AInteractableObject::SelectItem() //function to generate a random number, e
 //Functions to control the players interactions with the interactable object////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AInteractableObject::GetPlayerDistance() //function to get the current location of the player
 {
-	bool isCloseEnough = false;
-	FVector playerLocation;
-	FVector objectLocation = GetActorLocation();
+	bool isCloseEnough = false;			//checks if player is close enough
+	FVector playerLocation;				//players current position
+	FVector objectLocation = GetActorLocation();	//position of this particular interactable
 
+	//Old system but due to my obsessive fear of changing stuff this close to hand in this will be left even though I know it does nothing////////
 	for (TActorIterator<ADungeonsNDwellingsv4Pawn> ActorItr(GetWorld()); ActorItr; ++ActorItr) //get the players location
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		ADungeonsNDwellingsv4Pawn *Object = *ActorItr;
-		playerLocation = ActorItr->GetPlayersCurrentLocation();
+		playerLocation = ActorItr->GetPlayersCurrentLocation();	//get distance from player
 	}
-
 	distanceFromPlayer = FVector::Dist(playerLocation, objectLocation); //how far is the player from an interactable item
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	for (TActorIterator<AInteractableObjectManager> ActorItr(GetWorld()); ActorItr; ++ActorItr) //check if player is close enough, manager provides key functionality
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		AInteractableObjectManager *Object = *ActorItr;
-		isCloseEnough = ActorItr->CheckDistanceFromPlayer();
+		isCloseEnough = ActorItr->CheckDistanceFromPlayer(); //is player close enough
 	}
-	if (isCloseEnough == false)
+	if (isCloseEnough == false) //when player is too far away
 	{
 		RemoveItemText(); //remove text when player is out of range
 	}
 }
 void AInteractableObject::DisplayItemText() //display item text widget
 {
-	AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
-	if (MyPlayer != NULL)
+	if (GEngine)
 	{
-		MyPlayer->DisplayTextPopup();
+		AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld())); //cast to player controller
+		if (MyPlayer != NULL) //if player is valid
+		{
+			MyPlayer->DisplayTextPopup();  //display text popup
+		}
 	}
 }
 void AInteractableObject::RemoveItemText() //remove item text widget
 {
-	AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
-	if (MyPlayer != NULL)
+	if (GEngine)
 	{
-		MyPlayer->RemoveTextPopup();
+		AMyPlayerController* const MyPlayer = Cast<AMyPlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld())); //cast
+		if (MyPlayer != NULL)
+		{
+			MyPlayer->RemoveTextPopup(); //remove text popup
+		}
 	}
 }
 
@@ -107,38 +114,38 @@ void AInteractableObject::RemoveItemText() //remove item text widget
 //Functions to interact with the interactable items, these allow the player to pick up or reroll the item provided//////////////////////////////////////////////////////////////////////////////
 void AInteractableObject::playerTakesItem() 
 {
-	if (isInteractable == true)
+	if (isInteractable == true) //if can be used
 	{		
 		for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 			AItemManager *Object = *ActorItr;
-			ActorItr->AddItemToPlayer(this->GetName());
+			ActorItr->AddItemToPlayer(GetName()); //add the item to the player
 		}
-		isInteractable = false;
-		itemName = " ";
-		this->SetActorHiddenInGame(true);
-		this->SetActorEnableCollision(false);
+		isInteractable = false;	//once taken interactable is used up
+		itemName = " ";			//change item name to blank
+		SetActorHiddenInGame(true);	//hide interactable
+		SetActorEnableCollision(false);	//remove collision
 	}
 	else
 	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Item already used."));
-		}
+		//if (GEngine) //currently commenting out debug for use in demo etc
+		//{
+		//    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Item already used."));
+		//}
 	}
 }
 bool AInteractableObject::PlayerRerollItem()
 {
-	isItemRerolled = false;
+	isItemRerolled = false; 
 
-	if (isInteractable == true)
+	if (isInteractable == true) //can be interacted with
 	{
 		for (TActorIterator<AItemManager> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
 			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 			AItemManager *Object = *ActorItr;
-			ActorItr->RerollItem(this->GetName());
+			ActorItr->RerollItem(GetName());	//function on item manager to switch available items
 		}
 		isItemRerolled = true;
 	}
@@ -150,6 +157,6 @@ bool AInteractableObject::PlayerRerollItem()
 //Functions to GET and pass variables to external classes, all too be called in BeginPlay()/////////////////////////////////////////////////////////////////////////////////////////////////////
 float AInteractableObject::GetDistanceFromPlayer()
 {
-	return (distanceFromPlayer);
+	return (distanceFromPlayer); //gets the distance from the player
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

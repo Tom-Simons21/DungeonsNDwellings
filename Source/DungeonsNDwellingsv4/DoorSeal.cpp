@@ -9,31 +9,31 @@
 // Sets default values
 ADoorSeal::ADoorSeal()
 {
-	// Static reference to the mesh to use for the Interactable object
-	static ConstructorHelpers::FObjectFinder<UStaticMesh>DoorSealAsset(TEXT("/Game/TwinStick/Meshes/Cuboid.Cuboid"));
+	// Static reference to the mesh to use for the door
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>DoorSealAsset(TEXT("/Game/TwinStick/Meshes/Cuboid.Cuboid")); //mesh for doors
 
-	// Create mesh component for the projectile sphere
-	CuboidMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CuboidMesh0"));
+	// Create mesh component for the door
+	CuboidMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CuboidMesh0"));	//set up meshes for object
 	RootComponent = CuboidMesh;
 	CuboidMesh->SetStaticMesh(DoorSealAsset.Object);
-	CuboidMesh->SetupAttachment(RootComponent);
-	CuboidMesh->BodyInstance.SetCollisionProfileName("Door");
+	//CuboidMesh->SetupAttachment(RootComponent);
+	CuboidMesh->BodyInstance.SetCollisionProfileName("Door"); //collision profile not properly set
 
-	doorSealLocation = FVector(0, 0, 0);
+	doorSealLocation = FVector(0, 0, 0);			//door parameters
 	doorSealRotation = FRotator(0, 0, 0);
 	doorSealScale = FVector(0.3, 0.95, 1.2);
 }
 
 //Functions for controlling door locations///////////////////////////////////////////////////////////////////////////////////////////////////
-void ADoorSeal::updateVariables(FVector loc, FRotator rot, FVector sca)
+void ADoorSeal::updateVariables(FVector loc, FRotator rot, FVector sca) //modify door scale so it is appropriate for the position
 {
-	doorSealLocation = loc;
-	doorSealRotation = rot;
-	doorSealScale = sca;
+	doorSealLocation = loc; //set location
+	doorSealRotation = rot;	//set rotation
+	doorSealScale = sca;	//set scale
 }
 void ADoorSeal::setLocation(FVector newLocation)
 {
-	doorSealLocation = newLocation;
+	doorSealLocation = newLocation;			//update door location, place it in the right spot
 	SetActorLocation(doorSealLocation);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,6 +41,6 @@ void ADoorSeal::setLocation(FVector newLocation)
 //GET and SET functions//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 FVector ADoorSeal::getLocation()
 {
-	return (doorSealLocation);
+	return (doorSealLocation);		//return the location
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

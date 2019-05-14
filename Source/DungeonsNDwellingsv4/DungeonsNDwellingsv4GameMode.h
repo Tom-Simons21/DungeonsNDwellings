@@ -22,19 +22,19 @@ private:
 protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Health", Meta = (BlueprintProtected = "true"))
-		TSubclassOf<class UUserWidget> PlayerHUDClass;
+		TSubclassOf<class UUserWidget> PlayerHUDClass; //class for HUD
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Loading", Meta = (BlueprintProtected = "true"))
-		TSubclassOf<class UUserWidget> LoadingScreenClass;
+		TSubclassOf<class UUserWidget> LoadingScreenClass; //class for Loading Screen
 
 	UPROPERTY()
-		class UUserWidget* CurrentWidget;
+		class UUserWidget* CurrentWidget; //widget used for HUD
 	UPROPERTY()
-		class UUserWidget* LoadingWidget;
+		class UUserWidget* LoadingWidget; //widget for loading screen
 
 public:
 
-	void DisplayLoadingScreen();
-	void RemoveLoadingScreen();
+	void DisplayLoadingScreen();	//display the loading screnn
+	void RemoveLoadingScreen();		//remove loading screen				
 };
 
 

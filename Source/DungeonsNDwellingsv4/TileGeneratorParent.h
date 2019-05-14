@@ -20,56 +20,56 @@ public:
 
 	//Variables to hold all the defaults used in the level/world building algorithm, initialised + declared here so they are exposed to other classes////////////////////////
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room Properties")
-		int32 roomXLength;
+		int32 roomXLength;								//length of floor
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room Properties")
-		int32 roomYLength;
+		int32 roomYLength;								//width of floor
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room Properties")
-		int32 tileSize;
+		int32 tileSize;									//size of floor/wall tile
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room Properties")
-		int32 roomCount;
+		int32 roomCount;								//number of rooms 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room Properties")
-		FVector roomPlacementModifier;
+		FVector roomPlacementModifier;					//distance between rooms
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wall Properties")
-		int32 wallXLength;
+		int32 wallXLength;								//length of wall
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wall Properties")
-		int32 wallYLength;
+		int32 wallYLength;								//width of wall
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wall Properties")
-		int32 singleWallLength;
+		int32 singleWallLength;							//number of tiles in a wall
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wall Properties")
-		int32 wallNo1;
+		int32 wallNo1;									//these are bad
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wall Properties")
-		int32 wallNo2;
+		int32 wallNo2;									// " "
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wall Properties")
-		int32 wallNo3;
+		int32 wallNo3;									// " "
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-		int32 roomDoorCount;
+		int32 roomDoorCount;							//doors per room
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-		TArray<int32> arrayOfDoors;
+		TArray<int32> arrayOfDoors;						//array to hold count of doors in each room
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-		int32 totalNumDoors;
+		int32 totalNumDoors;							//total number of doors
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-		int32 minNumDoors;
+		int32 minNumDoors;								//minimum number of doors per room
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-		int32 maxNumDoors;
+		int32 maxNumDoors;								//maximum number of doors per room
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-		int32 testingTotal;
+		int32 testingTotal;								//a running total of doors used during spawning
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-		bool isCompleted;
+		bool isCompleted;								//bool to check if a valid door system has been developed
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-		int32 valueToChange;
+		int32 valueToChange;							//door number to be changed, this will reduce/increase number of doors on a particular floor to ensure the door count is between the min total and max total
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-		int32 minTotalDoors;
+		int32 minTotalDoors;							//minimum total number of doors, total must be above a certain value to make logical sense
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Properties")
-		int32 maxTotalDoors;
+		int32 maxTotalDoors;							//maximum total number of doors, total must be below a certain value to make logical sense
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	/***********************************************************************************PUBLIC FUNCTIONS****************************************************************************/
 
 	//Functions to GET values from blueprint, used by other functions to access blueprint variables (READ ONLY)/////////////////////////////////////////////////////////////////////
-	TArray<int32> GetArrayOfDoors();
-	int32 GetRunningTotal();
-	int32 GetRoomCount();
-	FVector GetRoomPlacementModifier();
+	TArray<int32> GetArrayOfDoors();		//pass array of doors spawned
+	int32 GetRunningTotal();				//get number of doors spawned
+	int32 GetRoomCount();					//get number of rooms
+	FVector GetRoomPlacementModifier();		//get distance between rooms
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };

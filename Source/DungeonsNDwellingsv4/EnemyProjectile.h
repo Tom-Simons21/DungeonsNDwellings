@@ -35,7 +35,7 @@ public:
 
 	UMaterialInterface* theMaterial;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Materials)
-		UMaterialInstanceDynamic* dynamicMaterial;
+		UMaterialInstanceDynamic* dynamicMaterial;	//material object
 
 protected:
 	// Called when the game starts or when spawned
@@ -44,7 +44,7 @@ protected:
 private:
 	/*********************************************************************PRIVATE VARIABLES***************************************************************************/
 	//variables for boss properties////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	float bossDmg;
+	float bossDmg;		//damage the boss will do
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -52,7 +52,7 @@ private:
 public:
 	/**********************************************************************PUBLIC FUNCTIONS***************************************************************************/
 	//Functions for updating properties of enemy projectile////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void UpdateMaterials();
+	void UpdateMaterials();			//update the material used for projectile
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };
 

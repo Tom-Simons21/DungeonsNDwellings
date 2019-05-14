@@ -17,16 +17,16 @@ class DUNGEONSNDWELLINGSV4_API AMyPlayerController : public APlayerController
 protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Pause Menu", Meta = (BlueprintProtected = "true"))
-		TSubclassOf<class UUserWidget> PauseMenuClass;
+		TSubclassOf<class UUserWidget> PauseMenuClass;	//pause menu class
 
 	UPROPERTY()
-		class UUserWidget* PauseMenuWidget;
+		class UUserWidget* PauseMenuWidget;	//pause menu widget
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item Popup", Meta = (BlueprintProtected = "true"))
-		TSubclassOf<class UUserWidget> TextPopupClass;
+		TSubclassOf<class UUserWidget> TextPopupClass;	//item popup name class
 
 	UPROPERTY()
-		class UUserWidget* TextWidget;
+		class UUserWidget* TextWidget;	//item popup widget
 
 	// Override BeginPlay()
 	virtual void BeginPlay() override;
@@ -35,17 +35,17 @@ private:
 	/**********************************************************************PRIVATE VARIABLES*******************************************************************************/
 	
 	//Variable to check if text popup widget is currently on screen////////////////////////////////////////////////////////////////////////////////////////////////////////
-	bool isTextPopupActive;
+	bool isTextPopupActive;	//is popup on screen
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
 	/**********************************************************************PUBLIC FUNCTIONS********************************************************************************/
 
 	//widget functions, display, remove and pass variables respecitively to be used to add widgets to viewport/////////////////////////////////////////////////////////////
-	void OpenPauseMenu();
-	void DisplayTextPopup();
-	void RemoveTextPopup();
+	void OpenPauseMenu();				//open + display pause menu
+	void DisplayTextPopup();			//popup text at correct time
+	void RemoveTextPopup();				//remove text popup the rest of the time
 	UFUNCTION(BlueprintPure, Category = "Item Popup")
-		FString GetItemText();
+		FString GetItemText();			//the item text to be displayed
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };
