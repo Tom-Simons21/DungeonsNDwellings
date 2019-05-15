@@ -234,7 +234,6 @@ void AEnemySpawner::ActivateEnemies(FVector playLoc)
 
 		if (room == playerRoom) //compare rooms numbers
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Value is: %d"), playerRoom); //debug message
 			slugEnemyArray[i]->SetIsEnemyActive();	//active relevant enemies
 		}
 	}

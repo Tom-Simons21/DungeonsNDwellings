@@ -43,7 +43,7 @@ AProjectileBoss::AProjectileBoss()
 	ProjectileBossComponent->OnComponentHit.AddDynamic(this, &AProjectileBoss::OnHit);	//set up a notification for when this component hits something
 
 	//set up weapon variance
-	gunOffset = FVector(50, 0, 0);					//offset from the mesh centre for projectiles to spawn
+	gunOffset = FVector(70, 0, 0);					//offset from the mesh centre for projectiles to spawn
 
 	//Set up boss stats
 	projectileBossContactDamage = 25;				//damage for if player touches boss
@@ -214,7 +214,7 @@ void AProjectileBoss::CircularAttack(float endTime)
 				rotation = FRotator(0, position, 0);			//rotate around X axis
 				forwardVector = UKismetMathLibrary::GetForwardVector(rotation);	//forward speed = forward vector made from the rotation, moves at that angle constantly
 				const FRotator FireRotation = forwardVector.Rotation();			//fire rotation uses forward vector rotation
-				spawnVector = ((forwardVector * radius) + GetActorLocation()) + FireRotation.RotateVector(gunOffset);	//set up position to spawn based on circular position / rotation + gun offset
+				spawnVector = ((forwardVector * radius) + GetActorLocation()) + FireRotation.RotateVector(gunOffset - FVector(15, 0, 0));	//set up position to spawn based on circular position / rotation + gun offset
 				spawnLocation = FTransform(FireRotation, spawnVector, sca);		//setup transform
 				AEnemyProjectile* projectileActor = World->SpawnActor<AEnemyProjectile>(AEnemyProjectile::StaticClass(), spawnLocation); //spawn
 			}
@@ -252,7 +252,7 @@ void AProjectileBoss::PulsatingAttack_One(float endTime)
 				rotation = FRotator(0, position, 0);
 				forwardVector = UKismetMathLibrary::GetForwardVector(rotation);
 				const FRotator FireRotation = forwardVector.Rotation();
-				spawnVector = ((forwardVector * radius) + GetActorLocation()) + FireRotation.RotateVector(gunOffset);
+				spawnVector = ((forwardVector * radius) + GetActorLocation()) + FireRotation.RotateVector(gunOffset - FVector(15, 0, 0));
 				spawnLocation = FTransform(FireRotation, spawnVector, sca);
 				AEnemyProjectile* projectileActor = World->SpawnActor<AEnemyProjectile>(AEnemyProjectile::StaticClass(), spawnLocation);
 			}
@@ -289,7 +289,7 @@ void AProjectileBoss::PulsatingAttack_Two(float endTime)
 				rotation = FRotator(0, position, 0);
 				forwardVector = UKismetMathLibrary::GetForwardVector(rotation);
 				const FRotator FireRotation = forwardVector.Rotation();
-				spawnVector = ((forwardVector * radius) + GetActorLocation()) + FireRotation.RotateVector(gunOffset);
+				spawnVector = ((forwardVector * radius) + GetActorLocation()) + FireRotation.RotateVector(gunOffset - FVector(15, 0, 0));
 				spawnLocation = FTransform(FireRotation, spawnVector, sca);
 				AEnemyProjectile* projectileActor = World->SpawnActorDeferred<AEnemyProjectile>(AEnemyProjectile::StaticClass(), spawnLocation); //change material so players can more easily distinguish
 				projectileActor->UpdateMaterials();		//change materials

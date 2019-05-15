@@ -18,7 +18,7 @@ ADoorPathingManager::ADoorPathingManager()
 void ADoorPathingManager::BeginPlay()
 {
 	Super::BeginPlay();
-
+	UE_LOG(LogTemp, Warning, TEXT("Class Loaded")); //debug message
 	arrayOfDoors.Empty();							//empty all arrays on level start
 	doorStartPoints.Empty();						// " "
 	doorMappings.Empty();							// " "

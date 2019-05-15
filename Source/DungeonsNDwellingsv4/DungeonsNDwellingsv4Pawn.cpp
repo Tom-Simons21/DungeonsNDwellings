@@ -137,6 +137,11 @@ void ADungeonsNDwellingsv4Pawn::SetupPlayerInputComponent(class UInputComponent*
 
 void ADungeonsNDwellingsv4Pawn::Tick(float DeltaSeconds)
 {
+	if (doorMapping.Num() < 1)  //load order causes issues with accessing this array - get it every tick until it fills
+	{
+		GetDoorMappings();		//gets the array
+	}
+
 	// Find movement direction
 	const float ForwardValue = GetInputAxisValue(MoveForwardBinding);			//get forward input = +/-
 	const float RightValue = GetInputAxisValue(MoveRightBinding);				//get right input = +/-
@@ -290,6 +295,8 @@ void ADungeonsNDwellingsv4Pawn::OnPauseGame()	//pause the game
 }
 void ADungeonsNDwellingsv4Pawn::OnNextLevel()	//go to the next level
 {
+	GetLevelNumber();
+	FString pathPrefix = "/Game/TwinStickCPP/Maps/";
 	FString nextLevel;				//the number of the next level as a string
 	FString nextLevelName;			//the name of the next level
 	FName name;						//name version of string
@@ -298,6 +305,8 @@ void ADungeonsNDwellingsv4Pawn::OnNextLevel()	//go to the next level
 	{
 		nextLevel = FString::FromInt(levelNumber + 1);	//create a string value that is current level number + 1
 		nextLevelName = levelPrefix + nextLevel;		//append the +1 version to the level prefix
+
+		nextLevelName = pathPrefix + nextLevelName;
 
 		name = FName(*nextLevelName);					//create a name variant of the level string
 	}

@@ -45,7 +45,7 @@ ABasicSlugEnemy::ABasicSlugEnemy()
 	isEnemyActive = false;
 
 	//default values for this specific enemy type
-	moveSpeed = 100;
+	moveSpeed = 115;
 	slugHealth = 40;
 	slugDamage = 15;
 }
@@ -131,7 +131,7 @@ void ABasicSlugEnemy::MoveTowardsPlayer(float deltaTime)							//move enemy towa
 }
 void ABasicSlugEnemy::MaintainSlugMovementSpeed()					//maintain slug movespeed
 {
-	moveSpeed = 100;												//after a slug is "Slowed" or similar by player this will restore the speed after a small interval
+	moveSpeed = 115;												//after a slug is "Slowed" or similar by player this will restore the speed after a small interval
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
