@@ -16,8 +16,10 @@ ADoorSeal::ADoorSeal()
 	CuboidMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CuboidMesh0"));	//set up meshes for object
 	RootComponent = CuboidMesh;
 	CuboidMesh->SetStaticMesh(DoorSealAsset.Object);
-	//CuboidMesh->SetupAttachment(RootComponent);
-	CuboidMesh->BodyInstance.SetCollisionProfileName("Door"); //collision profile not properly set
+	if (!HasAnyFlags(RF_ClassDefaultObject))
+	{
+		CuboidMesh->BodyInstance.SetCollisionProfileName("Door"); //collision profile not properly set
+	}
 
 	doorSealLocation = FVector(0, 0, 0);			//door parameters
 	doorSealRotation = FRotator(0, 0, 0);

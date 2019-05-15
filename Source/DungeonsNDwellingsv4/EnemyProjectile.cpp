@@ -20,19 +20,22 @@ AEnemyProjectile::AEnemyProjectile()
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EPMesh0"));  //mesh object for projectile
 	ProjectileMesh->SetStaticMesh(EnemyProjectileMeshAsset.Object);				//attach to asset
 	//ProjectileMesh->SetupAttachment(RootComponent);
-	ProjectileMesh->BodyInstance.SetCollisionProfileName("EnemyProjectile");			//setup collision
+	if (!HasAnyFlags(RF_ClassDefaultObject))
+	{
+		ProjectileMesh->BodyInstance.SetCollisionProfileName("EnemyProjectile");			//setup collision
+	}
 	ProjectileMesh->OnComponentHit.AddDynamic(this, &AEnemyProjectile::OnHit);		// set up a notification for when this component hits something
 	RootComponent = ProjectileMesh;				//setup root
-		
-	// Use a ProjectileMovementComponent to govern this projectile's movement
+
+												// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("EPMovement0"));		//movement component
-	ProjectileMovement->UpdatedComponent = ProjectileMesh;				
+	ProjectileMovement->UpdatedComponent = ProjectileMesh;
 	ProjectileMovement->bRotationFollowsVelocity = true;						//constant velocity
 	ProjectileMovement->bShouldBounce = false;									//no bouncing
 	ProjectileMovement->ProjectileGravityScale = 0.f; // No gravity
 
 	//Mobility
-	ProjectileMesh->SetMobility(EComponentMobility::Movable);			
+	ProjectileMesh->SetMobility(EComponentMobility::Movable);
 
 	//sets material component
 	static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> Material(TEXT("/Game/TwinStick/Meshes/YellowMaterial.YellowMaterial"));		//helper for changeable material
@@ -40,7 +43,7 @@ AEnemyProjectile::AEnemyProjectile()
 	{
 		theMaterial = (UMaterialInstanceConstant*)Material.Object;		//material object
 	}
-
+	
 	//sets projectile stats
 	ProjectileMovement->InitialSpeed = 300;			
 	ProjectileMovement->MaxSpeed = 300;

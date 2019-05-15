@@ -14,30 +14,31 @@ ABasicSlugEnemy::ABasicSlugEnemy()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>CylinderMesh(TEXT("/Game/TwinStick/Meshes/Cylinder.Cylinder"));	//select mesh to use for enemy
 
 	// Create mesh component for the projectile sphere
 	CylinderMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CylinderMesh0"));							//create mesh component
 	RootComponent = CylinderMeshComponent;																					//attach to root - still not 100% clear on the exact order/effect
 	CylinderMeshComponent->SetStaticMesh(CylinderMesh.Object);																//attach/set the mesh to the mesh object selected
-	//CylinderMeshComponent->SetupAttachment(RootComponent);
-	CylinderMeshComponent->SetCollisionProfileName(UCollisionProfile::BlockAllDynamic_ProfileName);							//add collision
-
-	CylinderMeshComponent->SetSimulatePhysics(true);																		//set physics for collisions
-	CylinderMeshComponent->SetLinearDamping(10000);																			//use big physics values so the player cannot exert a force on the object
-	CylinderMeshComponent->SetAngularDamping(10000);																		// " "
-	CylinderMeshComponent->SetEnableGravity(false);																			//no gravity
-	CylinderMeshComponent->SetConstraintMode(EDOFMode::XYPlane);															//limit axis movement - no Z movement
-	CylinderMeshComponent->SetMassOverrideInKg(NAME_None, 10000);															//big value - no impulses
-	CylinderMeshComponent->bIgnoreRadialImpulse = true;																		//no impulses
-	CylinderMeshComponent->bIgnoreRadialForce = true;																		// " "
-	CylinderMeshComponent->bApplyImpulseOnDamage = false;																	// " "
-	CylinderMeshComponent->bReplicatePhysicsToAutonomousProxy = false;														//this is default but wanted to move all here for clarity
-
-	CylinderMeshComponent->SetNotifyRigidBodyCollision(true);																//ensure rigid body is set, more consistent collision + physics
-	CylinderMeshComponent->OnComponentHit.AddDynamic(this, &ABasicSlugEnemy::OnHit);										//set up a notification for when this component hits something
-
+	
+	if (!HasAnyFlags(RF_ClassDefaultObject))
+	{
+		CylinderMeshComponent->SetCollisionProfileName(UCollisionProfile::BlockAllDynamic_ProfileName);							//add collision
+		CylinderMeshComponent->SetSimulatePhysics(true);																		//set physics for collisions
+		CylinderMeshComponent->SetLinearDamping(10000);																			//use big physics values so the player cannot exert a force on the object
+		CylinderMeshComponent->SetAngularDamping(10000);																		// " "
+		CylinderMeshComponent->SetEnableGravity(false);																			//no gravity
+		CylinderMeshComponent->SetConstraintMode(EDOFMode::XYPlane);															//limit axis movement - no Z movement
+		CylinderMeshComponent->SetMassOverrideInKg(NAME_None, 10000);															//big value - no impulses
+		CylinderMeshComponent->bIgnoreRadialImpulse = true;																		//no impulses
+		CylinderMeshComponent->bIgnoreRadialForce = true;																		// " "
+		CylinderMeshComponent->bApplyImpulseOnDamage = false;																	// " "
+		CylinderMeshComponent->bReplicatePhysicsToAutonomousProxy = false;														//this is default but wanted to move all here for clarity
+		CylinderMeshComponent->SetNotifyRigidBodyCollision(true);																//ensure rigid body is set, more consistent collision + physics
+	}
+	CylinderMeshComponent->OnComponentHit.AddDynamic(this, &ABasicSlugEnemy::OnHit);											//set up a notification for when this component hits something
+	
 	//keep track of the players location so we can move towards them
 	playerLocation = FVector(0, 0, 0);
 

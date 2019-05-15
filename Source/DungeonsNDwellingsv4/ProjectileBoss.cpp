@@ -16,32 +16,33 @@
 // Sets default values
 AProjectileBoss::AProjectileBoss()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	if (!HasAnyFlags(RF_ClassDefaultObject))
+	{
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh>ProjectileBossMesh(TEXT("/Game/TwinStick/Meshes/ProjectileBoss.ProjectileBoss")); //select mesh object
+		static ConstructorHelpers::FObjectFinder<UStaticMesh>ProjectileBossMesh(TEXT("/Game/TwinStick/Meshes/ProjectileBoss.ProjectileBoss")); //select mesh object
 
-	//Set up collsion and appropriate physics for the boss object
-	ProjectileBossComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BossMesh0"));	//create mesh
-	RootComponent = ProjectileBossComponent;													//create root
-	ProjectileBossComponent->SetStaticMesh(ProjectileBossMesh.Object);							//attach object/geometry to mesh object
-	//ProjectileBossComponent->SetupAttachment(RootComponent);
-	ProjectileBossComponent->BodyInstance.SetCollisionProfileName("BlockAllDynamic");			//set collision
+		//Set up collsion and appropriate physics for the boss object
+		ProjectileBossComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BossMesh0"));	//create mesh
+		RootComponent = ProjectileBossComponent;													//create root
+		ProjectileBossComponent->SetStaticMesh(ProjectileBossMesh.Object);							//attach object/geometry to mesh object
 
-	ProjectileBossComponent->SetSimulatePhysics(false);											//not simulating physics cos I'm and OCD overly obsessive idiot who wanted his boss to be roundish
-	ProjectileBossComponent->SetLinearDamping(100000);											//big number again, see comments for slug
-	ProjectileBossComponent->SetAngularDamping(100000);
-	ProjectileBossComponent->SetEnableGravity(false);
-	ProjectileBossComponent->SetConstraintMode(EDOFMode::XYPlane);
-	ProjectileBossComponent->SetMassOverrideInKg(NAME_None, 1000000);
-	ProjectileBossComponent->bIgnoreRadialImpulse = true;
-	ProjectileBossComponent->bIgnoreRadialForce = true;
-	ProjectileBossComponent->bApplyImpulseOnDamage = false;
-	ProjectileBossComponent->bReplicatePhysicsToAutonomousProxy = false;
+		ProjectileBossComponent->BodyInstance.SetCollisionProfileName("BlockAllDynamic");			//set collision
+		ProjectileBossComponent->SetSimulatePhysics(false);											//not simulating physics cos I'm and OCD overly obsessive idiot who wanted his boss to be roundish
+		ProjectileBossComponent->SetLinearDamping(100000);											//big number again, see comments for slug
+		ProjectileBossComponent->SetAngularDamping(100000);
+		ProjectileBossComponent->SetEnableGravity(false);
+		ProjectileBossComponent->SetConstraintMode(EDOFMode::XYPlane);
+		ProjectileBossComponent->SetMassOverrideInKg(NAME_None, 1000000);
+		ProjectileBossComponent->bIgnoreRadialImpulse = true;
+		ProjectileBossComponent->bIgnoreRadialForce = true;
+		ProjectileBossComponent->bApplyImpulseOnDamage = false;
+		ProjectileBossComponent->bReplicatePhysicsToAutonomousProxy = false;
+		ProjectileBossComponent->SetNotifyRigidBodyCollision(true);
 
-	ProjectileBossComponent->SetNotifyRigidBodyCollision(true);
-	ProjectileBossComponent->OnComponentHit.AddDynamic(this, &AProjectileBoss::OnHit);	//set up a notification for when this component hits something
-
+		ProjectileBossComponent->OnComponentHit.AddDynamic(this, &AProjectileBoss::OnHit);	//set up a notification for when this component hits something
+	}
 	//set up weapon variance
 	gunOffset = FVector(70, 0, 0);					//offset from the mesh centre for projectiles to spawn
 

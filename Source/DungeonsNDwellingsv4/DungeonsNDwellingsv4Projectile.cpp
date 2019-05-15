@@ -12,12 +12,14 @@ ADungeonsNDwellingsv4Projectile::ADungeonsNDwellingsv4Projectile()
 {
 	// Static reference to the mesh to use for the projectile
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ProjectileMeshAsset(TEXT("/Game/TwinStick/Meshes/TwinStickProjectile.TwinStickProjectile")); //set the asset to use
-
 	// Create mesh component for the projectile sphere
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh0")); //create mesh object
 	ProjectileMesh->SetStaticMesh(ProjectileMeshAsset.Object);		//attach asset to mesh
 	//ProjectileMesh->SetupAttachment(RootComponent);
-	ProjectileMesh->BodyInstance.SetCollisionProfileName("PlayerProjectile");	//collision setting
+	if (!HasAnyFlags(RF_ClassDefaultObject))
+	{
+		ProjectileMesh->BodyInstance.SetCollisionProfileName("PlayerProjectile");	//collision setting
+	}
 	ProjectileMesh->OnComponentHit.AddDynamic(this, &ADungeonsNDwellingsv4Projectile::OnHit);		// set up a notification for when this component hits something
 	RootComponent = ProjectileMesh; //setup root
 
@@ -27,7 +29,7 @@ ADungeonsNDwellingsv4Projectile::ADungeonsNDwellingsv4Projectile()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.f; // No gravity
-
+	
 	//Modify projectile stats
 	isProjectileGrowing = false;
 }

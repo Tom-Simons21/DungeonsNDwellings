@@ -32,7 +32,10 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 	// Create the mesh component
 	PlayerMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipMesh"));		//setup mesh object
 	RootComponent = PlayerMeshComponent;														//setup root
-	PlayerMeshComponent->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);			//setup collision
+	if (!HasAnyFlags(RF_ClassDefaultObject))
+	{
+		PlayerMeshComponent->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);			//setup collision
+	}
 	PlayerMeshComponent->SetStaticMesh(ShipMesh.Object);										//attach asset to mesh
 
 	// Cache our sound effect
@@ -53,7 +56,7 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 	CameraComponent->bUsePawnControlRotation = false;	// Camera does not rotate relative to arm
 	CameraComponent->FieldOfView = 66;														//field of view to be used
 	CameraComponent->AddRelativeLocation(FVector(0, 0, 0));						//relative location directly above
-	CameraComponent->SetAspectRatio(1.0);										
+	CameraComponent->SetAspectRatio(1.0);
 
 	// Movement
 	MoveSpeed = 1000.0f;								
