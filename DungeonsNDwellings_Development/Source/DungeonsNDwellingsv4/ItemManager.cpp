@@ -345,15 +345,15 @@ void AItemManager::VigAffects()
 
 	if (vigItemCounter == 1)
 	{
-		healthIncrease = 20;
+		healthIncrease = 25;
 	}
 	else if (vigItemCounter == 2)
 	{
-		healthIncrease = 40;
+		healthIncrease = 25;
 	}
 	else if (vigItemCounter == 3)
 	{
-		healthIncrease = 40;
+		healthIncrease = 50;
 		isHealthRegening = true; //says if health should be regening each time a room is completed
 		regenRate = 2;			 //health per room
 		isVigMaxed = true;

@@ -108,9 +108,11 @@ ADungeonsNDwellingsv4Pawn::ADungeonsNDwellingsv4Pawn()
 	
 	//amount of health being regen'd per room cleared
 	healthRegenValue = 0;
+	isHealthDraining = false;
 
 	//maintain correct dmg stats
 	hyperModePercent = 1;
+	lastHyperModeChange = 0;
 	otherDmgChanges = 0;
 
 	//set enemy speed modifier
@@ -439,7 +441,7 @@ void ADungeonsNDwellingsv4Pawn::ModifyPlayerDamage(bool isABuff, float damageMul
 	{
 		if (strBuffMaxed == true)
 		{
-			projectileDamage = (projectileDefaultDamage + otherDmgChanges) * damageMultiplier; //apply max buff
+			projectileDamage = (projectileDefaultDamage * damageMultiplier) + otherDmgChanges; //apply max buff
 		}
 		else if (strBuffActive == true)
 		{
@@ -475,11 +477,17 @@ void ADungeonsNDwellingsv4Pawn::ModifyPlayerHealth(bool isABuff, float healthInc
 	{
 		if (vigBuffActive == true)
 		{
-			playerMaxHealth = playerHealthDefault + healthIncrease;	//increase max health
-			playerHealth = playerHealthDefault + healthIncrease - currentHealthLost; //this is not a full heal so the player gains health but keeps however much damage had been taken
-			if (isHealthRegening == true)		//is health regening
+			playerMaxHealth += healthIncrease;
+			playerHealth += healthIncrease;
+
+			if (vigBuffMaxed == true)
 			{
-				healthRegenValue = healthRegenAmount; //if yes set amount per room
+				playerMaxHealth = playerHealthDefault + healthIncrease;	//increase max health
+				playerHealth = playerHealthDefault + healthIncrease - currentHealthLost; //this is not a full heal so the player gains health but keeps however much damage had been taken
+				if (isHealthRegening == true)		//is health regening
+				{
+					healthRegenValue = healthRegenAmount; //if yes set amount per room
+				}
 			}
 		}
 	}
@@ -488,11 +496,16 @@ void ADungeonsNDwellingsv4Pawn::ModifyPlayerHealth(bool isABuff, float healthInc
 		if (vigBuffMaxed != true)		//max buff cures
 		{
 			playerHealth = playerHealth * healthIncrease;	//negative health 
-			playerMaxHealth = playerHealth;	//player max health also reduced
+			playerMaxHealth = playerMaxHealth/2;	//player max health also reduced
+
+			if (playerHealth > playerMaxHealth) //player health cannot exceed max
+			{
+				playerHealth = playerMaxHealth;
+			}
 		}
 		if (isHealthRegening == true)	
 		{
-			healthRegenValue = (playerHealth / 10) * (-1);	//player loses 10% health per room
+			isHealthDraining = true; //set health to drain
 		}
 	}
 }
@@ -582,7 +595,7 @@ void ADungeonsNDwellingsv4Pawn::ActivateHyperMode() //activate hyper mode
 	}
 	else if (healthLost > (playerMaxHealth / 2))	//check if health loss more than half
 	{
-		dmgIncrease = (healthLost - (playerMaxHealth / 2)) * hyperModePercent;	//add damage
+		dmgIncrease = (((healthLost - (playerMaxHealth / 2)) * hyperModePercent) / 2);	//add damage
 	}
 	else if (healthLost < (playerMaxHealth / 2)) //if no
 	{
@@ -591,14 +604,21 @@ void ADungeonsNDwellingsv4Pawn::ActivateHyperMode() //activate hyper mode
 	}
 	if (hyperBuffActive == true)
 	{
-		if (otherDmgChanges < 0)		//track damage that is being added through this function
-		{
-			otherDmgChanges = otherDmgChanges * (-1);	//must be a positive
-		}
-		projectileDamage += otherDmgChanges;	//restore projectile damage to pre-debuff
-		projectileDamage += dmgIncrease;		//then apply hyper mode affect
-		otherDmgChanges += dmgIncrease;			//then track damage changes
+		projectileDamage -= lastHyperModeChange;	//restore projectile damage to pre-debuff
+		projectileDamage += dmgIncrease;			//then apply hyper mode affect
+		otherDmgChanges -= lastHyperModeChange;
+		otherDmgChanges += dmgIncrease;				//then track damage changes
+
+		lastHyperModeChange = dmgIncrease;
 	} //this area still needs a little work - works but not quite as intended
+}
+
+void ADungeonsNDwellingsv4Pawn::SetDrainHealth()
+{
+	if (isHealthDraining == true)	//if draining is active then drain
+	{
+		healthRegenValue = (playerHealth / 10) * (-1);	//player loses 10% health per room
+	}
 }
 
 bool ADungeonsNDwellingsv4Pawn::SpawnAdditionalShots(FVector FireDirection)	//spawn additional shot 
@@ -781,6 +801,7 @@ void ADungeonsNDwellingsv4Pawn::MoveToRoom(FVector newLocation) //move player ap
 	{
 		uniqueZTracker.AddUnique(playerNewLoc.Z - playerZElevation.Z);	//add the room player is in to unique array
 		UpdatePlayerCurrency();											//if room is new player can gain currency
+		SetDrainHealth();												//updates the amount of health to lose each room, makes sure it stays at 10%
 		RegenHealth();													//if room is new player can regen if active
 	}
 
